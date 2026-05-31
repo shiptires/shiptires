@@ -1,26 +1,192 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-navy: #06060c;
+  --color-navy-light: #0d0d16;
+  --color-navy-dark: #020205;
+  --color-blue: #2563EB;
+  --color-blue-light: #3B82F6;
+  --color-blue-dark: #1D4ED8;
+  --color-orange: #DC2626;
+  --color-orange-light: #EF4444;
+  --color-orange-dark: #B91C1C;
+  --color-cream: #F0F2F5;
+  --color-white: #ffffff;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-navy-dark);
+  color: var(--color-gray-300);
+  font-family: var(--font-sans);
+}
+
+/* Racing stripe accent */
+.racing-stripe {
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 10px,
+    rgba(220, 38, 38, 0.03) 10px,
+    rgba(220, 38, 38, 0.03) 20px
+  );
+}
+
+/* Checkered flag pattern */
+.checkered-accent {
+  background-image:
+    linear-gradient(45deg, rgba(220, 38, 38, 0.08) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(220, 38, 38, 0.08) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(220, 38, 38, 0.08) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(220, 38, 38, 0.08) 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* Red glow effect for key CTAs */
+.red-glow {
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.4), 0 0 60px rgba(220, 38, 38, 0.15);
+}
+
+/* Carbon fiber pattern — GT cockpit texture */
+.carbon-fiber {
+  background:
+    linear-gradient(27deg, #080810 5px, transparent 5px) 0 5px,
+    linear-gradient(207deg, #080810 5px, transparent 5px) 10px 0px,
+    linear-gradient(27deg, #0a0a14 5px, transparent 5px) 0px 10px,
+    linear-gradient(207deg, #0a0a14 5px, transparent 5px) 10px 5px,
+    linear-gradient(90deg, #090912 10px, transparent 10px),
+    linear-gradient(#080810 25%, #060608 25%, #060608 50%, transparent 50%, transparent 75%, #080810 75%, #080810);
+  background-size: 20px 20px;
+}
+
+/* GT scanline overlay */
+.scanlines::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.015) 2px,
+    rgba(0, 0, 0, 0.015) 4px
+  );
+  pointer-events: none;
+}
+
+/* HUD glow effect */
+.hud-glow {
+  box-shadow: inset 0 0 30px rgba(220, 38, 38, 0.03), 0 0 15px rgba(220, 38, 38, 0.05);
+}
+
+/* GT speed lines — horizontal motion blur */
+.speed-lines {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 40px,
+    rgba(220, 38, 38, 0.02) 40px,
+    rgba(220, 38, 38, 0.02) 41px
+  );
+}
+
+/* GT tachometer sweep animation */
+@keyframes tach-sweep {
+  0% { transform: rotate(-120deg); }
+  100% { transform: rotate(120deg); }
+}
+
+/* Subtle pulse for accents */
+@keyframes gt-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+.gt-pulse {
+  animation: gt-pulse 3s ease-in-out infinite;
+}
+
+/* Speed streak across elements */
+@keyframes speed-streak {
+  0% { transform: translateX(-100%); opacity: 0; }
+  50% { opacity: 0.6; }
+  100% { transform: translateX(200%); opacity: 0; }
+}
+
+.speed-streak::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(220, 38, 38, 0.08), transparent);
+  animation: speed-streak 6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* GT metallic shimmer for cards */
+.gt-card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 50%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(8px);
+}
+
+/* Racing grid pattern */
+.racing-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* GT rev indicator bar */
+@keyframes rev-bar {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+/* GT start light sequence */
+@keyframes start-light {
+  0%, 20% { opacity: 0.2; }
+  25%, 45% { opacity: 1; }
+  50%, 100% { opacity: 0.2; }
+}
+
+/* Animated border glow */
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(220, 38, 38, 0.2); }
+  50% { border-color: rgba(220, 38, 38, 0.5); }
+}
+
+.border-glow {
+  animation: border-glow 4s ease-in-out infinite;
+}
+
+.chat-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.chat-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-scrollbar::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 2px;
 }
