@@ -38,10 +38,28 @@ export const metadata: Metadata = {
     url: "https://ship.tires",
     siteName: "Ship.Tires",
     type: "website",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Ship.Tires - Tires Delivered Fast",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ship.Tires — Tires Shipped Fast. Installed Near You.",
+    description:
+      "Free nationwide tire shipping. 20+ brands, 100+ models, delivered to your door or installer.",
+    images: ["/logo.png"],
   },
   robots: {
     index: true,
     follow: true,
+  },
+  alternates: {
+    canonical: "https://ship.tires",
   },
   metadataBase: new URL("https://ship.tires"),
 };

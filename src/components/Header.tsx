@@ -36,16 +36,16 @@ export default function Header() {
         {/* Subtle bottom glow */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange/30 to-transparent" />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-28 items-center justify-between lg:h-32">
+          <div className="flex h-36 items-center justify-between lg:h-40">
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link href="/" className="block">
                 <Image
                   src="/logo.png"
                   alt="Ship.Tires - Tires Delivered Fast"
-                  width={300}
-                  height={150}
-                  className="h-24 w-auto lg:h-28"
+                  width={400}
+                  height={200}
+                  className="h-32 w-auto lg:h-36"
                   priority
                 />
               </Link>

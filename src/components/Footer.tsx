@@ -44,9 +44,9 @@ export default function Footer() {
               <Image
                 src="/logo.png"
                 alt="Ship.Tires - Tires Delivered Fast"
-                width={280}
-                height={140}
-                className="h-24 w-auto lg:h-28"
+                width={400}
+                height={200}
+                className="h-32 w-auto lg:h-36"
               />
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-gray-300">
