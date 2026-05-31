@@ -1,0 +1,78 @@
+# Ship.Tires
+
+> Nationwide tire shipping with free delivery. Browse 20+ top brands, find the perfect fit for your vehicle, and get tires shipped to your door or local installer.
+
+## About
+
+Ship.Tires is a US-based online tire retailer offering free nationwide shipping on all orders. We carry over 20 premium tire brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, and Cooper. Customers can have tires delivered directly to their home or to a local installer of their choice.
+
+## Contact
+
+- Phone: (916) 476-7689
+- Email: info@ship.tires
+- Website: https://ship.tires
+
+## Services
+
+- Free nationwide tire shipping (continental US)
+- Direct-to-door or direct-to-installer delivery
+- Vehicle lookup tool to find compatible tire sizes by year/make/model
+- Tire search by size (e.g., 225/65R17)
+- Price quotes via phone, email, or online form
+- All tires include manufacturer warranty
+
+## Tire Categories
+
+- All-Season Tires
+- Winter / Snow Tires
+- Performance Tires
+- All-Terrain Tires
+- Touring Tires
+- Truck & SUV Tires
+
+## Top Brands
+
+- Michelin
+- Goodyear
+- Bridgestone
+- Continental
+- Pirelli
+- Cooper
+- Hankook
+- Yokohama
+- Toyo
+- Falken
+- BFGoodrich
+- Firestone
+- General Tire
+- Kumho
+- Nitto
+
+## Key Pages
+
+- Homepage: https://ship.tires
+- Browse All Tires: https://ship.tires/tires
+- Vehicle Lookup: https://ship.tires/vehicle-lookup
+- Shipping Info: https://ship.tires/shipping
+- About Us: https://ship.tires/about
+- Contact / Get a Quote: https://ship.tires/contact
+- FAQ: https://ship.tires/faq
+- Blog: https://ship.tires/blog
+- Racing: https://ship.tires/racing
+
+## How It Works
+
+1. Find your tires by size, vehicle, or brand
+2. Request a quote or browse available models
+3. We ship free to your door or your installer
+4. Get your tires installed at any local shop
+
+## Location & Coverage
+
+- Based in Sacramento, California
+- Ships to all 50 US states (free shipping continental US)
+- Delivery typically within 3-7 business days
+
+## For more details
+
+See https://ship.tires/llm-full.txt for comprehensive product and brand information.

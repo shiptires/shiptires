@@ -71,8 +71,15 @@ const jsonLd = {
   url: "https://ship.tires",
   telephone: "+1-916-476-7689",
   email: "info@ship.tires",
+  logo: "https://ship.tires/logo.png",
   description:
     "Nationwide tire shipping with free delivery. Browse 20+ top brands and get tires shipped to your door or local installer.",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Sacramento",
+    addressRegion: "CA",
+    addressCountry: "US",
+  },
   areaServed: {
     "@type": "Country",
     name: "United States",
@@ -86,12 +93,85 @@ const jsonLd = {
       { "@type": "OfferCatalog", name: "Winter Tires" },
       { "@type": "OfferCatalog", name: "Performance Tires" },
       { "@type": "OfferCatalog", name: "All-Terrain Tires" },
+      { "@type": "OfferCatalog", name: "All-Terrain Tires" },
+      { "@type": "OfferCatalog", name: "Touring Tires" },
+      { "@type": "OfferCatalog", name: "Truck & SUV Tires" },
     ],
   },
   potentialAction: {
     "@type": "SearchAction",
     target: "https://ship.tires/search?q={search_term_string}",
     "query-input": "required name=search_term_string",
+  },
+};
+
+const serviceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: "Nationwide Tire Shipping & Delivery",
+  provider: {
+    "@type": "Organization",
+    name: "Ship.Tires",
+    url: "https://ship.tires",
+  },
+  description:
+    "Free nationwide tire shipping to your door or local installer. Browse 20+ premium brands, search by vehicle or tire size, and get competitive quotes.",
+  serviceType: [
+    "Tire Sales",
+    "Tire Shipping",
+    "Tire Delivery",
+    "Vehicle Tire Lookup",
+    "Tire Size Consultation",
+  ],
+  areaServed: {
+    "@type": "Country",
+    name: "United States",
+  },
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Tire Services",
+    itemListElement: [
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Free Tire Shipping",
+          description: "Free shipping on all tire orders to anywhere in the continental United States. Most orders arrive within 3-7 business days.",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Ship to Installer",
+          description: "Ship tires directly to your preferred local tire installer for convenient installation.",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Vehicle Tire Lookup",
+          description: "Find compatible tire sizes by entering your vehicle year, make, and model.",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Tire Size Search",
+          description: "Search our catalog by tire size to find all compatible tires from 20+ premium brands.",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: "Free Price Quotes",
+          description: "Request a free tire quote by phone, email, or online form. We respond within hours.",
+        },
+      },
+    ],
   },
 };
 
@@ -106,6 +186,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
         />
       </head>
       <body className="min-h-full flex flex-col">
