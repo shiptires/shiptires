@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { brands } from "@/data/brands";
 import { tireCategories } from "@/data/tire-categories";
+import { getLogoUrl } from "@/lib/api-helpers";
 import SearchPanel from "@/components/SearchPanel";
 
 const faqItems = [
@@ -208,10 +209,15 @@ export default function HomePage() {
                 className="group flex flex-col items-center gap-2 rounded-xl border border-white/10 bg-white/5 p-4 transition-all duration-300 hover:bg-white/10 hover:border-orange/40 relative overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-orange/0 group-hover:from-orange/5 to-transparent transition-all duration-300" />
-                <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/10 group-hover:border-orange/30 transition-all">
-                  <span className="text-sm font-black text-gray-300 group-hover:text-orange transition-colors">
-                    {brand.name.charAt(0)}
-                  </span>
+                <div className="relative flex h-12 w-12 items-center justify-center rounded-lg bg-white p-1.5">
+                  <Image
+                    src={getLogoUrl(brand.domain)}
+                    alt={brand.name}
+                    width={40}
+                    height={40}
+                    className="h-9 w-9 object-contain"
+                    unoptimized
+                  />
                 </div>
                 <span className="relative text-xs font-medium text-gray-400 group-hover:text-orange text-center transition-colors">
                   {brand.name}
