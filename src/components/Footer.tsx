@@ -46,7 +46,7 @@ export default function Footer() {
                 alt="Ship.Tires - Tires Delivered Fast"
                 width={280}
                 height={140}
-                className="h-20 w-auto lg:h-24"
+                className="h-24 w-auto lg:h-28"
               />
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-gray-300">
