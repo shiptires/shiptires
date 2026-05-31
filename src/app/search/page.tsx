@@ -84,7 +84,7 @@ function SearchContent() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Tire name, brand..."
-                  className="w-full rounded-lg border border-white/10 bg-navy px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:border-orange/50 focus:outline-none"
+                  className="w-full rounded-lg border border-white/10 bg-navy px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-orange/50 focus:outline-none"
                 />
               </div>
 
@@ -123,7 +123,7 @@ function SearchContent() {
                   value={filterSize}
                   onChange={(e) => setFilterSize(e.target.value)}
                   placeholder="e.g. 225/65R17"
-                  className="w-full rounded-lg border border-white/10 bg-navy px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:border-orange/50 focus:outline-none"
+                  className="w-full rounded-lg border border-white/10 bg-navy px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-orange/50 focus:outline-none"
                 />
               </div>
 

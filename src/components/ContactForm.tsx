@@ -60,7 +60,7 @@ export default function ContactForm() {
             name="name"
             id="name"
             required
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none"
+            className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none"
           />
         </div>
         <div>
@@ -72,7 +72,7 @@ export default function ContactForm() {
             name="email"
             id="email"
             required
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none"
+            className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none"
           />
         </div>
       </div>
@@ -85,7 +85,7 @@ export default function ContactForm() {
             type="tel"
             name="phone"
             id="phone"
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none"
+            className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none"
           />
         </div>
         <div>
@@ -95,7 +95,7 @@ export default function ContactForm() {
           <select
             name="subject"
             id="subject"
-            className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none"
+            className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-4 py-2.5 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none"
           >
             <option value="quote">Request a Quote</option>
             <option value="sizing">Tire Sizing Help</option>
@@ -115,7 +115,7 @@ export default function ContactForm() {
           rows={5}
           required
           placeholder="Tell us what tires you're looking for, your vehicle info, or any questions..."
-          className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none"
+          className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none"
         />
       </div>
 

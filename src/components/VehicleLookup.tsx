@@ -91,7 +91,7 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
           id="v-year"
           value={year}
           onChange={(e) => setYear(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none bg-white"
+          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none bg-white text-gray-900"
         >
           <option value="">Select Year</option>
           {yearRange.map((y) => (
@@ -110,7 +110,7 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
           value={make}
           onChange={(e) => setMake(e.target.value)}
           disabled={!year || loading === "makes"}
-          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none bg-white text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
         >
           <option value="">{loading === "makes" ? "Loading..." : "Select Make"}</option>
           {makes.map((m) => (
@@ -129,7 +129,7 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
           value={model}
           onChange={(e) => setModel(e.target.value)}
           disabled={!make || loading === "models"}
-          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none bg-white text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
         >
           <option value="">{loading === "models" ? "Loading..." : "Select Model"}</option>
           {models.map((m) => (

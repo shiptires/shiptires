@@ -39,7 +39,7 @@ export default function SizeSearch() {
               setError("");
             }}
             placeholder="225/65R17"
-            className="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none"
+            className="flex-1 rounded-lg border border-gray-300 bg-white text-gray-900 px-4 py-3 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none"
           />
           <button
             type="submit"

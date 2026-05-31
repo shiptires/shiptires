@@ -47,7 +47,7 @@ export default function OrderTracking() {
                 setStatus("idle");
               }}
               placeholder="e.g. ST-10042"
-              className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-orange focus:ring-2 focus:ring-orange/20 focus:outline-none"
+              className="block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-orange focus:ring-2 focus:ring-orange/20 focus:outline-none"
             />
           </div>
           <div>
@@ -63,7 +63,7 @@ export default function OrderTracking() {
                 setStatus("idle");
               }}
               placeholder="you@example.com"
-              className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-orange focus:ring-2 focus:ring-orange/20 focus:outline-none"
+              className="block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-4 py-2.5 text-sm placeholder:text-gray-400 focus:border-orange focus:ring-2 focus:ring-orange/20 focus:outline-none"
             />
           </div>
         </div>

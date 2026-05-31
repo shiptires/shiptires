@@ -67,25 +67,25 @@ Notes: ${data.get("notes") || "None"}`,
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="qname" className="block text-sm font-medium text-gray-700">Name *</label>
-          <input type="text" name="name" id="qname" required className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
+          <input type="text" name="name" id="qname" required className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
         </div>
         <div>
           <label htmlFor="qphone" className="block text-sm font-medium text-gray-700">Phone *</label>
-          <input type="tel" name="phone" id="qphone" required className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
+          <input type="tel" name="phone" id="qphone" required className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
         </div>
       </div>
       <div>
         <label htmlFor="qemail" className="block text-sm font-medium text-gray-700">Email *</label>
-        <input type="email" name="email" id="qemail" required className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
+        <input type="email" name="email" id="qemail" required className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="tireSize" className="block text-sm font-medium text-gray-700">Tire Size *</label>
-          <input type="text" name="tireSize" id="tireSize" required defaultValue={defaultSize} placeholder="e.g. 225/65R17" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
+          <input type="text" name="tireSize" id="tireSize" required defaultValue={defaultSize} placeholder="e.g. 225/65R17" className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
         </div>
         <div>
           <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">Qty</label>
-          <select name="quantity" id="quantity" defaultValue="4" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none">
+          <select name="quantity" id="quantity" defaultValue="4" className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none">
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="4">4</option>
@@ -96,24 +96,24 @@ Notes: ${data.get("notes") || "None"}`,
       <div className="grid grid-cols-3 gap-3">
         <div>
           <label htmlFor="vehicleYear" className="block text-sm font-medium text-gray-700">Year</label>
-          <input type="text" name="vehicleYear" id="vehicleYear" placeholder="2024" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
+          <input type="text" name="vehicleYear" id="vehicleYear" placeholder="2024" className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
         </div>
         <div>
           <label htmlFor="vehicleMake" className="block text-sm font-medium text-gray-700">Make</label>
-          <input type="text" name="vehicleMake" id="vehicleMake" placeholder="Toyota" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
+          <input type="text" name="vehicleMake" id="vehicleMake" placeholder="Toyota" className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
         </div>
         <div>
           <label htmlFor="vehicleModel" className="block text-sm font-medium text-gray-700">Model</label>
-          <input type="text" name="vehicleModel" id="vehicleModel" placeholder="Camry" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
+          <input type="text" name="vehicleModel" id="vehicleModel" placeholder="Camry" className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
         </div>
       </div>
       <div>
         <label htmlFor="shippingZip" className="block text-sm font-medium text-gray-700">Shipping ZIP Code *</label>
-        <input type="text" name="shippingZip" id="shippingZip" required placeholder="95240" pattern="[0-9]{5}" className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
+        <input type="text" name="shippingZip" id="shippingZip" required placeholder="95240" pattern="[0-9]{5}" className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
       </div>
       <div>
         <label htmlFor="notes" className="block text-sm font-medium text-gray-700">Notes</label>
-        <textarea name="notes" id="notes" rows={2} placeholder="Any special requests..." className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
+        <textarea name="notes" id="notes" rows={2} placeholder="Any special requests..." className="mt-1 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none" />
       </div>
 
       {status === "error" && (
