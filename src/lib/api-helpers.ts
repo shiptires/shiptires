@@ -25,16 +25,9 @@ export async function fetchTireSizes(
   model: string,
   year: string
 ) {
-  const apiKey = process.env.VDIM_API_KEY;
-  if (!apiKey) return null;
-
   try {
     const res = await fetch(
-      `https://api.vdimsoftware.com/v1/tire-sizes?make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&year=${year}`,
-      {
-        headers: { Authorization: `Bearer ${apiKey}` },
-        next: { revalidate: 86400 },
-      }
+      `/api/vehicle/tires?make=${encodeURIComponent(make)}&model=${encodeURIComponent(model)}&year=${year}`
     );
     if (!res.ok) return null;
     return await res.json();
@@ -44,8 +37,7 @@ export async function fetchTireSizes(
 }
 
 export function getLogoUrl(domain: string): string {
-  const token = process.env.NEXT_PUBLIC_LOGO_DEV_TOKEN;
-  if (!token) return "";
+  const token = process.env.NEXT_PUBLIC_LOGO_DEV_TOKEN || "pk_ZRXBnppQSK6bIlXZ0EiXIg";
   return `https://img.logo.dev/${domain}?token=${token}&size=120&format=png`;
 }
 

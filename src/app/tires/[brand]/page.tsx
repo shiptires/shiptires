@@ -50,21 +50,16 @@ export default async function BrandPage({
             <span className="text-sm text-gray-300">{brand.name}</span>
           </div>
           <div className="mt-6 flex items-center gap-6">
-            {logoUrl ? (
-              <div className="flex-shrink-0 rounded-xl bg-white p-3">
-                <Image
-                  src={logoUrl}
-                  alt={brand.name}
-                  width={80}
-                  height={80}
-                  className="h-16 w-16 object-contain"
-                />
-              </div>
-            ) : (
-              <div className="flex h-20 w-20 items-center justify-center rounded-xl bg-white text-2xl font-bold text-gray-600">
-                {brand.name.charAt(0)}
-              </div>
-            )}
+            <div className="flex-shrink-0 rounded-xl bg-white p-3">
+              <Image
+                src={logoUrl}
+                alt={brand.name}
+                width={80}
+                height={80}
+                className="h-16 w-16 object-contain"
+                unoptimized
+              />
+            </div>
             <div>
               <h1 className="text-3xl font-bold sm:text-4xl">{brand.name} Tires</h1>
               <p className="mt-1 text-gray-400">

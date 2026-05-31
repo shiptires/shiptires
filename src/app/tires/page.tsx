@@ -35,19 +35,14 @@ export default function TiresPage() {
               className="group flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-blue"
             >
               <div className="flex-shrink-0">
-                {getLogoUrl(brand.domain) ? (
-                  <Image
-                    src={getLogoUrl(brand.domain)}
-                    alt={brand.name}
-                    width={60}
-                    height={60}
-                    className="h-12 w-12 object-contain"
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-200 text-lg font-bold text-gray-600">
-                    {brand.name.charAt(0)}
-                  </div>
-                )}
+                <Image
+                  src={getLogoUrl(brand.domain)}
+                  alt={brand.name}
+                  width={60}
+                  height={60}
+                  className="h-12 w-12 object-contain"
+                  unoptimized
+                />
               </div>
               <div className="min-w-0">
                 <h2 className="font-semibold text-gray-900 group-hover:text-blue transition-colors">
