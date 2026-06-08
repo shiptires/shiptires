@@ -30,35 +30,9 @@ Ship.Tires is a US-based online tire retailer offering free nationwide shipping 
 - Touring Tires
 - Truck & SUV Tires
 
-## Top Brands
+## Brands Carried
 
-- Michelin
-- Goodyear
-- Bridgestone
-- Continental
-- Pirelli
-- Cooper
-- Hankook
-- Yokohama
-- Toyo
-- Falken
-- BFGoodrich
-- Firestone
-- General Tire
-- Kumho
-- Nitto
-
-## Key Pages
-
-- Homepage: https://ship.tires
-- Browse All Tires: https://ship.tires/tires
-- Vehicle Lookup: https://ship.tires/vehicle-lookup
-- Shipping Info: https://ship.tires/shipping
-- About Us: https://ship.tires/about
-- Contact / Get a Quote: https://ship.tires/contact
-- FAQ: https://ship.tires/faq
-- Blog: https://ship.tires/blog
-- Racing: https://ship.tires/racing
+Michelin, Goodyear, Bridgestone, Continental, Pirelli, Cooper, Hankook, Yokohama, Toyo, Falken, BFGoodrich, Firestone, General Tire, Kumho, Nitto
 
 ## How It Works
 
@@ -72,7 +46,33 @@ Ship.Tires is a US-based online tire retailer offering free nationwide shipping 
 - Based in Sacramento, California
 - Ships to all 50 US states (free shipping continental US)
 - Delivery typically within 3-7 business days
+- 250+ city pages for local tire shipping info
+
+## Key Pages (with Markdown endpoints)
+
+| Page | URL | Markdown |
+|------|-----|----------|
+| Homepage | https://ship.tires | https://ship.tires/.md |
+| All Tires | https://ship.tires/tires | https://ship.tires/tires.md |
+| Vehicle Lookup | https://ship.tires/vehicle-lookup | https://ship.tires/vehicle-lookup.md |
+| Rankings | https://ship.tires/rankings | https://ship.tires/rankings.md |
+| Shipping Info | https://ship.tires/shipping | https://ship.tires/shipping.md |
+| About Us | https://ship.tires/about | https://ship.tires/about.md |
+| Contact | https://ship.tires/contact | https://ship.tires/contact.md |
+| FAQ | https://ship.tires/faq | https://ship.tires/faq.md |
+| Blog | https://ship.tires/blog | https://ship.tires/blog.md |
+| Racing | https://ship.tires/racing | https://ship.tires/racing.md |
+| Racing Tech | https://ship.tires/racing-tech | https://ship.tires/racing-tech.md |
+| Search | https://ship.tires/search | https://ship.tires/search.md |
+
+## National Coverage
+
+250+ city pages across all 50 US states. Pattern: https://ship.tires/{state}/{city-tires}.md
+
+## Markdown Endpoints
+
+Every page on ship.tires has a .md endpoint returning clean markdown. Append .md to any URL.
 
 ## For more details
 
-See https://ship.tires/llm-full.txt for comprehensive product and brand information.
+See https://ship.tires/llm-full.txt for comprehensive product, brand, and location information.

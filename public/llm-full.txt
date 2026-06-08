@@ -206,29 +206,232 @@ A tire size like **225/65R17** breaks down as:
 
 ---
 
-## Site Structure
+## Site Structure & Markdown Endpoints
 
-| Page | URL | Purpose |
-|------|-----|---------|
-| Home | https://ship.tires | Main landing, search, featured brands |
-| All Tires | https://ship.tires/tires | Browse all brands and models |
-| Vehicle Lookup | https://ship.tires/vehicle-lookup | Find tires by year/make/model |
-| Search | https://ship.tires/search | Search by size, type, brand |
-| About | https://ship.tires/about | Company story and mission |
-| Contact | https://ship.tires/contact | Quote request form, phone, email |
-| Shipping | https://ship.tires/shipping | Shipping policy and details |
-| FAQ | https://ship.tires/faq | Common questions answered |
-| Blog | https://ship.tires/blog | Tire guides, tips, news |
-| Racing | https://ship.tires/racing | Racing tire programs |
+Every page on ship.tires has a clean markdown (.md) endpoint for AI consumption. Append `.md` to any URL.
+
+| Page | URL | Markdown |
+|------|-----|----------|
+| Home | https://ship.tires | https://ship.tires/.md |
+| All Tires | https://ship.tires/tires | https://ship.tires/tires.md |
+| Vehicle Lookup | https://ship.tires/vehicle-lookup | https://ship.tires/vehicle-lookup.md |
+| Rankings | https://ship.tires/rankings | https://ship.tires/rankings.md |
+| Search | https://ship.tires/search | https://ship.tires/search.md |
+| About | https://ship.tires/about | https://ship.tires/about.md |
+| Contact | https://ship.tires/contact | https://ship.tires/contact.md |
+| Shipping | https://ship.tires/shipping | https://ship.tires/shipping.md |
+| FAQ | https://ship.tires/faq | https://ship.tires/faq.md |
+| Blog | https://ship.tires/blog | https://ship.tires/blog.md |
+| Racing | https://ship.tires/racing | https://ship.tires/racing.md |
+| Racing Tech | https://ship.tires/racing-tech | https://ship.tires/racing-tech.md |
+
+### Brand Pages (15 brands)
+Pattern: `https://ship.tires/tires/{brand-slug}` → `.md` at `https://ship.tires/tires/{brand-slug}.md`
+
+- /tires/michelin — Michelin (France, est. 1889)
+- /tires/goodyear — Goodyear (USA, est. 1898)
+- /tires/bridgestone — Bridgestone (Japan, est. 1931)
+- /tires/continental — Continental (Germany, est. 1871)
+- /tires/pirelli — Pirelli (Italy, est. 1872)
+- /tires/cooper — Cooper (USA, est. 1914)
+- /tires/hankook — Hankook (South Korea, est. 1941)
+- /tires/yokohama — Yokohama (Japan, est. 1917)
+- /tires/toyo — Toyo (Japan, est. 1945)
+- /tires/falken — Falken (Japan, est. 1983)
+- /tires/bfgoodrich — BFGoodrich (USA, est. 1870)
+- /tires/firestone — Firestone (USA, est. 1900)
+- /tires/general-tire — General Tire (USA, est. 1915)
+- /tires/kumho — Kumho (South Korea, est. 1960)
+- /tires/nitto — Nitto (Japan, est. 1949)
+
+### Model Pages (100+)
+Pattern: `https://ship.tires/tires/{brand}/{model-slug}.md`
+Example: https://ship.tires/tires/michelin/pilot-sport-4s.md
+
+### Blog Posts
+Pattern: `https://ship.tires/blog/{slug}.md`
+- /blog/how-to-read-tire-size-numbers
+- /blog/all-season-vs-winter-tires
+- /blog/when-to-replace-your-tires-warning-signs
+- /blog/ultimate-guide-tire-speed-ratings
+- /blog/how-to-choose-right-tires-for-your-vehicle
+- /blog/tire-shipping-101-what-to-expect
+
+### Racing Articles
+Pattern: `https://ship.tires/racing/{series}/{slug}.md`
+Series: f1, nascar, le-mans, indycar
+
+### Racing Tech Articles
+Pattern: `https://ship.tires/racing-tech/{slug}.md`
+
+---
+
+## National Coverage — All 50 States + DC (250+ Cities)
+
+Ship.Tires has dedicated local tire shipping pages for every major US city.
+Pattern: `https://ship.tires/{state-slug}/{city-slug}` → Markdown: append `.md`
+
+### Alabama (AL)
+- /alabama/birmingham-tires, /alabama/montgomery-tires, /alabama/huntsville-tires, /alabama/mobile-tires, /alabama/tuscaloosa-tires
+
+### Alaska (AK)
+- /alaska/anchorage-tires, /alaska/fairbanks-tires, /alaska/juneau-tires, /alaska/wasilla-tires, /alaska/sitka-tires
+
+### Arizona (AZ)
+- /arizona/phoenix-tires, /arizona/tucson-tires, /arizona/mesa-tires, /arizona/chandler-tires, /arizona/scottsdale-tires
+
+### Arkansas (AR)
+- /arkansas/little-rock-tires, /arkansas/fort-smith-tires, /arkansas/fayetteville-tires, /arkansas/springdale-tires, /arkansas/jonesboro-tires
+
+### California (CA)
+- /california/los-angeles-tires, /california/san-francisco-tires, /california/san-diego-tires, /california/san-jose-tires, /california/sacramento-tires
+
+### Colorado (CO)
+- /colorado/denver-tires, /colorado/colorado-springs-tires, /colorado/aurora-tires, /colorado/fort-collins-tires, /colorado/lakewood-tires
+
+### Connecticut (CT)
+- /connecticut/bridgeport-tires, /connecticut/new-haven-tires, /connecticut/hartford-tires, /connecticut/stamford-tires, /connecticut/waterbury-tires
+
+### Delaware (DE)
+- /delaware/wilmington-tires, /delaware/dover-tires, /delaware/newark-tires, /delaware/middletown-tires, /delaware/bear-tires
+
+### Florida (FL)
+- /florida/miami-tires, /florida/orlando-tires, /florida/tampa-tires, /florida/jacksonville-tires, /florida/fort-lauderdale-tires
+
+### Georgia (GA)
+- /georgia/atlanta-tires, /georgia/savannah-tires, /georgia/augusta-tires, /georgia/columbus-tires, /georgia/macon-tires
+
+### Hawaii (HI)
+- /hawaii/honolulu-tires, /hawaii/pearl-city-tires, /hawaii/hilo-tires, /hawaii/kailua-tires, /hawaii/waipahu-tires
+
+### Idaho (ID)
+- /idaho/boise-tires, /idaho/meridian-tires, /idaho/nampa-tires, /idaho/idaho-falls-tires, /idaho/pocatello-tires
+
+### Illinois (IL)
+- /illinois/chicago-tires, /illinois/aurora-tires, /illinois/naperville-tires, /illinois/joliet-tires, /illinois/rockford-tires
+
+### Indiana (IN)
+- /indiana/indianapolis-tires, /indiana/fort-wayne-tires, /indiana/evansville-tires, /indiana/south-bend-tires, /indiana/carmel-tires
+
+### Iowa (IA)
+- /iowa/des-moines-tires, /iowa/cedar-rapids-tires, /iowa/davenport-tires, /iowa/sioux-city-tires, /iowa/iowa-city-tires
+
+### Kansas (KS)
+- /kansas/wichita-tires, /kansas/overland-park-tires, /kansas/kansas-city-tires, /kansas/olathe-tires, /kansas/topeka-tires
+
+### Kentucky (KY)
+- /kentucky/louisville-tires, /kentucky/lexington-tires, /kentucky/bowling-green-tires, /kentucky/owensboro-tires, /kentucky/covington-tires
+
+### Louisiana (LA)
+- /louisiana/new-orleans-tires, /louisiana/baton-rouge-tires, /louisiana/shreveport-tires, /louisiana/lafayette-tires, /louisiana/lake-charles-tires
+
+### Maine (ME)
+- /maine/portland-tires, /maine/lewiston-tires, /maine/bangor-tires, /maine/south-portland-tires, /maine/auburn-tires
+
+### Maryland (MD)
+- /maryland/baltimore-tires, /maryland/frederick-tires, /maryland/rockville-tires, /maryland/gaithersburg-tires, /maryland/bowie-tires
+
+### Massachusetts (MA)
+- /massachusetts/boston-tires, /massachusetts/worcester-tires, /massachusetts/springfield-tires, /massachusetts/cambridge-tires, /massachusetts/lowell-tires
+
+### Michigan (MI)
+- /michigan/detroit-tires, /michigan/grand-rapids-tires, /michigan/warren-tires, /michigan/sterling-heights-tires, /michigan/ann-arbor-tires
+
+### Minnesota (MN)
+- /minnesota/minneapolis-tires, /minnesota/saint-paul-tires, /minnesota/rochester-tires, /minnesota/duluth-tires, /minnesota/bloomington-tires
+
+### Mississippi (MS)
+- /mississippi/jackson-tires, /mississippi/gulfport-tires, /mississippi/southaven-tires, /mississippi/hattiesburg-tires, /mississippi/biloxi-tires
+
+### Missouri (MO)
+- /missouri/kansas-city-tires, /missouri/saint-louis-tires, /missouri/springfield-tires, /missouri/columbia-tires, /missouri/independence-tires
+
+### Montana (MT)
+- /montana/billings-tires, /montana/missoula-tires, /montana/great-falls-tires, /montana/bozeman-tires, /montana/butte-tires
+
+### Nebraska (NE)
+- /nebraska/omaha-tires, /nebraska/lincoln-tires, /nebraska/bellevue-tires, /nebraska/grand-island-tires, /nebraska/kearney-tires
+
+### Nevada (NV)
+- /nevada/las-vegas-tires, /nevada/henderson-tires, /nevada/reno-tires, /nevada/north-las-vegas-tires, /nevada/sparks-tires
+
+### New Hampshire (NH)
+- /new-hampshire/manchester-tires, /new-hampshire/nashua-tires, /new-hampshire/concord-tires, /new-hampshire/derry-tires, /new-hampshire/dover-tires
+
+### New Jersey (NJ)
+- /new-jersey/newark-tires, /new-jersey/jersey-city-tires, /new-jersey/paterson-tires, /new-jersey/elizabeth-tires, /new-jersey/trenton-tires
+
+### New Mexico (NM)
+- /new-mexico/albuquerque-tires, /new-mexico/las-cruces-tires, /new-mexico/rio-rancho-tires, /new-mexico/santa-fe-tires, /new-mexico/roswell-tires
+
+### New York (NY)
+- /new-york/new-york-city-tires, /new-york/buffalo-tires, /new-york/rochester-tires, /new-york/yonkers-tires, /new-york/syracuse-tires
+
+### North Carolina (NC)
+- /north-carolina/charlotte-tires, /north-carolina/raleigh-tires, /north-carolina/greensboro-tires, /north-carolina/durham-tires, /north-carolina/winston-salem-tires
+
+### North Dakota (ND)
+- /north-dakota/fargo-tires, /north-dakota/bismarck-tires, /north-dakota/grand-forks-tires, /north-dakota/minot-tires, /north-dakota/west-fargo-tires
+
+### Ohio (OH)
+- /ohio/columbus-tires, /ohio/cleveland-tires, /ohio/cincinnati-tires, /ohio/toledo-tires, /ohio/akron-tires
+
+### Oklahoma (OK)
+- /oklahoma/oklahoma-city-tires, /oklahoma/tulsa-tires, /oklahoma/norman-tires, /oklahoma/broken-arrow-tires, /oklahoma/edmond-tires
+
+### Oregon (OR)
+- /oregon/portland-tires, /oregon/salem-tires, /oregon/eugene-tires, /oregon/gresham-tires, /oregon/hillsboro-tires
+
+### Pennsylvania (PA)
+- /pennsylvania/philadelphia-tires, /pennsylvania/pittsburgh-tires, /pennsylvania/allentown-tires, /pennsylvania/erie-tires, /pennsylvania/reading-tires
+
+### Rhode Island (RI)
+- /rhode-island/providence-tires, /rhode-island/warwick-tires, /rhode-island/cranston-tires, /rhode-island/pawtucket-tires, /rhode-island/east-providence-tires
+
+### South Carolina (SC)
+- /south-carolina/charleston-tires, /south-carolina/columbia-tires, /south-carolina/north-charleston-tires, /south-carolina/mount-pleasant-tires, /south-carolina/rock-hill-tires
+
+### South Dakota (SD)
+- /south-dakota/sioux-falls-tires, /south-dakota/rapid-city-tires, /south-dakota/aberdeen-tires, /south-dakota/brookings-tires, /south-dakota/watertown-tires
+
+### Tennessee (TN)
+- /tennessee/nashville-tires, /tennessee/memphis-tires, /tennessee/knoxville-tires, /tennessee/chattanooga-tires, /tennessee/clarksville-tires
+
+### Texas (TX)
+- /texas/houston-tires, /texas/dallas-tires, /texas/san-antonio-tires, /texas/austin-tires, /texas/fort-worth-tires
+
+### Utah (UT)
+- /utah/salt-lake-city-tires, /utah/west-valley-city-tires, /utah/provo-tires, /utah/west-jordan-tires, /utah/orem-tires
+
+### Vermont (VT)
+- /vermont/burlington-tires, /vermont/south-burlington-tires, /vermont/rutland-tires, /vermont/barre-tires, /vermont/montpelier-tires
+
+### Virginia (VA)
+- /virginia/virginia-beach-tires, /virginia/norfolk-tires, /virginia/chesapeake-tires, /virginia/richmond-tires, /virginia/newport-news-tires
+
+### Washington (WA)
+- /washington/seattle-tires, /washington/spokane-tires, /washington/tacoma-tires, /washington/vancouver-tires, /washington/bellevue-tires
+
+### West Virginia (WV)
+- /west-virginia/charleston-tires, /west-virginia/huntington-tires, /west-virginia/morgantown-tires, /west-virginia/parkersburg-tires, /west-virginia/wheeling-tires
+
+### Wisconsin (WI)
+- /wisconsin/milwaukee-tires, /wisconsin/madison-tires, /wisconsin/green-bay-tires, /wisconsin/kenosha-tires, /wisconsin/racine-tires
+
+### Wyoming (WY)
+- /wyoming/cheyenne-tires, /wyoming/casper-tires, /wyoming/laramie-tires, /wyoming/gillette-tires, /wyoming/rock-springs-tires
+
+### District of Columbia (DC)
+- /district-of-columbia/washington-tires, /district-of-columbia/georgetown-tires, /district-of-columbia/capitol-hill-tires, /district-of-columbia/dupont-circle-tires, /district-of-columbia/adams-morgan-tires
 
 ---
 
 ## Structured Data (Schema.org)
 
 Ship.Tires implements the following schema types:
-- Organization
-- Store
-- OfferCatalog (Tire categories)
+- Organization + Store
+- Service (Nationwide Tire Shipping & Delivery)
+- OfferCatalog (Tire categories & services)
 - SearchAction (site search)
 - FAQPage (on homepage and FAQ page)
 - Product (on individual tire model pages)

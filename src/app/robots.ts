@@ -10,27 +10,27 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "GPTBot",
-        allow: ["/", "/llm.txt", "/llm-full.txt"],
+        allow: ["/", "/llm.txt", "/llms.txt", "/llm-full.txt"],
         disallow: ["/api/"],
       },
       {
         userAgent: "ChatGPT-User",
-        allow: ["/", "/llm.txt", "/llm-full.txt"],
+        allow: ["/", "/llm.txt", "/llms.txt", "/llm-full.txt"],
         disallow: ["/api/"],
       },
       {
         userAgent: "Claude-Web",
-        allow: ["/", "/llm.txt", "/llm-full.txt"],
+        allow: ["/", "/llm.txt", "/llms.txt", "/llm-full.txt"],
         disallow: ["/api/"],
       },
       {
         userAgent: "PerplexityBot",
-        allow: ["/", "/llm.txt", "/llm-full.txt"],
+        allow: ["/", "/llm.txt", "/llms.txt", "/llm-full.txt"],
         disallow: ["/api/"],
       },
       {
         userAgent: "Applebot-Extended",
-        allow: ["/", "/llm.txt", "/llm-full.txt"],
+        allow: ["/", "/llm.txt", "/llms.txt", "/llm-full.txt"],
         disallow: ["/api/"],
       },
     ],
