@@ -19,10 +19,13 @@ export const dynamicParams = true;
 
 export async function generateStaticParams() {
   const params: { state: string; city: string; brand: string }[] = [];
-  // Pre-generate California
+  // Pre-generate top 10 California cities × all brands (rest via ISR)
   const ca = states.find((s) => s.slug === "california");
   if (ca) {
-    for (const city of ca.cities) {
+    const topCities = [...ca.cities]
+      .sort((a, b) => b.population - a.population)
+      .slice(0, 10);
+    for (const city of topCities) {
       for (const brand of brands) {
         params.push({
           state: "california",

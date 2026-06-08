@@ -1,6 +1,6 @@
 {
   "name": "Ship.Tires",
-  "description": "Nationwide online tire retailer with free shipping on every order. 21 premium brands, 80+ models, 800+ sizes for every vehicle type. Ships free to all 50 US states.",
+  "description": "Nationwide online tire retailer with free shipping on every order. 21 premium brands, 80+ models, 800+ sizes shipped free to 1,000+ US cities. Find tires near me — shipped free to your door or local installer.",
   "url": "https://ship.tires",
   "provider": {
     "name": "Ship.Tires",
@@ -45,7 +45,7 @@
       "Ironman",
       "Sumitomo"
     ],
-    "search_by": ["tire_size", "vehicle_year_make_model", "brand"],
+    "search_by": ["tire_size", "vehicle_year_make_model", "brand", "category", "price_range", "city"],
     "shipping": {
       "free": true,
       "coverage": "all_50_us_states",
@@ -55,7 +55,21 @@
     "warranty": "manufacturer_warranty_included",
     "cities_served": "1000+"
   },
-  "endpoints": {
+  "api": {
+    "type": "openapi",
+    "url": "https://ship.tires/openapi.json",
+    "endpoints": {
+      "search_tires": "GET /api/tires/search?size=225/65R17&brand=michelin&category=all-season",
+      "list_brands": "GET /api/tires/brands",
+      "search_locations": "GET /api/locations/search?q=los+angeles&state=california",
+      "vehicle_makes": "GET /api/vehicle/makes",
+      "vehicle_models": "GET /api/vehicle/models?make=Toyota&year=2024",
+      "vehicle_tires": "GET /api/vehicle/tires?make=Toyota&model=Camry&year=2024",
+      "page_content": "GET /api/markdown?path=/tires/michelin",
+      "contact": "POST /api/contact"
+    }
+  },
+  "pages": {
     "homepage": "https://ship.tires",
     "all_tires": "https://ship.tires/tires",
     "locations": "https://ship.tires/locations",
@@ -65,10 +79,12 @@
     "faq": "https://ship.tires/faq"
   },
   "ai_readable": {
+    "openapi_spec": "https://ship.tires/openapi.json",
     "llm_txt": "https://ship.tires/llm.txt",
     "llms_txt": "https://ship.tires/llms.txt",
     "llm_full_txt": "https://ship.tires/llm-full.txt",
-    "markdown_endpoints": "Append .md to any page URL for AI-friendly markdown content"
+    "ai_plugin": "https://ship.tires/.well-known/ai-plugin.json",
+    "markdown_api": "https://ship.tires/api/markdown?path=/{page_path}"
   },
   "url_patterns": {
     "brand_page": "https://ship.tires/tires/{brand_slug}",

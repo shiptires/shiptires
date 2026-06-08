@@ -24,32 +24,10 @@ export const dynamicParams = true;
 export const revalidate = 86400; // re-validate daily
 
 export async function generateStaticParams() {
-  const params: {
-    state: string;
-    city: string;
-    brand: string;
-    size: string;
-  }[] = [];
-
-  // Pre-generate California × all brands × all sizes
-  const ca = states.find((s) => s.slug === "california");
-  if (ca) {
-    for (const city of ca.cities) {
-      for (const brand of brands) {
-        const sizes = getBrandUniqueSizes(brand);
-        for (const entry of sizes) {
-          params.push({
-            state: "california",
-            city: toLocationSlug(city.slug),
-            brand: brand.slug,
-            size: entry.slug,
-          });
-        }
-      }
-    }
-  }
-
-  return params;
+  // All brand×size pages generated on-demand via ISR (dynamicParams=true)
+  // Pre-generating 128 CA cities × 21 brands × 25+ sizes = 67K+ pages
+  // exceeds Vercel's build output manifest limit
+  return [];
 }
 
 export async function generateMetadata({

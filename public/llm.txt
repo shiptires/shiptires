@@ -42,10 +42,16 @@ All-Season, Winter/Snow, Performance, All-Terrain, Mud-Terrain, Touring, Highway
 
 Append .md to any page URL for AI-friendly markdown content.
 
-## AI Agent Discovery
+## AI Agent Discovery & API
 
+- OpenAPI 3.1 spec: https://ship.tires/openapi.json
 - Agent card: https://ship.tires/.well-known/ai-agent.json
 - AI plugin: https://ship.tires/.well-known/ai-plugin.json
+- Tire search API: GET https://ship.tires/api/tires/search?size={size}&brand={brand}
+- Vehicle lookup API: GET https://ship.tires/api/vehicle/tires?make={make}&model={model}&year={year}
+- Location search API: GET https://ship.tires/api/locations/search?q={city}
+- Brands API: GET https://ship.tires/api/tires/brands
+- Markdown API: GET https://ship.tires/api/markdown?path={page_path}
 
 ## Full details
 

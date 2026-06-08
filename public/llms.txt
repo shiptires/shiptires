@@ -89,11 +89,23 @@ Find tires near me in any of 1,000 cities. Every brand shipped free to every cit
 ### States Served (all 50)
 Alabama, Alaska, Arizona, Arkansas, California, Colorado, Connecticut, Delaware, Florida, Georgia, Hawaii, Idaho, Illinois, Indiana, Iowa, Kansas, Kentucky, Louisiana, Maine, Maryland, Massachusetts, Michigan, Minnesota, Mississippi, Missouri, Montana, Nebraska, Nevada, New Hampshire, New Jersey, New Mexico, New York, North Carolina, North Dakota, Ohio, Oklahoma, Oregon, Pennsylvania, Rhode Island, South Carolina, South Dakota, Tennessee, Texas, Utah, Vermont, Virginia, Washington, West Virginia, Wisconsin, Wyoming
 
-## AI Discovery
+## AI Discovery & API
 
+- OpenAPI spec: https://ship.tires/openapi.json (GPT Actions / AI agents)
 - Agent card: https://ship.tires/.well-known/ai-agent.json
 - AI plugin: https://ship.tires/.well-known/ai-plugin.json
 - Full inventory: https://ship.tires/llm-full.txt
+
+## API Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| GET /api/tires/search?size=225/65R17&brand=michelin | Search tires by size, brand, category, price |
+| GET /api/tires/brands | List all 21 brands with models and pricing |
+| GET /api/locations/search?q=los+angeles | Find cities with free tire shipping |
+| GET /api/vehicle/tires?make=Toyota&model=Camry&year=2024 | Look up tires by vehicle |
+| GET /api/markdown?path=/tires/michelin | Get any page as markdown |
+| POST /api/contact | Submit tire inquiry or quote request |
 
 ## Markdown Endpoints
 

@@ -1,0 +1,435 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Ship.Tires API",
+    "description": "Ship.Tires is a US-based online tire retailer offering free nationwide shipping. Search 21 brands, 80+ models, 800+ tire sizes. Find tires near me — shipped free to 1,000+ US cities. Use this API to search tires by size, brand, or category, look up tires by vehicle, find delivery locations, and get page content in markdown.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Ship.Tires",
+      "email": "info@ship.tires",
+      "url": "https://ship.tires"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://ship.tires",
+      "description": "Production"
+    }
+  ],
+  "paths": {
+    "/api/tires/search": {
+      "get": {
+        "operationId": "searchTires",
+        "summary": "Search tires by size, brand, category, or price range",
+        "description": "Search the Ship.Tires catalog. Filter by tire size (e.g., 225/65R17), brand (e.g., michelin), category (e.g., all-season), and price range. All tires ship free nationwide.",
+        "parameters": [
+          {
+            "name": "size",
+            "in": "query",
+            "description": "Tire size to search for (e.g., 225/65R17, 245/40R18). Partial matches supported.",
+            "schema": { "type": "string" },
+            "example": "225/65R17"
+          },
+          {
+            "name": "brand",
+            "in": "query",
+            "description": "Filter by brand slug or name (e.g., michelin, goodyear, bridgestone)",
+            "schema": { "type": "string" },
+            "example": "michelin"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter by tire category/type",
+            "schema": {
+              "type": "string",
+              "enum": ["all-season", "winter", "summer", "performance", "all-terrain", "mud-terrain", "highway", "touring"]
+            }
+          },
+          {
+            "name": "min_price",
+            "in": "query",
+            "description": "Minimum price filter (USD per tire)",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "max_price",
+            "in": "query",
+            "description": "Maximum price filter (USD per tire)",
+            "schema": { "type": "number" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of results to return (default 50, max 100)",
+            "schema": { "type": "integer", "default": 50, "maximum": 100 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tire search results with pricing and free shipping info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": { "type": "integer", "description": "Total number of matching tires" },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "brand": { "type": "string" },
+                          "model": { "type": "string" },
+                          "type": { "type": "string" },
+                          "size": { "type": "string" },
+                          "load_index": { "type": "integer" },
+                          "speed_rating": { "type": "string" },
+                          "price": { "type": "number", "description": "Price per tire in USD" },
+                          "warranty": { "type": "string" },
+                          "features": { "type": "array", "items": { "type": "string" } },
+                          "url": { "type": "string", "format": "uri" }
+                        }
+                      }
+                    },
+                    "shipping": { "type": "string" },
+                    "contact": {
+                      "type": "object",
+                      "properties": {
+                        "phone": { "type": "string" },
+                        "email": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tires/brands": {
+      "get": {
+        "operationId": "listBrands",
+        "summary": "List all 21 tire brands with models and pricing",
+        "description": "Returns all tire brands carried by Ship.Tires, including model details, price ranges, and direct URLs. All brands ship free nationwide.",
+        "responses": {
+          "200": {
+            "description": "Complete brand catalog",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": { "type": "integer" },
+                    "brands": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": { "type": "string" },
+                          "slug": { "type": "string" },
+                          "country": { "type": "string" },
+                          "founded": { "type": "integer" },
+                          "description": { "type": "string" },
+                          "models": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "name": { "type": "string" },
+                                "type": { "type": "string" },
+                                "warranty": { "type": "string" },
+                                "price_range": {
+                                  "type": "object",
+                                  "properties": {
+                                    "min": { "type": "number" },
+                                    "max": { "type": "number" }
+                                  }
+                                },
+                                "sizes_count": { "type": "integer" },
+                                "url": { "type": "string", "format": "uri" }
+                              }
+                            }
+                          },
+                          "url": { "type": "string", "format": "uri" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/locations/search": {
+      "get": {
+        "operationId": "searchLocations",
+        "summary": "Search cities where tires are shipped free",
+        "description": "Search 1,000+ US cities served by Ship.Tires. All locations receive free shipping. Find tires near me in any city.",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "description": "City or state name to search for (e.g., 'los angeles', 'texas')",
+            "schema": { "type": "string" },
+            "example": "los angeles"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "Filter by state slug or abbreviation (e.g., 'california' or 'CA')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum results (default 20, max 50)",
+            "schema": { "type": "integer", "default": 20, "maximum": 50 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Matching cities with population and direct URLs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": { "type": "integer" },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "city": { "type": "string" },
+                          "state": { "type": "string" },
+                          "state_abbreviation": { "type": "string" },
+                          "population": { "type": "integer" },
+                          "url": { "type": "string", "format": "uri" },
+                          "brands_available": { "type": "integer" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vehicle/makes": {
+      "get": {
+        "operationId": "getVehicleMakes",
+        "summary": "Get all vehicle makes for tire lookup",
+        "description": "Returns all vehicle makes (manufacturers) from NHTSA database. Use this as the first step in vehicle-based tire lookup.",
+        "responses": {
+          "200": {
+            "description": "List of vehicle makes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "MakeId": { "type": "integer" },
+                          "MakeName": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vehicle/models": {
+      "get": {
+        "operationId": "getVehicleModels",
+        "summary": "Get vehicle models for a given make and year",
+        "description": "Returns all models for a specific vehicle make and year. Use after getVehicleMakes to narrow down the vehicle.",
+        "parameters": [
+          {
+            "name": "make",
+            "in": "query",
+            "required": true,
+            "description": "Vehicle make name (e.g., 'Toyota', 'Honda')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "description": "Vehicle model year (e.g., '2024')",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of vehicle models",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "Results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "Model_ID": { "type": "integer" },
+                          "Model_Name": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required parameters"
+          }
+        }
+      }
+    },
+    "/api/vehicle/tires": {
+      "get": {
+        "operationId": "getVehicleTires",
+        "summary": "Get compatible tire sizes for a specific vehicle",
+        "description": "Returns tire sizes that fit a specific vehicle based on make, model, and year. Final step in vehicle-based tire lookup.",
+        "parameters": [
+          {
+            "name": "make",
+            "in": "query",
+            "required": true,
+            "description": "Vehicle make (e.g., 'Toyota')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "model",
+            "in": "query",
+            "required": true,
+            "description": "Vehicle model (e.g., 'Camry')",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "year",
+            "in": "query",
+            "required": true,
+            "description": "Vehicle year (e.g., '2024')",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Compatible tire sizes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sizes": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "description": "Compatible tire sizes (e.g., ['225/65R17', '235/60R18'])"
+                    },
+                    "year": { "type": "string" },
+                    "make": { "type": "string" },
+                    "model": { "type": "string" },
+                    "fallback": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required parameters"
+          }
+        }
+      }
+    },
+    "/api/markdown": {
+      "get": {
+        "operationId": "getPageContent",
+        "summary": "Get any Ship.Tires page as markdown",
+        "description": "Returns the content of any Ship.Tires page in AI-friendly markdown format. Use for detailed tire info, brand details, blog posts, racing content, and location pages.",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "required": true,
+            "description": "Page path (e.g., '/', '/tires/michelin', '/blog', '/faq', '/tires/michelin/pilot-sport-4s')",
+            "schema": { "type": "string" },
+            "example": "/tires/michelin"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Page content in markdown format",
+            "content": {
+              "text/markdown": {
+                "schema": { "type": "string" }
+              }
+            }
+          },
+          "404": {
+            "description": "Page not found"
+          }
+        }
+      }
+    },
+    "/api/contact": {
+      "post": {
+        "operationId": "submitInquiry",
+        "summary": "Submit a tire inquiry or quote request",
+        "description": "Send a tire inquiry, quote request, or question to Ship.Tires. Response is typically within a few hours.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "message"],
+                "properties": {
+                  "name": { "type": "string", "description": "Customer's full name" },
+                  "email": { "type": "string", "format": "email", "description": "Customer's email address" },
+                  "phone": { "type": "string", "description": "Customer's phone number (optional)" },
+                  "subject": { "type": "string", "description": "Inquiry subject (e.g., 'Tire Quote', 'Size Question')" },
+                  "message": { "type": "string", "description": "Full message including tire size, vehicle info, and quantity needed" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Inquiry submitted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields"
+          }
+        }
+      }
+    }
+  }
+}
