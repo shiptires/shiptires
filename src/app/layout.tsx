@@ -14,13 +14,19 @@ export const metadata: Metadata = {
     template: "%s | Ship.Tires",
   },
   description:
-    "Nationwide tire shipping with free delivery. Browse 20+ top brands, find the perfect fit for your vehicle, and get tires shipped to your door or local installer. Call (916) 476-7689.",
+    "Tires shipped free nationwide. Browse 21 top brands, 800+ sizes shipped free to 1,000 cities. Find tires near me — ship to your door or local installer. Call (916) 476-7689.",
   keywords: [
+    "tires near me",
     "buy tires online",
+    "tires shipped free",
+    "free tire shipping",
+    "ship tires",
     "tire shipping",
     "tires delivered",
-    "free tire shipping",
     "tire delivery",
+    "Michelin tires near me",
+    "Goodyear tires near me",
+    "Bridgestone tires near me",
     "Michelin tires",
     "Goodyear tires",
     "Bridgestone tires",
@@ -30,30 +36,33 @@ export const metadata: Metadata = {
     "tire sizes",
     "tire quotes",
     "nationwide tire delivery",
-    "ship tires",
   ],
   openGraph: {
-    title: "Ship.Tires — Tires Shipped Fast. Installed Near You.",
+    title: "Ship.Tires — Tires Shipped Free. Near You.",
     description:
-      "Free nationwide tire shipping. 20+ brands, 100+ models, delivered to your door or installer.",
+      "Free nationwide tire shipping. 21 brands, 80+ models, shipped free to 1,000 cities. Find tires near me.",
     url: "https://ship.tires",
     siteName: "Ship.Tires",
     type: "website",
     images: [
       {
-        url: "/logo.png",
+        url: "https://ship.tires/logo.png",
         width: 1200,
         height: 630,
-        alt: "Ship.Tires - Tires Delivered Fast",
+        alt: "Ship.Tires - Tires Shipped Free Nationwide",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ship.Tires — Tires Shipped Fast. Installed Near You.",
+    title: "Ship.Tires — Tires Shipped Free. Near You.",
     description:
-      "Free nationwide tire shipping. 20+ brands, 100+ models, delivered to your door or installer.",
-    images: ["/logo.png"],
+      "Free nationwide tire shipping. 21 brands, 80+ models, shipped free to 1,000 cities. Find tires near me.",
+    images: ["https://ship.tires/logo.png"],
+  },
+  icons: {
+    icon: "/icon",
+    apple: "/logo.png",
   },
   robots: {
     index: true,
@@ -74,7 +83,7 @@ const jsonLd = {
   email: "info@ship.tires",
   logo: "https://ship.tires/logo.png",
   description:
-    "Nationwide tire shipping with free delivery. Browse 20+ top brands and get tires shipped to your door or local installer.",
+    "Tires shipped free nationwide. 21 brands, 800+ sizes shipped to 1,000 cities. Free shipping on every order — ship to your door or installer near you.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Sacramento",
@@ -116,7 +125,7 @@ const serviceSchema = {
     url: "https://ship.tires",
   },
   description:
-    "Free nationwide tire shipping to your door or local installer. Browse 20+ premium brands, search by vehicle or tire size, and get competitive quotes.",
+    "Tires shipped free to your door or local installer near you. Browse 21 premium brands, search by vehicle or tire size, and get competitive quotes. Free shipping on every order.",
   serviceType: [
     "Tire Sales",
     "Tire Shipping",
