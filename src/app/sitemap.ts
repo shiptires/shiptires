@@ -27,11 +27,10 @@ export async function generateSitemaps() {
   return sitemaps;
 }
 
-export default async function sitemap({
-  id,
-}: {
-  id: number;
+export default async function sitemap(props: {
+  id: Promise<string>;
 }): Promise<MetadataRoute.Sitemap> {
+  const id = Number(await props.id);
   const baseUrl = "https://ship.tires";
 
   // Sitemap 0: Core pages
