@@ -1,0 +1,81 @@
+{
+  "name": "Ship.Tires",
+  "description": "Nationwide online tire retailer with free shipping on every order. 21 premium brands, 80+ models, 800+ sizes for every vehicle type. Ships free to all 50 US states.",
+  "url": "https://ship.tires",
+  "provider": {
+    "name": "Ship.Tires",
+    "url": "https://ship.tires",
+    "email": "info@ship.tires",
+    "phone": "(916) 476-7689"
+  },
+  "capabilities": {
+    "products": "tires",
+    "brands": 21,
+    "models": "80+",
+    "sizes": "800+",
+    "categories": [
+      "All-Season",
+      "Winter/Snow",
+      "Performance",
+      "All-Terrain",
+      "Mud-Terrain",
+      "Touring",
+      "Highway",
+      "Truck & SUV"
+    ],
+    "brand_list": [
+      "Michelin",
+      "Goodyear",
+      "Bridgestone",
+      "Continental",
+      "Pirelli",
+      "Hankook",
+      "Cooper",
+      "Firestone",
+      "BFGoodrich",
+      "Yokohama",
+      "Toyo",
+      "Falken",
+      "General Tire",
+      "Kumho",
+      "Nexen",
+      "Nitto",
+      "Dunlop",
+      "Maxxis",
+      "Ironman",
+      "Sumitomo"
+    ],
+    "search_by": ["tire_size", "vehicle_year_make_model", "brand"],
+    "shipping": {
+      "free": true,
+      "coverage": "all_50_us_states",
+      "delivery": "3-7 business days",
+      "destinations": ["home", "installer"]
+    },
+    "warranty": "manufacturer_warranty_included",
+    "cities_served": "1000+"
+  },
+  "endpoints": {
+    "homepage": "https://ship.tires",
+    "all_tires": "https://ship.tires/tires",
+    "locations": "https://ship.tires/locations",
+    "vehicle_lookup": "https://ship.tires/vehicle-lookup",
+    "rankings": "https://ship.tires/rankings",
+    "contact": "https://ship.tires/contact",
+    "faq": "https://ship.tires/faq"
+  },
+  "ai_readable": {
+    "llm_txt": "https://ship.tires/llm.txt",
+    "llms_txt": "https://ship.tires/llms.txt",
+    "llm_full_txt": "https://ship.tires/llm-full.txt",
+    "markdown_endpoints": "Append .md to any page URL for AI-friendly markdown content"
+  },
+  "url_patterns": {
+    "brand_page": "https://ship.tires/tires/{brand_slug}",
+    "model_page": "https://ship.tires/tires/{brand_slug}/{model_slug}",
+    "state_page": "https://ship.tires/locations/{state_slug}",
+    "city_page": "https://ship.tires/locations/{state_slug}/{city_slug}",
+    "city_brand_page": "https://ship.tires/locations/{state_slug}/{city_slug}/{brand_slug}",
+    "city_brand_size_page": "https://ship.tires/locations/{state_slug}/{city_slug}/{brand_slug}/{size_slug}"
+  }
+}

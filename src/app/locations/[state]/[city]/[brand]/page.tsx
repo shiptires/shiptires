@@ -50,8 +50,8 @@ export async function generateMetadata({
   const lowestPrice = Math.min(...brand.models.map((m) => m.priceRange[0]));
 
   return {
-    title: `${brand.name} Tires in ${city.name}, ${state.abbreviation} — ${sizes.length} Sizes from $${lowestPrice}`,
-    description: `Buy ${brand.name} tires with free shipping to ${city.name}, ${state.abbreviation}. ${brand.models.length} models, ${sizes.length} sizes. From $${lowestPrice}/tire. ${brand.name} ${brand.models[0]?.name}, ${brand.models[1]?.name ?? ""} & more. Delivered free.`,
+    title: `${brand.name} Tires Near Me in ${city.name}, ${state.abbreviation} — ${sizes.length} Sizes Shipped Free`,
+    description: `${brand.name} tires near me in ${city.name}, ${state.abbreviation}. ${brand.models.length} models, ${sizes.length} sizes shipped free from $${lowestPrice}/tire. Free shipping on all ${brand.name} tires. Ship to your door or installer near ${city.name}.`,
   };
 }
 
@@ -158,7 +158,7 @@ export default async function CityBrandPage({
               <span className="text-gray-300">{brand.name}</span>
             </div>
             <h1 className="mt-4 text-3xl font-bold sm:text-4xl">
-              {brand.name} Tires in {city.name}, {state.abbreviation}
+              {brand.name} Tires Near Me in {city.name}, {state.abbreviation}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-gray-300">
               <span>
@@ -181,7 +181,7 @@ export default async function CityBrandPage({
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 space-y-12">
           <div className="rounded-xl bg-white border border-gray-200 p-8 shadow-sm">
             <h2 className="text-2xl font-bold text-gray-900">
-              {brand.name} Tires Delivered Free to {city.name}
+              {brand.name} Tires Shipped Free to {city.name} — Find {brand.name} Near Me
             </h2>
             <p className="mt-4 text-gray-600 leading-relaxed">{introText}</p>
           </div>
@@ -221,12 +221,12 @@ export default async function CityBrandPage({
           {/* All Sizes */}
           <div>
             <h2 className="text-2xl font-bold text-gray-900">
-              All {brand.name} Sizes Available in {city.name} (
+              All {brand.name} Sizes Shipped Free to {city.name} (
               {uniqueSizes.length})
             </h2>
             <p className="mt-2 text-gray-600">
-              Select a size to see detailed pricing, specs, and available
-              models.
+              Select a tire size to see detailed pricing, specs, and available
+              models. Every size ships free to {city.name}.
             </p>
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {uniqueSizes.map((entry) => (
@@ -270,10 +270,10 @@ export default async function CityBrandPage({
 
           <div className="rounded-xl bg-orange p-8 text-center text-white">
             <h2 className="text-2xl font-bold">
-              Get {brand.name} Tires in {city.name}
+              Ship {brand.name} Tires to {city.name} — Free
             </h2>
             <p className="mt-2 text-white/90">
-              Free shipping. {brand.name} warranty. Expert support.
+              Free shipping on every {brand.name} tire. Shipped to your door or installer near {city.name}. {brand.name} warranty included.
             </p>
             <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link

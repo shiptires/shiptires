@@ -1,21 +1,12 @@
-export interface CityData {
-  name: string;
-  slug: string;
-  population: number;
-}
+// Script to generate the full locations.ts file with 1000+ cities
+// Run: node scripts/generate-locations.js
 
-export interface StateData {
-  name: string;
-  slug: string;
-  abbreviation: string;
-  cities: CityData[];
-}
+const fs = require('fs');
+const path = require('path');
 
-export const states: StateData[] = [
+const statesData = [
   {
-    name: "Alabama",
-    slug: "alabama",
-    abbreviation: "AL",
+    name: "Alabama", slug: "alabama", abbreviation: "AL",
     cities: [
       { name: "Birmingham", slug: "birmingham-tires", population: 200000 },
       { name: "Montgomery", slug: "montgomery-tires", population: 200000 },
@@ -35,24 +26,17 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Alaska",
-    slug: "alaska",
-    abbreviation: "AK",
+    name: "Alaska", slug: "alaska", abbreviation: "AK",
     cities: [
       { name: "Anchorage", slug: "anchorage-tires", population: 290000 },
       { name: "Fairbanks", slug: "fairbanks-tires", population: 32000 },
       { name: "Juneau", slug: "juneau-tires", population: 32000 },
       { name: "Wasilla", slug: "wasilla-tires", population: 10000 },
       { name: "Sitka", slug: "sitka-tires", population: 8500 },
-      { name: "Ketchikan", slug: "ketchikan-tires", population: 8200 },
-      { name: "Kodiak", slug: "kodiak-tires", population: 6100 },
-      { name: "Palmer", slug: "palmer-tires", population: 7000 },
     ],
   },
   {
-    name: "Arizona",
-    slug: "arizona",
-    abbreviation: "AZ",
+    name: "Arizona", slug: "arizona", abbreviation: "AZ",
     cities: [
       { name: "Phoenix", slug: "phoenix-tires", population: 1680000 },
       { name: "Tucson", slug: "tucson-tires", population: 545000 },
@@ -72,9 +56,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Arkansas",
-    slug: "arkansas",
-    abbreviation: "AR",
+    name: "Arkansas", slug: "arkansas", abbreviation: "AR",
     cities: [
       { name: "Little Rock", slug: "little-rock-tires", population: 202000 },
       { name: "Fort Smith", slug: "fort-smith-tires", population: 89000 },
@@ -86,17 +68,10 @@ export const states: StateData[] = [
       { name: "North Little Rock", slug: "north-little-rock-tires", population: 65000 },
       { name: "Bentonville", slug: "bentonville-tires", population: 54000 },
       { name: "Pine Bluff", slug: "pine-bluff-tires", population: 41000 },
-      { name: "Hot Springs", slug: "hot-springs-tires", population: 38000 },
-      { name: "Texarkana", slug: "texarkana-tires", population: 30000 },
-      { name: "Russellville", slug: "russellville-tires", population: 29000 },
-      { name: "Jacksonville", slug: "jacksonville-ar-tires", population: 28000 },
-      { name: "Cabot", slug: "cabot-tires", population: 26000 },
     ],
   },
   {
-    name: "California",
-    slug: "california",
-    abbreviation: "CA",
+    name: "California", slug: "california", abbreviation: "CA",
     cities: [
       { name: "Los Angeles", slug: "los-angeles-tires", population: 3976000 },
       { name: "San Diego", slug: "san-diego-tires", population: 1410000 },
@@ -229,9 +204,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Colorado",
-    slug: "colorado",
-    abbreviation: "CO",
+    name: "Colorado", slug: "colorado", abbreviation: "CO",
     cities: [
       { name: "Denver", slug: "denver-tires", population: 715000 },
       { name: "Colorado Springs", slug: "colorado-springs-tires", population: 478000 },
@@ -261,9 +234,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Connecticut",
-    slug: "connecticut",
-    abbreviation: "CT",
+    name: "Connecticut", slug: "connecticut", abbreviation: "CT",
     cities: [
       { name: "Bridgeport", slug: "bridgeport-tires", population: 148000 },
       { name: "New Haven", slug: "new-haven-tires", population: 134000 },
@@ -283,24 +254,17 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Delaware",
-    slug: "delaware",
-    abbreviation: "DE",
+    name: "Delaware", slug: "delaware", abbreviation: "DE",
     cities: [
       { name: "Wilmington", slug: "wilmington-de-tires", population: 71000 },
       { name: "Dover", slug: "dover-tires", population: 39000 },
       { name: "Newark", slug: "newark-de-tires", population: 33000 },
       { name: "Middletown", slug: "middletown-de-tires", population: 22000 },
       { name: "Bear", slug: "bear-tires", population: 21000 },
-      { name: "Smyrna", slug: "smyrna-de-tires", population: 12000 },
-      { name: "Milford", slug: "milford-de-tires", population: 11000 },
-      { name: "Seaford", slug: "seaford-tires", population: 8000 },
     ],
   },
   {
-    name: "Florida",
-    slug: "florida",
-    abbreviation: "FL",
+    name: "Florida", slug: "florida", abbreviation: "FL",
     cities: [
       { name: "Jacksonville", slug: "jacksonville-tires", population: 949000 },
       { name: "Miami", slug: "miami-tires", population: 442000 },
@@ -345,9 +309,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Georgia",
-    slug: "georgia",
-    abbreviation: "GA",
+    name: "Georgia", slug: "georgia", abbreviation: "GA",
     cities: [
       { name: "Atlanta", slug: "atlanta-tires", population: 498000 },
       { name: "Augusta", slug: "augusta-tires", population: 202000 },
@@ -377,24 +339,17 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Hawaii",
-    slug: "hawaii",
-    abbreviation: "HI",
+    name: "Hawaii", slug: "hawaii", abbreviation: "HI",
     cities: [
       { name: "Honolulu", slug: "honolulu-tires", population: 350000 },
       { name: "Pearl City", slug: "pearl-city-tires", population: 47000 },
       { name: "Hilo", slug: "hilo-tires", population: 45000 },
       { name: "Kailua", slug: "kailua-tires", population: 40000 },
       { name: "Waipahu", slug: "waipahu-tires", population: 38000 },
-      { name: "Kaneohe", slug: "kaneohe-tires", population: 34000 },
-      { name: "Mililani", slug: "mililani-tires", population: 28000 },
-      { name: "Kahului", slug: "kahului-tires", population: 26000 },
     ],
   },
   {
-    name: "Idaho",
-    slug: "idaho",
-    abbreviation: "ID",
+    name: "Idaho", slug: "idaho", abbreviation: "ID",
     cities: [
       { name: "Boise", slug: "boise-tires", population: 228000 },
       { name: "Meridian", slug: "meridian-tires", population: 117000 },
@@ -402,16 +357,12 @@ export const states: StateData[] = [
       { name: "Idaho Falls", slug: "idaho-falls-tires", population: 64000 },
       { name: "Caldwell", slug: "caldwell-tires", population: 60000 },
       { name: "Pocatello", slug: "pocatello-tires", population: 56000 },
-      { name: "Coeur d\'Alene", slug: "coeur-d-alene-tires", population: 53000 },
+      { name: "Coeur d'Alene", slug: "coeur-d-alene-tires", population: 53000 },
       { name: "Twin Falls", slug: "twin-falls-tires", population: 50000 },
-      { name: "Post Falls", slug: "post-falls-tires", population: 38000 },
-      { name: "Eagle", slug: "eagle-tires", population: 30000 },
     ],
   },
   {
-    name: "Illinois",
-    slug: "illinois",
-    abbreviation: "IL",
+    name: "Illinois", slug: "illinois", abbreviation: "IL",
     cities: [
       { name: "Chicago", slug: "chicago-tires", population: 2696000 },
       { name: "Aurora", slug: "aurora-il-tires", population: 197000 },
@@ -446,9 +397,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Indiana",
-    slug: "indiana",
-    abbreviation: "IN",
+    name: "Indiana", slug: "indiana", abbreviation: "IN",
     cities: [
       { name: "Indianapolis", slug: "indianapolis-tires", population: 887000 },
       { name: "Fort Wayne", slug: "fort-wayne-tires", population: 263000 },
@@ -473,9 +422,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Iowa",
-    slug: "iowa",
-    abbreviation: "IA",
+    name: "Iowa", slug: "iowa", abbreviation: "IA",
     cities: [
       { name: "Des Moines", slug: "des-moines-tires", population: 214000 },
       { name: "Cedar Rapids", slug: "cedar-rapids-tires", population: 137000 },
@@ -489,19 +436,10 @@ export const states: StateData[] = [
       { name: "Ankeny", slug: "ankeny-tires", population: 67000 },
       { name: "Dubuque", slug: "dubuque-tires", population: 59000 },
       { name: "Urbandale", slug: "urbandale-tires", population: 45000 },
-      { name: "Marion", slug: "marion-ia-tires", population: 40000 },
-      { name: "Bettendorf", slug: "bettendorf-tires", population: 36000 },
-      { name: "Mason City", slug: "mason-city-tires", population: 27000 },
-      { name: "Burlington", slug: "burlington-ia-tires", population: 25000 },
-      { name: "Coralville", slug: "coralville-tires", population: 21000 },
-      { name: "Fort Dodge", slug: "fort-dodge-tires", population: 24000 },
-      { name: "Johnston", slug: "johnston-tires", population: 22000 },
     ],
   },
   {
-    name: "Kansas",
-    slug: "kansas",
-    abbreviation: "KS",
+    name: "Kansas", slug: "kansas", abbreviation: "KS",
     cities: [
       { name: "Wichita", slug: "wichita-tires", population: 397000 },
       { name: "Overland Park", slug: "overland-park-tires", population: 197000 },
@@ -513,17 +451,10 @@ export const states: StateData[] = [
       { name: "Manhattan", slug: "manhattan-ks-tires", population: 55000 },
       { name: "Lenexa", slug: "lenexa-tires", population: 55000 },
       { name: "Salina", slug: "salina-tires", population: 47000 },
-      { name: "Hutchinson", slug: "hutchinson-tires", population: 40000 },
-      { name: "Leawood", slug: "leawood-tires", population: 34000 },
-      { name: "Garden City", slug: "garden-city-tires", population: 28000 },
-      { name: "Emporia", slug: "emporia-tires", population: 25000 },
-      { name: "Derby", slug: "derby-tires", population: 25000 },
     ],
   },
   {
-    name: "Kentucky",
-    slug: "kentucky",
-    abbreviation: "KY",
+    name: "Kentucky", slug: "kentucky", abbreviation: "KY",
     cities: [
       { name: "Louisville", slug: "louisville-tires", population: 633000 },
       { name: "Lexington", slug: "lexington-tires", population: 322000 },
@@ -543,9 +474,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Louisiana",
-    slug: "louisiana",
-    abbreviation: "LA",
+    name: "Louisiana", slug: "louisiana", abbreviation: "LA",
     cities: [
       { name: "New Orleans", slug: "new-orleans-tires", population: 383000 },
       { name: "Baton Rouge", slug: "baton-rouge-tires", population: 227000 },
@@ -565,24 +494,17 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Maine",
-    slug: "maine",
-    abbreviation: "ME",
+    name: "Maine", slug: "maine", abbreviation: "ME",
     cities: [
       { name: "Portland", slug: "portland-me-tires", population: 68000 },
       { name: "Lewiston", slug: "lewiston-tires", population: 36000 },
       { name: "Bangor", slug: "bangor-tires", population: 32000 },
       { name: "South Portland", slug: "south-portland-tires", population: 26000 },
       { name: "Auburn", slug: "auburn-me-tires", population: 24000 },
-      { name: "Biddeford", slug: "biddeford-tires", population: 22000 },
-      { name: "Scarborough", slug: "scarborough-tires", population: 21000 },
-      { name: "Brunswick", slug: "brunswick-tires", population: 21000 },
     ],
   },
   {
-    name: "Maryland",
-    slug: "maryland",
-    abbreviation: "MD",
+    name: "Maryland", slug: "maryland", abbreviation: "MD",
     cities: [
       { name: "Baltimore", slug: "baltimore-tires", population: 585000 },
       { name: "Columbia", slug: "columbia-md-tires", population: 104000 },
@@ -607,9 +529,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Massachusetts",
-    slug: "massachusetts",
-    abbreviation: "MA",
+    name: "Massachusetts", slug: "massachusetts", abbreviation: "MA",
     cities: [
       { name: "Boston", slug: "boston-tires", population: 675000 },
       { name: "Worcester", slug: "worcester-tires", population: 206000 },
@@ -634,9 +554,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Michigan",
-    slug: "michigan",
-    abbreviation: "MI",
+    name: "Michigan", slug: "michigan", abbreviation: "MI",
     cities: [
       { name: "Detroit", slug: "detroit-tires", population: 639000 },
       { name: "Grand Rapids", slug: "grand-rapids-tires", population: 198000 },
@@ -666,9 +584,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Minnesota",
-    slug: "minnesota",
-    abbreviation: "MN",
+    name: "Minnesota", slug: "minnesota", abbreviation: "MN",
     cities: [
       { name: "Minneapolis", slug: "minneapolis-tires", population: 429000 },
       { name: "St Paul", slug: "st-paul-tires", population: 311000 },
@@ -688,9 +604,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Mississippi",
-    slug: "mississippi",
-    abbreviation: "MS",
+    name: "Mississippi", slug: "mississippi", abbreviation: "MS",
     cities: [
       { name: "Jackson", slug: "jackson-ms-tires", population: 153000 },
       { name: "Gulfport", slug: "gulfport-tires", population: 72000 },
@@ -702,25 +616,18 @@ export const states: StateData[] = [
       { name: "Meridian", slug: "meridian-tires", population: 37000 },
       { name: "Pearl", slug: "pearl-tires", population: 26000 },
       { name: "Madison", slug: "madison-ms-tires", population: 26000 },
-      { name: "Clinton", slug: "clinton-ms-tires", population: 25000 },
-      { name: "Ridgeland", slug: "ridgeland-tires", population: 24000 },
-      { name: "Starkville", slug: "starkville-tires", population: 25000 },
-      { name: "Columbus", slug: "columbus-ms-tires", population: 23000 },
-      { name: "Vicksburg", slug: "vicksburg-tires", population: 22000 },
     ],
   },
   {
-    name: "Missouri",
-    slug: "missouri",
-    abbreviation: "MO",
+    name: "Missouri", slug: "missouri", abbreviation: "MO",
     cities: [
       { name: "Kansas City", slug: "kansas-city-mo-tires", population: 508000 },
       { name: "St Louis", slug: "st-louis-tires", population: 302000 },
       { name: "Springfield", slug: "springfield-mo-tires", population: 169000 },
       { name: "Columbia", slug: "columbia-mo-tires", population: 126000 },
       { name: "Independence", slug: "independence-tires", population: 123000 },
-      { name: "Lee\'s Summit", slug: "lees-summit-tires", population: 101000 },
-      { name: "O\'Fallon", slug: "ofallon-tires", population: 91000 },
+      { name: "Lee's Summit", slug: "lees-summit-tires", population: 101000 },
+      { name: "O'Fallon", slug: "ofallon-tires", population: 91000 },
       { name: "St Joseph", slug: "st-joseph-tires", population: 72000 },
       { name: "St Charles", slug: "st-charles-tires", population: 70000 },
       { name: "Blue Springs", slug: "blue-springs-tires", population: 57000 },
@@ -737,24 +644,17 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Montana",
-    slug: "montana",
-    abbreviation: "MT",
+    name: "Montana", slug: "montana", abbreviation: "MT",
     cities: [
       { name: "Billings", slug: "billings-tires", population: 117000 },
       { name: "Missoula", slug: "missoula-tires", population: 74000 },
       { name: "Great Falls", slug: "great-falls-tires", population: 58000 },
       { name: "Bozeman", slug: "bozeman-tires", population: 53000 },
       { name: "Helena", slug: "helena-tires", population: 33000 },
-      { name: "Butte", slug: "butte-tires", population: 35000 },
-      { name: "Kalispell", slug: "kalispell-tires", population: 24000 },
-      { name: "Havre", slug: "havre-tires", population: 10000 },
     ],
   },
   {
-    name: "Nebraska",
-    slug: "nebraska",
-    abbreviation: "NE",
+    name: "Nebraska", slug: "nebraska", abbreviation: "NE",
     cities: [
       { name: "Omaha", slug: "omaha-tires", population: 486000 },
       { name: "Lincoln", slug: "lincoln-tires", population: 291000 },
@@ -766,15 +666,10 @@ export const states: StateData[] = [
       { name: "Norfolk", slug: "norfolk-ne-tires", population: 24000 },
       { name: "North Platte", slug: "north-platte-tires", population: 24000 },
       { name: "Columbus", slug: "columbus-ne-tires", population: 24000 },
-      { name: "Papillion", slug: "papillion-tires", population: 24000 },
-      { name: "La Vista", slug: "la-vista-tires", population: 18000 },
-      { name: "Scottsbluff", slug: "scottsbluff-tires", population: 15000 },
     ],
   },
   {
-    name: "Nevada",
-    slug: "nevada",
-    abbreviation: "NV",
+    name: "Nevada", slug: "nevada", abbreviation: "NV",
     cities: [
       { name: "Las Vegas", slug: "las-vegas-tires", population: 641000 },
       { name: "Henderson", slug: "henderson-tires", population: 320000 },
@@ -791,27 +686,17 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "New Hampshire",
-    slug: "new-hampshire",
-    abbreviation: "NH",
+    name: "New Hampshire", slug: "new-hampshire", abbreviation: "NH",
     cities: [
       { name: "Manchester", slug: "manchester-tires", population: 115000 },
       { name: "Nashua", slug: "nashua-tires", population: 91000 },
       { name: "Concord", slug: "concord-nh-tires", population: 43000 },
       { name: "Dover", slug: "dover-nh-tires", population: 32000 },
       { name: "Rochester", slug: "rochester-nh-tires", population: 32000 },
-      { name: "Keene", slug: "keene-tires", population: 23000 },
-      { name: "Derry", slug: "derry-tires", population: 34000 },
-      { name: "Salem", slug: "salem-nh-tires", population: 29000 },
-      { name: "Merrimack", slug: "merrimack-tires", population: 26000 },
-      { name: "Londonderry", slug: "londonderry-tires", population: 26000 },
-      { name: "Hudson", slug: "hudson-nh-tires", population: 25000 },
     ],
   },
   {
-    name: "New Jersey",
-    slug: "new-jersey",
-    abbreviation: "NJ",
+    name: "New Jersey", slug: "new-jersey", abbreviation: "NJ",
     cities: [
       { name: "Newark", slug: "newark-tires", population: 311000 },
       { name: "Jersey City", slug: "jersey-city-tires", population: 292000 },
@@ -841,9 +726,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "New Mexico",
-    slug: "new-mexico",
-    abbreviation: "NM",
+    name: "New Mexico", slug: "new-mexico", abbreviation: "NM",
     cities: [
       { name: "Albuquerque", slug: "albuquerque-tires", population: 564000 },
       { name: "Las Cruces", slug: "las-cruces-tires", population: 111000 },
@@ -855,17 +738,10 @@ export const states: StateData[] = [
       { name: "Clovis", slug: "clovis-nm-tires", population: 39000 },
       { name: "Alamogordo", slug: "alamogordo-tires", population: 31000 },
       { name: "Carlsbad", slug: "carlsbad-nm-tires", population: 29000 },
-      { name: "Las Vegas", slug: "las-vegas-nm-tires", population: 13000 },
-      { name: "Deming", slug: "deming-tires", population: 14000 },
-      { name: "Gallup", slug: "gallup-tires", population: 22000 },
-      { name: "Sunland Park", slug: "sunland-park-tires", population: 17000 },
-      { name: "Los Lunas", slug: "los-lunas-tires", population: 16000 },
     ],
   },
   {
-    name: "New York",
-    slug: "new-york",
-    abbreviation: "NY",
+    name: "New York", slug: "new-york", abbreviation: "NY",
     cities: [
       { name: "New York City", slug: "new-york-city-tires", population: 8336000 },
       { name: "Buffalo", slug: "buffalo-tires", population: 278000 },
@@ -900,9 +776,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "North Carolina",
-    slug: "north-carolina",
-    abbreviation: "NC",
+    name: "North Carolina", slug: "north-carolina", abbreviation: "NC",
     cities: [
       { name: "Charlotte", slug: "charlotte-tires", population: 874000 },
       { name: "Raleigh", slug: "raleigh-tires", population: 467000 },
@@ -932,24 +806,17 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "North Dakota",
-    slug: "north-dakota",
-    abbreviation: "ND",
+    name: "North Dakota", slug: "north-dakota", abbreviation: "ND",
     cities: [
       { name: "Fargo", slug: "fargo-tires", population: 125000 },
       { name: "Bismarck", slug: "bismarck-tires", population: 73000 },
       { name: "Grand Forks", slug: "grand-forks-tires", population: 56000 },
       { name: "Minot", slug: "minot-tires", population: 48000 },
       { name: "West Fargo", slug: "west-fargo-tires", population: 37000 },
-      { name: "Williston", slug: "williston-tires", population: 29000 },
-      { name: "Dickinson", slug: "dickinson-tires", population: 23000 },
-      { name: "Mandan", slug: "mandan-tires", population: 22000 },
     ],
   },
   {
-    name: "Ohio",
-    slug: "ohio",
-    abbreviation: "OH",
+    name: "Ohio", slug: "ohio", abbreviation: "OH",
     cities: [
       { name: "Columbus", slug: "columbus-tires", population: 905000 },
       { name: "Cleveland", slug: "cleveland-tires", population: 373000 },
@@ -984,9 +851,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Oklahoma",
-    slug: "oklahoma",
-    abbreviation: "OK",
+    name: "Oklahoma", slug: "oklahoma", abbreviation: "OK",
     cities: [
       { name: "Oklahoma City", slug: "oklahoma-city-tires", population: 681000 },
       { name: "Tulsa", slug: "tulsa-tires", population: 413000 },
@@ -1006,9 +871,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Oregon",
-    slug: "oregon",
-    abbreviation: "OR",
+    name: "Oregon", slug: "oregon", abbreviation: "OR",
     cities: [
       { name: "Portland", slug: "portland-tires", population: 652000 },
       { name: "Salem", slug: "salem-tires", population: 175000 },
@@ -1028,9 +891,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Pennsylvania",
-    slug: "pennsylvania",
-    abbreviation: "PA",
+    name: "Pennsylvania", slug: "pennsylvania", abbreviation: "PA",
     cities: [
       { name: "Philadelphia", slug: "philadelphia-tires", population: 1603000 },
       { name: "Pittsburgh", slug: "pittsburgh-tires", population: 302000 },
@@ -1060,24 +921,17 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Rhode Island",
-    slug: "rhode-island",
-    abbreviation: "RI",
+    name: "Rhode Island", slug: "rhode-island", abbreviation: "RI",
     cities: [
       { name: "Providence", slug: "providence-tires", population: 190000 },
       { name: "Warwick", slug: "warwick-tires", population: 82000 },
       { name: "Cranston", slug: "cranston-tires", population: 81000 },
       { name: "Pawtucket", slug: "pawtucket-tires", population: 75000 },
       { name: "East Providence", slug: "east-providence-tires", population: 47000 },
-      { name: "Woonsocket", slug: "woonsocket-tires", population: 44000 },
-      { name: "Newport", slug: "newport-ri-tires", population: 25000 },
-      { name: "Central Falls", slug: "central-falls-tires", population: 22000 },
     ],
   },
   {
-    name: "South Carolina",
-    slug: "south-carolina",
-    abbreviation: "SC",
+    name: "South Carolina", slug: "south-carolina", abbreviation: "SC",
     cities: [
       { name: "Charleston", slug: "charleston-tires", population: 150000 },
       { name: "Columbia", slug: "columbia-sc-tires", population: 131000 },
@@ -1097,24 +951,17 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "South Dakota",
-    slug: "south-dakota",
-    abbreviation: "SD",
+    name: "South Dakota", slug: "south-dakota", abbreviation: "SD",
     cities: [
       { name: "Sioux Falls", slug: "sioux-falls-tires", population: 192000 },
       { name: "Rapid City", slug: "rapid-city-tires", population: 74000 },
       { name: "Aberdeen", slug: "aberdeen-tires", population: 28000 },
       { name: "Brookings", slug: "brookings-tires", population: 24000 },
       { name: "Watertown", slug: "watertown-sd-tires", population: 22000 },
-      { name: "Mitchell", slug: "mitchell-tires", population: 16000 },
-      { name: "Huron", slug: "huron-tires", population: 14000 },
-      { name: "Pierre", slug: "pierre-tires", population: 14000 },
     ],
   },
   {
-    name: "Tennessee",
-    slug: "tennessee",
-    abbreviation: "TN",
+    name: "Tennessee", slug: "tennessee", abbreviation: "TN",
     cities: [
       { name: "Nashville", slug: "nashville-tires", population: 689000 },
       { name: "Memphis", slug: "memphis-tires", population: 633000 },
@@ -1139,9 +986,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Texas",
-    slug: "texas",
-    abbreviation: "TX",
+    name: "Texas", slug: "texas", abbreviation: "TX",
     cities: [
       { name: "Houston", slug: "houston-tires", population: 2300000 },
       { name: "San Antonio", slug: "san-antonio-tires", population: 1547000 },
@@ -1206,9 +1051,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Utah",
-    slug: "utah",
-    abbreviation: "UT",
+    name: "Utah", slug: "utah", abbreviation: "UT",
     cities: [
       { name: "Salt Lake City", slug: "salt-lake-city-tires", population: 200000 },
       { name: "West Valley City", slug: "west-valley-city-tires", population: 140000 },
@@ -1222,34 +1065,20 @@ export const states: StateData[] = [
       { name: "South Jordan", slug: "south-jordan-tires", population: 77000 },
       { name: "Lehi", slug: "lehi-tires", population: 75000 },
       { name: "Logan", slug: "logan-tires", population: 52000 },
-      { name: "Taylorsville", slug: "taylorsville-tires", population: 60000 },
-      { name: "Murray", slug: "murray-tires", population: 50000 },
-      { name: "Draper", slug: "draper-tires", population: 49000 },
-      { name: "Bountiful", slug: "bountiful-tires", population: 44000 },
-      { name: "Riverton", slug: "riverton-ut-tires", population: 43000 },
-      { name: "Roy", slug: "roy-tires", population: 39000 },
-      { name: "Spanish Fork", slug: "spanish-fork-tires", population: 42000 },
     ],
   },
   {
-    name: "Vermont",
-    slug: "vermont",
-    abbreviation: "VT",
+    name: "Vermont", slug: "vermont", abbreviation: "VT",
     cities: [
       { name: "Burlington", slug: "burlington-vt-tires", population: 45000 },
       { name: "South Burlington", slug: "south-burlington-tires", population: 19000 },
       { name: "Rutland", slug: "rutland-tires", population: 15000 },
       { name: "Barre", slug: "barre-tires", population: 9000 },
       { name: "Montpelier", slug: "montpelier-tires", population: 8000 },
-      { name: "Bennington", slug: "bennington-tires", population: 15000 },
-      { name: "Brattleboro", slug: "brattleboro-tires", population: 12000 },
-      { name: "St Albans", slug: "st-albans-tires", population: 7000 },
     ],
   },
   {
-    name: "Virginia",
-    slug: "virginia",
-    abbreviation: "VA",
+    name: "Virginia", slug: "virginia", abbreviation: "VA",
     cities: [
       { name: "Virginia Beach", slug: "virginia-beach-tires", population: 459000 },
       { name: "Norfolk", slug: "norfolk-tires", population: 244000 },
@@ -1274,9 +1103,7 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Washington",
-    slug: "washington",
-    abbreviation: "WA",
+    name: "Washington", slug: "washington", abbreviation: "WA",
     cities: [
       { name: "Seattle", slug: "seattle-tires", population: 737000 },
       { name: "Spokane", slug: "spokane-tires", population: 228000 },
@@ -1306,25 +1133,17 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "West Virginia",
-    slug: "west-virginia",
-    abbreviation: "WV",
+    name: "West Virginia", slug: "west-virginia", abbreviation: "WV",
     cities: [
       { name: "Charleston", slug: "charleston-wv-tires", population: 48000 },
       { name: "Huntington", slug: "huntington-wv-tires", population: 46000 },
       { name: "Morgantown", slug: "morgantown-tires", population: 31000 },
       { name: "Parkersburg", slug: "parkersburg-tires", population: 29000 },
       { name: "Wheeling", slug: "wheeling-tires", population: 27000 },
-      { name: "Weirton", slug: "weirton-tires", population: 19000 },
-      { name: "Fairmont", slug: "fairmont-tires", population: 18000 },
-      { name: "Beckley", slug: "beckley-tires", population: 17000 },
-      { name: "Martinsburg", slug: "martinsburg-tires", population: 18000 },
     ],
   },
   {
-    name: "Wisconsin",
-    slug: "wisconsin",
-    abbreviation: "WI",
+    name: "Wisconsin", slug: "wisconsin", abbreviation: "WI",
     cities: [
       { name: "Milwaukee", slug: "milwaukee-tires", population: 577000 },
       { name: "Madison", slug: "madison-wi-tires", population: 269000 },
@@ -1344,21 +1163,55 @@ export const states: StateData[] = [
     ],
   },
   {
-    name: "Wyoming",
-    slug: "wyoming",
-    abbreviation: "WY",
+    name: "Wyoming", slug: "wyoming", abbreviation: "WY",
     cities: [
       { name: "Cheyenne", slug: "cheyenne-tires", population: 64000 },
       { name: "Casper", slug: "casper-tires", population: 58000 },
       { name: "Laramie", slug: "laramie-tires", population: 32000 },
       { name: "Gillette", slug: "gillette-tires", population: 33000 },
       { name: "Rock Springs", slug: "rock-springs-tires", population: 23000 },
-      { name: "Sheridan", slug: "sheridan-tires", population: 18000 },
-      { name: "Green River", slug: "green-river-tires", population: 12000 },
-      { name: "Evanston", slug: "evanston-wy-tires", population: 12000 },
-      { name: "Riverton", slug: "riverton-tires", population: 11000 },
-      { name: "Jackson", slug: "jackson-wy-tires", population: 11000 },
-      { name: "Cody", slug: "cody-tires", population: 10000 },
     ],
   },
 ];
+
+// Count total
+let totalCities = 0;
+statesData.forEach(s => totalCities += s.cities.length);
+console.log(`Generating locations.ts with ${statesData.length} states and ${totalCities} cities...`);
+
+// Generate TypeScript
+let output = `export interface CityData {
+  name: string;
+  slug: string;
+  population: number;
+}
+
+export interface StateData {
+  name: string;
+  slug: string;
+  abbreviation: string;
+  cities: CityData[];
+}
+
+export const states: StateData[] = [\n`;
+
+for (const state of statesData) {
+  output += `  {\n`;
+  output += `    name: "${state.name}",\n`;
+  output += `    slug: "${state.slug}",\n`;
+  output += `    abbreviation: "${state.abbreviation}",\n`;
+  output += `    cities: [\n`;
+  for (const city of state.cities) {
+    const escapedName = city.name.replace(/'/g, "\\'");
+    output += `      { name: "${escapedName}", slug: "${city.slug}", population: ${city.population} },\n`;
+  }
+  output += `    ],\n`;
+  output += `  },\n`;
+}
+
+output += `];\n`;
+
+const outPath = path.join(__dirname, '..', 'src', 'data', 'locations.ts');
+fs.writeFileSync(outPath, output);
+console.log(`Written to ${outPath}`);
+console.log(`Total: ${totalCities} cities across ${statesData.length} states`);

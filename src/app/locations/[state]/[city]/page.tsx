@@ -34,8 +34,8 @@ export async function generateMetadata({
   if (!state || !city) return {};
 
   return {
-    title: `Buy Tires in ${city.name}, ${state.abbreviation} — ${brands.length} Brands, Free Shipping`,
-    description: `Shop ${brands.length}+ tire brands with free shipping to ${city.name}, ${state.abbreviation}. Michelin, Goodyear, Bridgestone & more. 800+ sizes for every vehicle. Delivered to your door or local installer.`,
+    title: `Tires Near Me in ${city.name}, ${state.abbreviation} — ${brands.length} Brands Shipped Free`,
+    description: `Find tires near me in ${city.name}, ${state.abbreviation}. ${brands.length} brands shipped free to your door. Michelin, Goodyear, Bridgestone & more — 800+ sizes. Free shipping on every order. Shop tires near ${city.name} today.`,
   };
 }
 
@@ -70,11 +70,11 @@ export default async function CityLocationsPage({
             <span className="text-gray-300">{city.name}</span>
           </div>
           <h1 className="mt-4 text-3xl font-bold sm:text-4xl">
-            Tires Shipped to {city.name}, {state.abbreviation}
+            Tires Near Me in {city.name}, {state.abbreviation} — Shipped Free
           </h1>
           <p className="mt-3 text-lg text-gray-300">
-            {brands.length} brands · 800+ sizes · Free delivery to{" "}
-            {city.name}
+            {brands.length} brands · 800+ sizes · Free shipping to{" "}
+            {city.name} · Ship to your door or installer
           </p>
         </div>
       </div>
@@ -82,25 +82,26 @@ export default async function CityLocationsPage({
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 space-y-12">
         <div className="rounded-xl bg-white border border-gray-200 p-8 shadow-sm">
           <h2 className="text-2xl font-bold text-gray-900">
-            Buy Tires Online in {city.name}, {state.abbreviation}
+            Buy Tires Near Me in {city.name}, {state.abbreviation} — Free Shipping
           </h2>
           <p className="mt-4 text-gray-600 leading-relaxed">
-            Ship.Tires delivers every major tire brand to {city.name},{" "}
-            {state.name} — completely free. With {climate} to navigate, having
-            the right tires is essential for {city.name} drivers. Choose from{" "}
-            {brands.length}+ brands including Michelin, Goodyear, Bridgestone,
-            Continental, and more. We ship directly to your {city.name} address
-            or any local tire installer.
+            Looking for tires near me in {city.name}? Ship.Tires ships every major tire brand
+            directly to {city.name}, {state.name} — with free shipping on every order.
+            With {climate} to navigate, having the right tires is essential for {city.name} drivers.
+            Choose from {brands.length}+ brands including Michelin, Goodyear, Bridgestone,
+            Continental, and more. Every tire is shipped free to your {city.name} address
+            or to any local tire installer near you. No hidden fees — just tires shipped
+            directly to your door with free delivery.
           </p>
         </div>
 
         <div>
           <h2 className="text-2xl font-bold text-gray-900">
-            Shop by Brand in {city.name}
+            Shop Tire Brands Near Me in {city.name}
           </h2>
           <p className="mt-2 text-gray-600">
             Select a tire brand to see all available sizes shipped free to{" "}
-            {city.name}.
+            {city.name}. Every brand ships with free shipping to your door.
           </p>
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {brands.map((brand) => {
@@ -162,10 +163,10 @@ export default async function CityLocationsPage({
 
         <div className="rounded-xl bg-orange p-8 text-center text-white">
           <h2 className="text-2xl font-bold">
-            Ready to Order Tires in {city.name}?
+            Ready to Ship Tires to {city.name}?
           </h2>
           <p className="mt-2 text-white/90">
-            Free shipping. Fast delivery. Expert help.
+            Free shipping on every order. Tires shipped fast to {city.name}. Expert help available.
           </p>
           <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link

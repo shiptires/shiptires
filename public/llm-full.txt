@@ -1,6 +1,6 @@
-# Ship.Tires — Complete Business & Product Information
+# Ship.Tires — Complete Business, Product & Inventory Information
 
-> Nationwide tire shipping with free delivery. Browse 20+ top brands, find the perfect fit for your vehicle, and get tires shipped to your door or local installer.
+> Nationwide online tire retailer. 21 brands, 80+ models, 800+ tire sizes shipped free to 1,000+ US cities. Delivered to your door or local installer.
 
 ---
 
@@ -12,179 +12,323 @@
 **Email:** info@ship.tires
 **Location:** Sacramento, California, United States
 **Industry:** Online Tire Retail / E-Commerce
-**Service Area:** All 50 US states (free shipping to continental US)
+**Service Area:** All 50 US states (free shipping continental US)
 
-Ship.Tires is an online tire retailer specializing in fast, free nationwide tire delivery. We simplify the tire buying process by letting customers search by vehicle, tire size, or brand, get competitive quotes, and have tires shipped directly to their home or preferred installer at no extra cost.
+Ship.Tires is an online tire retailer specializing in fast, free nationwide tire delivery. Customers search by vehicle, tire size, or brand, get competitive quotes, and have tires shipped directly to their home or preferred installer at no extra cost.
 
 ---
 
 ## Core Value Proposition
 
 - **Free shipping** on every order, no minimums
-- **20+ premium brands** available
+- **21 premium tire brands** in stock
+- **80+ tire models** covering every driving need
+- **800+ tire sizes** for every vehicle type
 - **Ship to home or installer** — customer's choice
 - **3-7 business day delivery** on most orders
 - **Manufacturer warranties** included on all tires
 - **Expert assistance** via phone at (916) 476-7689
-- **No hidden fees** — the quoted price is what you pay plus shipping is free
 
 ---
 
-## How to Buy Tires from Ship.Tires
+## Complete Brand & Model Inventory
 
-### Option 1: Search by Vehicle
-Use the Vehicle Lookup tool at https://ship.tires/vehicle-lookup
-1. Select your vehicle year
-2. Select your make (Ford, Toyota, BMW, etc.)
-3. Select your model
-4. View all compatible tire sizes and recommendations
+### 1. Michelin (France, est. 1889)
+**Models:**
+- **Defender LTX M/S 2** — All-Season, 70,000 mi warranty, $189–$299
+  Sizes: 225/65R17, 235/70R16, 245/60R18, 245/65R17, 255/70R18, 265/60R18, 265/65R17, 265/70R16, 265/70R17, 275/55R20, 275/60R20, 285/45R22
+- **Pilot Sport 4S** — Performance, 30,000 mi warranty, $219–$389
+  Sizes: 225/40R18, 225/45R17, 235/35R19, 245/35R18, 245/40R18, 255/35R19, 255/40R18, 265/35R18, 275/30R20, 275/35R19, 295/30R20, 305/30R20
+- **Primacy MXV4** — Touring, 55,000 mi warranty, $169–$249
+  Sizes: 205/55R16, 215/55R17, 225/45R17, 225/50R17, 225/55R17, 235/45R18, 235/55R17, 245/45R18, 245/50R18, 255/45R18
+- **X-Ice Snow** — Winter, 40,000 mi warranty, $149–$269
+  Sizes: 195/65R15, 205/55R16, 215/55R17, 225/45R17, 225/50R17, 225/55R18, 225/65R17, 235/45R18, 235/55R18, 245/45R18, 255/50R19, 265/60R18
 
-### Option 2: Search by Tire Size
-Go to https://ship.tires/search
-Enter your tire size (found on tire sidewall), e.g.:
-- 225/65R17
-- 265/70R16
-- 245/45R18
+### 2. Goodyear (USA, est. 1898)
+**Models:**
+- **Assurance WeatherReady** — All-Season, 60,000 mi, $149–$239
+  Sizes: 195/65R15, 205/55R16, 215/55R17, 225/45R17, 225/50R17, 225/55R18, 225/65R17, 235/45R18, 235/55R18, 245/45R18, 245/50R20, 255/55R20
+- **Eagle F1 Asymmetric 6** — Performance, 45,000 mi, $169–$289
+  Sizes: 225/40R18, 225/45R17, 235/35R19, 245/35R19, 245/40R18, 255/35R19, 255/40R19, 265/35R18, 275/35R19, 285/30R20
+- **Wrangler All-Terrain Adventure** — All-Terrain, 60,000 mi, $179–$279
+  Sizes: 235/70R16, 245/65R17, 245/70R17, 255/70R18, 265/65R17, 265/70R16, 265/70R17, 275/55R20, 275/60R20, 285/70R17, 315/70R17
+- **Assurance MaxLife** — Touring, 85,000 mi, $129–$199
+  Sizes: 195/65R15, 205/55R16, 215/55R17, 215/60R16, 225/50R17, 225/55R17, 225/60R18, 225/65R17, 235/55R18, 235/65R17, 245/45R18, 245/50R20
 
-### Option 3: Browse by Brand
-Visit https://ship.tires/tires to see all brands and their tire lineups.
+### 3. Bridgestone (Japan, est. 1931)
+**Models:**
+- **Turanza QuietTrack** — Touring, 80,000 mi, $149–$229
+- **Potenza Sport** — Performance, No mileage warranty, $179–$329
+- **Dueler A/T Revo 3** — All-Terrain, 60,000 mi, $169–$269
+- **Blizzak WS90** — Winter, No mileage warranty, $129–$239
 
-### Option 4: Call or Request a Quote
-- Call (916) 476-7689 for immediate assistance
-- Use the contact form at https://ship.tires/contact
-- We respond to all quote requests within a few hours
+### 4. Continental (Germany, est. 1871)
+**Models:**
+- **PureContact LS** — Touring, 70,000 mi, $139–$219
+- **ExtremeContact DWS 06 Plus** — All-Season, 50,000 mi, $149–$269
+- **TerrainContact A/T** — All-Terrain, 60,000 mi, $169–$249
+- **VikingContact 7** — Winter, No mileage warranty, $139–$229
+
+### 5. Pirelli (Italy, est. 1872)
+**Models:**
+- **P Zero** — Performance, No mileage warranty, $189–$369
+- **Cinturato P7 All Season Plus 3** — All-Season, 70,000 mi, $139–$209
+- **Scorpion All Terrain Plus** — All-Terrain, 50,000 mi, $179–$269
+- **Winter Sottozero 3** — Winter, No mileage warranty, $169–$289
+
+### 6. Hankook (South Korea, est. 1941)
+**Models:**
+- **Ventus V2 Concept2** — All-Season, 45,000 mi, $89–$149
+- **Kinergy GT** — Touring, 70,000 mi, $99–$159
+- **Dynapro AT2** — All-Terrain, 60,000 mi, $139–$229
+
+### 7. Cooper (USA, est. 1914)
+**Models:**
+- **Discoverer AT3 4S** — All-Terrain, 65,000 mi, $149–$249
+- **CS5 Ultra Touring** — Touring, 70,000 mi, $109–$169
+- **Discoverer STT Pro** — Mud-Terrain, No mileage warranty, $199–$329
+
+### 8. Firestone (USA, est. 1900)
+**Models:**
+- **WeatherGrip** — All-Season, 65,000 mi, $119–$179
+- **Destination LE3** — Highway, 70,000 mi, $139–$209
+- **All Season** — All-Season, 55,000 mi, $79–$129
+
+### 9. BFGoodrich (USA, est. 1870)
+**Models:**
+- **All-Terrain T/A KO2** — All-Terrain, 50,000 mi, $179–$299
+- **Mud-Terrain T/A KM3** — Mud-Terrain, No mileage warranty, $219–$379
+- **Advantage T/A Sport LT** — All-Season, 60,000 mi, $139–$199
+
+### 10. Yokohama (Japan, est. 1917)
+**Models:**
+- **Geolandar A/T G015** — All-Terrain, 60,000 mi, $149–$239
+- **ADVAN Sport A/S+** — All-Season, 50,000 mi, $139–$219
+- **BluEarth Winter V906** — Winter, No mileage warranty, $119–$189
+
+### 11. Toyo (Japan, est. 1945)
+**Models:**
+- **Open Country A/T III** — All-Terrain, 65,000 mi, $159–$259
+- **Proxes Sport** — Performance, No mileage warranty, $149–$279
+- **Celsius II** — All-Season, 60,000 mi, $119–$179
+
+### 12. Falken (Japan, est. 1983)
+**Models:**
+- **Wildpeak A/T3W** — All-Terrain, 55,000 mi, $129–$219
+- **Azenis FK510** — Performance, No mileage warranty, $129–$229
+- **Sincera SN201 A/S** — All-Season, 65,000 mi, $79–$119
+
+### 13. General Tire (USA, est. 1915)
+**Models:**
+- **Grabber A/TX** — All-Terrain, 60,000 mi, $139–$219
+- **AltiMAX RT45** — All-Season, 75,000 mi, $79–$129
+- **Grabber HTS 60** — Highway, 65,000 mi, $129–$189
+
+### 14. Kumho (South Korea, est. 1960)
+**Models:**
+- **Crugen HP71** — All-Season, 65,000 mi, $109–$179
+- **Solus TA51a** — All-Season, 75,000 mi, $69–$109
+
+### 15. Nexen (South Korea, est. 1942)
+**Models:**
+- **N'Fera AU7** — All-Season, 50,000 mi, $99–$159
+- **Roadian HTX2** — Highway, 70,000 mi, $109–$169
+
+### 16. Nitto (Japan, est. 1949)
+**Models:**
+- **Ridge Grappler** — All-Terrain, No mileage warranty, $189–$319
+- **NT555 G2** — Performance, No mileage warranty, $119–$209
+- **Nomad Grappler** — All-Season, 60,000 mi, $159–$219
+
+### 17. Dunlop (UK, est. 1888)
+**Models:**
+- **Sport Maxx RT2** — Performance, No mileage warranty, $129–$229
+- **Signature HP** — All-Season, 55,000 mi, $99–$159
+
+### 18. Maxxis (Taiwan, est. 1967)
+**Models:**
+- **Razr AT811** — All-Terrain, 55,000 mi, $139–$219
+- **Victra MA-Z4S** — Performance, No mileage warranty, $79–$149
+- **Premitra HP5** — Touring, 60,000 mi, $79–$129
+
+### 19. Ironman (USA, est. 1969)
+**Models:**
+- **GR906** — All-Season, 50,000 mi, $59–$89
+- **All Country AT** — All-Terrain, 50,000 mi, $109–$179
+
+### 20. Sumitomo (Japan, est. 1909)
+**Models:**
+- **HTR A/S P03** — All-Season, 60,000 mi, $89–$139
+- **Encounter AT** — All-Terrain, 50,000 mi, $119–$189
+- **HTR Enhance WX2** — Performance, 45,000 mi, $89–$149
 
 ---
 
-## Tire Categories & Use Cases
+## All Tire Sizes Available
 
-### All-Season Tires
-Best for: Year-round driving in moderate climates
-Features: Balanced wet/dry performance, longer tread life, quiet ride
-Popular picks: Michelin Defender, Continental TrueContact, Goodyear Assurance
+### Passenger Car Sizes
+185/65R15, 195/50R15, 195/60R15, 195/65R15, 205/50R17, 205/55R16, 205/60R16, 205/65R16, 215/45R17, 215/50R17, 215/55R17, 215/60R16, 225/40R18, 225/45R17, 225/50R17, 225/55R17, 225/55R18, 225/60R17, 225/60R18, 235/35R19, 235/40R19, 235/45R17, 235/45R18, 235/55R17, 235/55R18, 245/35R18, 245/35R19, 245/40R18, 245/45R18, 245/50R18, 245/50R20, 255/35R18, 255/35R19, 255/40R18, 255/40R19, 255/45R18, 255/45R19, 265/35R18, 275/30R20, 275/35R19, 275/35R20, 275/40R19, 275/40R20, 285/30R20, 295/30R20, 305/30R20, 305/35R20
 
-### Winter / Snow Tires
-Best for: Cold weather, snow, ice, temperatures below 45°F
-Features: Soft rubber compound, siping for ice grip, snowflake symbol (3PMSF)
-Popular picks: Bridgestone Blizzak, Michelin X-Ice, Continental VikingContact
+### SUV & Crossover Sizes
+225/55R18, 225/60R17, 225/65R17, 235/55R18, 235/55R19, 235/60R18, 235/65R17, 235/65R18, 245/50R20, 245/55R19, 245/60R18, 245/65R17, 255/45R19, 255/50R19, 255/50R20, 255/55R18, 255/55R19, 255/55R20, 255/65R18, 265/50R20, 265/55R19, 265/60R18, 275/45R20, 275/45R21, 275/50R20
 
-### Performance Tires
-Best for: Sports cars, spirited driving, track days
-Features: Maximum grip, responsive handling, higher speed ratings
-Popular picks: Michelin Pilot Sport, Continental ExtremeContact, Pirelli P Zero
-
-### All-Terrain Tires
-Best for: Trucks, SUVs, off-road and on-road mix
-Features: Aggressive tread, sidewall protection, mud/gravel capability
-Popular picks: BFGoodrich KO2, Goodyear Wrangler, Falken Wildpeak
-
-### Touring Tires
-Best for: Sedans, comfort-focused driving, highway miles
-Features: Smooth ride, low noise, extended mileage warranties
-Popular picks: Michelin Primacy, Bridgestone Turanza, Continental PureContact
-
-### Truck & SUV Tires
-Best for: Pickups, full-size SUVs, towing, hauling
-Features: Load-rated, durable construction, all-weather capable
-Popular picks: Michelin LTX, Goodyear Wrangler, Cooper Discoverer
+### Truck & Off-Road Sizes
+235/70R16, 235/85R16, 245/70R17, 255/70R18, 265/65R17, 265/70R16, 265/70R17, 275/55R20, 275/60R20, 275/70R18, 285/60R20, 285/65R20, 285/70R17, 285/75R16, 295/70R17, 295/70R18, 305/55R20, 305/70R16, 305/70R18, 315/70R17, 35X12.50R17, 37X12.50R17, 37X13.50R17, 37X13.50R20
 
 ---
 
-## Brands Carried
+## Price Range Summary
 
-### Premium Brands
-| Brand | Speciality | Country |
-|-------|-----------|---------|
-| Michelin | All-around excellence, longevity | France |
-| Goodyear | Durability, all-weather | USA |
-| Bridgestone | Technology, winter tires | Japan |
-| Continental | Safety, performance | Germany |
-| Pirelli | Ultra-high performance, luxury | Italy |
-
-### Major Brands
-| Brand | Speciality | Country |
-|-------|-----------|---------|
-| Cooper | Value, SUV/truck | USA |
-| Hankook | Performance value | South Korea |
-| Yokohama | Performance, eco-friendly | Japan |
-| Toyo | Truck/SUV, performance | Japan |
-| Falken | All-terrain, performance | Japan |
-
-### Value Brands
-| Brand | Speciality | Country |
-|-------|-----------|---------|
-| BFGoodrich | Off-road, all-terrain | USA |
-| Firestone | Everyday driving value | USA |
-| General Tire | All-season value | USA/Germany |
-| Kumho | Budget performance | South Korea |
-| Nitto | Truck, enthusiast | Japan |
+| Category | Lowest Price | Highest Price |
+|----------|-------------|---------------|
+| Budget All-Season | $59/tire | $109/tire |
+| Mid-Range All-Season | $109/tire | $199/tire |
+| Premium All-Season | $149/tire | $269/tire |
+| Performance | $79/tire | $389/tire |
+| All-Terrain | $109/tire | $299/tire |
+| Mud-Terrain | $199/tire | $379/tire |
+| Touring | $79/tire | $249/tire |
+| Winter | $119/tire | $289/tire |
+| Highway | $109/tire | $209/tire |
 
 ---
 
-## Shipping & Delivery Details
+## Tire Categories
+
+### All-Season
+Best for year-round driving in moderate climates. Balanced wet/dry performance, longer tread life.
+
+### Winter / Snow
+Best for cold weather, snow, ice, temperatures below 45°F. Soft rubber compound, 3PMSF certified.
+
+### Performance
+Best for sports cars, spirited driving. Maximum grip, responsive handling, higher speed ratings.
+
+### All-Terrain
+Best for trucks/SUVs, on/off-road mix. Aggressive tread, sidewall protection.
+
+### Touring
+Best for sedans, comfort driving. Smooth ride, low noise, extended mileage warranties.
+
+### Mud-Terrain
+Best for serious off-road use. Extreme traction on rocks, mud, trails.
+
+### Highway
+Best for SUVs/crossovers on pavement. Quiet, comfortable, long tread life.
+
+---
+
+## National Coverage — 1,000+ Cities, All 50 States
+
+### Location Page Structure
+Ship.Tires has SEO-optimized pages for every combination of city, brand, and tire size:
+
+- **State pages:** https://ship.tires/locations/{state}
+- **City pages:** https://ship.tires/locations/{state}/{city}
+- **Brand+City pages:** https://ship.tires/locations/{state}/{city}/{brand}
+- **Size+Brand+City pages:** https://ship.tires/locations/{state}/{city}/{brand}/{size-slug}
+
+**Example URLs:**
+- https://ship.tires/locations/california/los-angeles/michelin/225-65r17
+- https://ship.tires/locations/texas/houston/goodyear/265-70r17
+- https://ship.tires/locations/florida/miami/bridgestone/225-45r17
+- https://ship.tires/locations/new-york/new-york-city/continental/215-55r17
+
+### Major Cities Served (sample)
+**California (130+ cities):** Los Angeles, San Diego, San Jose, San Francisco, Fresno, Sacramento, Long Beach, Oakland, Bakersfield, Anaheim, Stockton, Riverside, Santa Ana, Irvine, Chula Vista, Santa Clarita, Fremont, San Bernardino, Modesto, Fontana, Moreno Valley, Huntington Beach, Glendale, Santa Rosa, Rancho Cucamonga, Oceanside, Elk Grove, Ontario, Garden Grove, Palmdale, Lancaster, Salinas, Hayward, Corona, Sunnyvale, Pomona, Escondido, Roseville, Torrance, Visalia, Orange, Fullerton, Pasadena, Victorville, Concord, Thousand Oaks, Simi Valley, Santa Clara, Vallejo, Berkeley, Clovis, Fairfield, Antioch, Carlsbad, Murrieta, Santa Monica, Newport Beach, Palo Alto, Mountain View, Santa Barbara, Palm Springs, Monterey, Santa Cruz, and more
+
+**Texas (90+ cities):** Houston, San Antonio, Dallas, Austin, Fort Worth, El Paso, Arlington, Corpus Christi, Plano, Laredo, Lubbock, Garland, Irving, Frisco, Amarillo, Grand Prairie, McKinney, Brownsville, Killeen, McAllen, Mesquite, Midland, Denton, Carrollton, Round Rock, Waco, Abilene, Odessa, Pearland, Richardson, Lewisville, Tyler, College Station, Allen, League City, Sugar Land, Beaumont, Galveston, and more
+
+**Florida (70+ cities):** Jacksonville, Miami, Tampa, Orlando, St. Petersburg, Hialeah, Fort Lauderdale, Port St. Lucie, Tallahassee, Cape Coral, Pembroke Pines, Hollywood, Miramar, Gainesville, Coral Springs, Palm Bay, Lakeland, Clearwater, West Palm Beach, Boca Raton, Sarasota, Daytona Beach, Pensacola, Fort Myers, Naples, Key West, and more
+
+**New York (50+ cities):** New York City, Buffalo, Rochester, Yonkers, Syracuse, Albany, New Rochelle, Mount Vernon, Schenectady, Utica, White Plains, Ithaca, Saratoga Springs, and more
+
+**All 50 states covered** with dedicated location pages for every city above 15,000 population.
+
+---
+
+## Site Structure & Markdown Endpoints
+
+Every page on ship.tires has a .md endpoint for AI consumption. Append `.md` to any URL.
+
+| Page | URL |
+|------|-----|
+| Home | https://ship.tires |
+| All Tires | https://ship.tires/tires |
+| Locations Hub | https://ship.tires/locations |
+| Vehicle Lookup | https://ship.tires/vehicle-lookup |
+| Rankings | https://ship.tires/rankings |
+| Search | https://ship.tires/search |
+| About | https://ship.tires/about |
+| Contact | https://ship.tires/contact |
+| Shipping | https://ship.tires/shipping |
+| FAQ | https://ship.tires/faq |
+| Blog | https://ship.tires/blog |
+| Racing | https://ship.tires/racing |
+| Racing Tech | https://ship.tires/racing-tech |
+
+### All 21 Brand Pages
+- https://ship.tires/tires/michelin
+- https://ship.tires/tires/goodyear
+- https://ship.tires/tires/bridgestone
+- https://ship.tires/tires/continental
+- https://ship.tires/tires/pirelli
+- https://ship.tires/tires/hankook
+- https://ship.tires/tires/cooper
+- https://ship.tires/tires/firestone
+- https://ship.tires/tires/bfgoodrich
+- https://ship.tires/tires/yokohama
+- https://ship.tires/tires/toyo
+- https://ship.tires/tires/falken
+- https://ship.tires/tires/general
+- https://ship.tires/tires/kumho
+- https://ship.tires/tires/nexen
+- https://ship.tires/tires/nitto
+- https://ship.tires/tires/dunlop
+- https://ship.tires/tires/maxxis
+- https://ship.tires/tires/ironman
+- https://ship.tires/tires/sumitomo
+
+---
+
+## Shipping & Delivery
 
 - **Cost:** FREE on all orders (continental US)
-- **Carrier:** Major carriers (UPS, FedEx)
-- **Timeframe:** 3-7 business days typical
+- **Carrier:** UPS, FedEx
+- **Timeframe:** 3-7 business days
 - **Tracking:** Provided on all orders
-- **Ship-to options:**
-  - Your home address
-  - Your workplace
-  - A tire installer/shop of your choice
-- **Alaska & Hawaii:** Available, contact for shipping quote
+- **Ship-to options:** Home, workplace, or tire installer
+- **Alaska & Hawaii:** Available, contact for quote
 
 ---
 
-## Frequently Asked Questions
+## FAQ
 
 **Q: How does free shipping work?**
-A: Every tire order ships free to anywhere in the continental United States. We ship via major carriers and most orders arrive within 3-7 business days.
+A: Every tire order ships free to anywhere in the continental US. Most orders arrive within 3-7 business days.
 
-**Q: Can you ship tires to my installer?**
-A: Yes! Just provide your installer's address during checkout and we'll ship directly to them. Many customers have tires waiting at their shop for a quick install appointment.
+**Q: Can you ship to my installer?**
+A: Yes! Provide your installer's address and we ship directly to them.
 
 **Q: How do I find my tire size?**
-A: Check the sidewall of your current tires for a number like 225/65R17. You can also use our Vehicle Lookup tool to find compatible sizes by year, make, and model.
+A: Check your tire sidewall for a number like 225/65R17, or use our Vehicle Lookup at https://ship.tires/vehicle-lookup.
 
-**Q: Do you offer a warranty?**
-A: All tires come with the manufacturer's warranty. Warranty coverage varies by brand and model — check individual product pages for details.
+**Q: Do tires come with warranty?**
+A: All tires include the manufacturer's warranty. Coverage varies by brand and model.
 
 **Q: How do I get a price quote?**
-A: Use the "Request Quote" button on any tire page, call us at (916) 476-7689, or fill out our contact form. We respond to all quote requests within a few hours.
-
-**Q: Do you install tires?**
-A: We are a shipping/retail company, not an installer. However, we can ship directly to any installer you choose. Many tire shops will install tires you bring in or have shipped to them.
-
-**Q: What payment methods do you accept?**
-A: We accept all major credit cards, debit cards, and can discuss payment options over the phone.
-
-**Q: Can I return tires?**
-A: Contact us at (916) 476-7689 or info@ship.tires to discuss returns. Unused, unmounted tires in original condition may be eligible for return.
+A: Use "Request Quote" on any tire page, call (916) 476-7689, or use https://ship.tires/contact.
 
 ---
 
 ## Understanding Tire Sizes
 
-A tire size like **225/65R17** breaks down as:
-- **225** = Width in millimeters
-- **65** = Aspect ratio (sidewall height as % of width)
-- **R** = Radial construction
-- **17** = Wheel diameter in inches
+**225/65R17** = 225mm width / 65% aspect ratio / R (Radial) / 17" wheel diameter
 
-### Common Tire Sizes by Vehicle Type
-- Sedans: 205/55R16, 215/55R17, 225/45R18
-- SUVs: 225/65R17, 235/65R18, 265/70R17
-- Trucks: 265/70R17, 275/65R18, 285/75R16
-- Sports cars: 245/40R18, 255/35R19, 275/35R20
-
----
-
-## Speed Ratings Guide
-
-| Rating | Max Speed | Typical Use |
-|--------|-----------|-------------|
-| S | 112 mph | Family sedans |
-| T | 118 mph | Family sedans, minivans |
+### Speed Ratings
+| Rating | Max Speed | Use |
+|--------|-----------|-----|
+| T | 118 mph | Sedans, minivans |
 | H | 130 mph | Sport sedans |
 | V | 149 mph | Sports cars |
 | W | 168 mph | High-performance |
@@ -192,273 +336,15 @@ A tire size like **225/65R17** breaks down as:
 
 ---
 
-## Seasonal Tire Recommendations
+## Contact
 
-### Spring/Summer
-- Performance tires for sports cars
-- All-season tires for daily drivers
-- All-terrain for trucks heading off-road
-
-### Fall/Winter
-- Winter tires when temps drop below 45°F consistently
-- All-season with M+S rating for mild winters
-- Studded tires where legally permitted for extreme ice
-
----
-
-## Site Structure & Markdown Endpoints
-
-Every page on ship.tires has a clean markdown (.md) endpoint for AI consumption. Append `.md` to any URL.
-
-| Page | URL | Markdown |
-|------|-----|----------|
-| Home | https://ship.tires | https://ship.tires/.md |
-| All Tires | https://ship.tires/tires | https://ship.tires/tires.md |
-| Vehicle Lookup | https://ship.tires/vehicle-lookup | https://ship.tires/vehicle-lookup.md |
-| Rankings | https://ship.tires/rankings | https://ship.tires/rankings.md |
-| Search | https://ship.tires/search | https://ship.tires/search.md |
-| About | https://ship.tires/about | https://ship.tires/about.md |
-| Contact | https://ship.tires/contact | https://ship.tires/contact.md |
-| Shipping | https://ship.tires/shipping | https://ship.tires/shipping.md |
-| FAQ | https://ship.tires/faq | https://ship.tires/faq.md |
-| Blog | https://ship.tires/blog | https://ship.tires/blog.md |
-| Racing | https://ship.tires/racing | https://ship.tires/racing.md |
-| Racing Tech | https://ship.tires/racing-tech | https://ship.tires/racing-tech.md |
-
-### Brand Pages (15 brands)
-Pattern: `https://ship.tires/tires/{brand-slug}` → `.md` at `https://ship.tires/tires/{brand-slug}.md`
-
-- /tires/michelin — Michelin (France, est. 1889)
-- /tires/goodyear — Goodyear (USA, est. 1898)
-- /tires/bridgestone — Bridgestone (Japan, est. 1931)
-- /tires/continental — Continental (Germany, est. 1871)
-- /tires/pirelli — Pirelli (Italy, est. 1872)
-- /tires/cooper — Cooper (USA, est. 1914)
-- /tires/hankook — Hankook (South Korea, est. 1941)
-- /tires/yokohama — Yokohama (Japan, est. 1917)
-- /tires/toyo — Toyo (Japan, est. 1945)
-- /tires/falken — Falken (Japan, est. 1983)
-- /tires/bfgoodrich — BFGoodrich (USA, est. 1870)
-- /tires/firestone — Firestone (USA, est. 1900)
-- /tires/general-tire — General Tire (USA, est. 1915)
-- /tires/kumho — Kumho (South Korea, est. 1960)
-- /tires/nitto — Nitto (Japan, est. 1949)
-
-### Model Pages (100+)
-Pattern: `https://ship.tires/tires/{brand}/{model-slug}.md`
-Example: https://ship.tires/tires/michelin/pilot-sport-4s.md
-
-### Blog Posts
-Pattern: `https://ship.tires/blog/{slug}.md`
-- /blog/how-to-read-tire-size-numbers
-- /blog/all-season-vs-winter-tires
-- /blog/when-to-replace-your-tires-warning-signs
-- /blog/ultimate-guide-tire-speed-ratings
-- /blog/how-to-choose-right-tires-for-your-vehicle
-- /blog/tire-shipping-101-what-to-expect
-
-### Racing Articles
-Pattern: `https://ship.tires/racing/{series}/{slug}.md`
-Series: f1, nascar, le-mans, indycar
-
-### Racing Tech Articles
-Pattern: `https://ship.tires/racing-tech/{slug}.md`
-
----
-
-## National Coverage — All 50 States + DC (250+ Cities)
-
-Ship.Tires has dedicated local tire shipping pages for every major US city.
-Pattern: `https://ship.tires/{state-slug}/{city-slug}` → Markdown: append `.md`
-
-### Alabama (AL)
-- /alabama/birmingham-tires, /alabama/montgomery-tires, /alabama/huntsville-tires, /alabama/mobile-tires, /alabama/tuscaloosa-tires
-
-### Alaska (AK)
-- /alaska/anchorage-tires, /alaska/fairbanks-tires, /alaska/juneau-tires, /alaska/wasilla-tires, /alaska/sitka-tires
-
-### Arizona (AZ)
-- /arizona/phoenix-tires, /arizona/tucson-tires, /arizona/mesa-tires, /arizona/chandler-tires, /arizona/scottsdale-tires
-
-### Arkansas (AR)
-- /arkansas/little-rock-tires, /arkansas/fort-smith-tires, /arkansas/fayetteville-tires, /arkansas/springdale-tires, /arkansas/jonesboro-tires
-
-### California (CA)
-- /california/los-angeles-tires, /california/san-francisco-tires, /california/san-diego-tires, /california/san-jose-tires, /california/sacramento-tires
-
-### Colorado (CO)
-- /colorado/denver-tires, /colorado/colorado-springs-tires, /colorado/aurora-tires, /colorado/fort-collins-tires, /colorado/lakewood-tires
-
-### Connecticut (CT)
-- /connecticut/bridgeport-tires, /connecticut/new-haven-tires, /connecticut/hartford-tires, /connecticut/stamford-tires, /connecticut/waterbury-tires
-
-### Delaware (DE)
-- /delaware/wilmington-tires, /delaware/dover-tires, /delaware/newark-tires, /delaware/middletown-tires, /delaware/bear-tires
-
-### Florida (FL)
-- /florida/miami-tires, /florida/orlando-tires, /florida/tampa-tires, /florida/jacksonville-tires, /florida/fort-lauderdale-tires
-
-### Georgia (GA)
-- /georgia/atlanta-tires, /georgia/savannah-tires, /georgia/augusta-tires, /georgia/columbus-tires, /georgia/macon-tires
-
-### Hawaii (HI)
-- /hawaii/honolulu-tires, /hawaii/pearl-city-tires, /hawaii/hilo-tires, /hawaii/kailua-tires, /hawaii/waipahu-tires
-
-### Idaho (ID)
-- /idaho/boise-tires, /idaho/meridian-tires, /idaho/nampa-tires, /idaho/idaho-falls-tires, /idaho/pocatello-tires
-
-### Illinois (IL)
-- /illinois/chicago-tires, /illinois/aurora-tires, /illinois/naperville-tires, /illinois/joliet-tires, /illinois/rockford-tires
-
-### Indiana (IN)
-- /indiana/indianapolis-tires, /indiana/fort-wayne-tires, /indiana/evansville-tires, /indiana/south-bend-tires, /indiana/carmel-tires
-
-### Iowa (IA)
-- /iowa/des-moines-tires, /iowa/cedar-rapids-tires, /iowa/davenport-tires, /iowa/sioux-city-tires, /iowa/iowa-city-tires
-
-### Kansas (KS)
-- /kansas/wichita-tires, /kansas/overland-park-tires, /kansas/kansas-city-tires, /kansas/olathe-tires, /kansas/topeka-tires
-
-### Kentucky (KY)
-- /kentucky/louisville-tires, /kentucky/lexington-tires, /kentucky/bowling-green-tires, /kentucky/owensboro-tires, /kentucky/covington-tires
-
-### Louisiana (LA)
-- /louisiana/new-orleans-tires, /louisiana/baton-rouge-tires, /louisiana/shreveport-tires, /louisiana/lafayette-tires, /louisiana/lake-charles-tires
-
-### Maine (ME)
-- /maine/portland-tires, /maine/lewiston-tires, /maine/bangor-tires, /maine/south-portland-tires, /maine/auburn-tires
-
-### Maryland (MD)
-- /maryland/baltimore-tires, /maryland/frederick-tires, /maryland/rockville-tires, /maryland/gaithersburg-tires, /maryland/bowie-tires
-
-### Massachusetts (MA)
-- /massachusetts/boston-tires, /massachusetts/worcester-tires, /massachusetts/springfield-tires, /massachusetts/cambridge-tires, /massachusetts/lowell-tires
-
-### Michigan (MI)
-- /michigan/detroit-tires, /michigan/grand-rapids-tires, /michigan/warren-tires, /michigan/sterling-heights-tires, /michigan/ann-arbor-tires
-
-### Minnesota (MN)
-- /minnesota/minneapolis-tires, /minnesota/saint-paul-tires, /minnesota/rochester-tires, /minnesota/duluth-tires, /minnesota/bloomington-tires
-
-### Mississippi (MS)
-- /mississippi/jackson-tires, /mississippi/gulfport-tires, /mississippi/southaven-tires, /mississippi/hattiesburg-tires, /mississippi/biloxi-tires
-
-### Missouri (MO)
-- /missouri/kansas-city-tires, /missouri/saint-louis-tires, /missouri/springfield-tires, /missouri/columbia-tires, /missouri/independence-tires
-
-### Montana (MT)
-- /montana/billings-tires, /montana/missoula-tires, /montana/great-falls-tires, /montana/bozeman-tires, /montana/butte-tires
-
-### Nebraska (NE)
-- /nebraska/omaha-tires, /nebraska/lincoln-tires, /nebraska/bellevue-tires, /nebraska/grand-island-tires, /nebraska/kearney-tires
-
-### Nevada (NV)
-- /nevada/las-vegas-tires, /nevada/henderson-tires, /nevada/reno-tires, /nevada/north-las-vegas-tires, /nevada/sparks-tires
-
-### New Hampshire (NH)
-- /new-hampshire/manchester-tires, /new-hampshire/nashua-tires, /new-hampshire/concord-tires, /new-hampshire/derry-tires, /new-hampshire/dover-tires
-
-### New Jersey (NJ)
-- /new-jersey/newark-tires, /new-jersey/jersey-city-tires, /new-jersey/paterson-tires, /new-jersey/elizabeth-tires, /new-jersey/trenton-tires
-
-### New Mexico (NM)
-- /new-mexico/albuquerque-tires, /new-mexico/las-cruces-tires, /new-mexico/rio-rancho-tires, /new-mexico/santa-fe-tires, /new-mexico/roswell-tires
-
-### New York (NY)
-- /new-york/new-york-city-tires, /new-york/buffalo-tires, /new-york/rochester-tires, /new-york/yonkers-tires, /new-york/syracuse-tires
-
-### North Carolina (NC)
-- /north-carolina/charlotte-tires, /north-carolina/raleigh-tires, /north-carolina/greensboro-tires, /north-carolina/durham-tires, /north-carolina/winston-salem-tires
-
-### North Dakota (ND)
-- /north-dakota/fargo-tires, /north-dakota/bismarck-tires, /north-dakota/grand-forks-tires, /north-dakota/minot-tires, /north-dakota/west-fargo-tires
-
-### Ohio (OH)
-- /ohio/columbus-tires, /ohio/cleveland-tires, /ohio/cincinnati-tires, /ohio/toledo-tires, /ohio/akron-tires
-
-### Oklahoma (OK)
-- /oklahoma/oklahoma-city-tires, /oklahoma/tulsa-tires, /oklahoma/norman-tires, /oklahoma/broken-arrow-tires, /oklahoma/edmond-tires
-
-### Oregon (OR)
-- /oregon/portland-tires, /oregon/salem-tires, /oregon/eugene-tires, /oregon/gresham-tires, /oregon/hillsboro-tires
-
-### Pennsylvania (PA)
-- /pennsylvania/philadelphia-tires, /pennsylvania/pittsburgh-tires, /pennsylvania/allentown-tires, /pennsylvania/erie-tires, /pennsylvania/reading-tires
-
-### Rhode Island (RI)
-- /rhode-island/providence-tires, /rhode-island/warwick-tires, /rhode-island/cranston-tires, /rhode-island/pawtucket-tires, /rhode-island/east-providence-tires
-
-### South Carolina (SC)
-- /south-carolina/charleston-tires, /south-carolina/columbia-tires, /south-carolina/north-charleston-tires, /south-carolina/mount-pleasant-tires, /south-carolina/rock-hill-tires
-
-### South Dakota (SD)
-- /south-dakota/sioux-falls-tires, /south-dakota/rapid-city-tires, /south-dakota/aberdeen-tires, /south-dakota/brookings-tires, /south-dakota/watertown-tires
-
-### Tennessee (TN)
-- /tennessee/nashville-tires, /tennessee/memphis-tires, /tennessee/knoxville-tires, /tennessee/chattanooga-tires, /tennessee/clarksville-tires
-
-### Texas (TX)
-- /texas/houston-tires, /texas/dallas-tires, /texas/san-antonio-tires, /texas/austin-tires, /texas/fort-worth-tires
-
-### Utah (UT)
-- /utah/salt-lake-city-tires, /utah/west-valley-city-tires, /utah/provo-tires, /utah/west-jordan-tires, /utah/orem-tires
-
-### Vermont (VT)
-- /vermont/burlington-tires, /vermont/south-burlington-tires, /vermont/rutland-tires, /vermont/barre-tires, /vermont/montpelier-tires
-
-### Virginia (VA)
-- /virginia/virginia-beach-tires, /virginia/norfolk-tires, /virginia/chesapeake-tires, /virginia/richmond-tires, /virginia/newport-news-tires
-
-### Washington (WA)
-- /washington/seattle-tires, /washington/spokane-tires, /washington/tacoma-tires, /washington/vancouver-tires, /washington/bellevue-tires
-
-### West Virginia (WV)
-- /west-virginia/charleston-tires, /west-virginia/huntington-tires, /west-virginia/morgantown-tires, /west-virginia/parkersburg-tires, /west-virginia/wheeling-tires
-
-### Wisconsin (WI)
-- /wisconsin/milwaukee-tires, /wisconsin/madison-tires, /wisconsin/green-bay-tires, /wisconsin/kenosha-tires, /wisconsin/racine-tires
-
-### Wyoming (WY)
-- /wyoming/cheyenne-tires, /wyoming/casper-tires, /wyoming/laramie-tires, /wyoming/gillette-tires, /wyoming/rock-springs-tires
-
-### District of Columbia (DC)
-- /district-of-columbia/washington-tires, /district-of-columbia/georgetown-tires, /district-of-columbia/capitol-hill-tires, /district-of-columbia/dupont-circle-tires, /district-of-columbia/adams-morgan-tires
-
----
-
-## Structured Data (Schema.org)
-
-Ship.Tires implements the following schema types:
-- Organization + Store
-- Service (Nationwide Tire Shipping & Delivery)
-- OfferCatalog (Tire categories & services)
-- SearchAction (site search)
-- FAQPage (on homepage and FAQ page)
-- Product (on individual tire model pages)
-- BreadcrumbList (navigation)
-
----
-
-## Social & Contact
-
-- **Phone:** (916) 476-7689 (call or text)
+- **Phone:** (916) 476-7689
 - **Email:** info@ship.tires
 - **Website:** https://ship.tires
-- **Hours:** Monday-Friday, responsive to quotes within hours
+- **Hours:** Monday-Friday, responsive within hours
 
 ---
 
-## Why Choose Ship.Tires
-
-1. **Free shipping always** — no minimum order, no gimmicks
-2. **Huge selection** — 20+ brands covering every vehicle and driving style
-3. **Ship anywhere** — to your door or directly to your installer
-4. **Expert help** — real people answering phones, not bots
-5. **Competitive pricing** — request a quote and compare
-6. **Fast delivery** — most orders arrive in 3-7 business days
-7. **Manufacturer warranties** — full factory coverage on every tire
-
----
-
-*Last updated: 2025*
-*For the summary version, see https://ship.tires/llm.txt*
+*Last updated: June 2026*
+*Summary version: https://ship.tires/llm.txt*
+*Standard version: https://ship.tires/llms.txt*

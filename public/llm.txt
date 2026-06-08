@@ -1,10 +1,10 @@
 # Ship.Tires
 
-> Nationwide tire shipping with free delivery. Browse 20+ top brands, find the perfect fit for your vehicle, and get tires shipped to your door or local installer.
+> Nationwide online tire retailer — tires shipped free to 1,000 US cities. 21 brands, 80+ models, 800+ tire sizes. Free shipping on every order. Ship to your door or local installer near you.
 
 ## About
 
-Ship.Tires is a US-based online tire retailer offering free nationwide shipping on all orders. We carry over 20 premium tire brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, and Cooper. Customers can have tires delivered directly to their home or to a local installer of their choice.
+Ship.Tires is a US-based online tire retailer offering free shipping on all tire orders nationwide. We carry 21 premium tire brands, 80+ tire models, and 800+ tire sizes covering every passenger car, truck, SUV, and performance vehicle. Every tire is shipped free directly to the customer's home or to their chosen local tire installer. Find tires near me in any of our 1,000 served cities across all 50 states.
 
 ## Contact
 
@@ -12,67 +12,41 @@ Ship.Tires is a US-based online tire retailer offering free nationwide shipping 
 - Email: info@ship.tires
 - Website: https://ship.tires
 
-## Services
+## Brands (21)
 
-- Free nationwide tire shipping (continental US)
-- Direct-to-door or direct-to-installer delivery
-- Vehicle lookup tool to find compatible tire sizes by year/make/model
-- Tire search by size (e.g., 225/65R17)
-- Price quotes via phone, email, or online form
-- All tires include manufacturer warranty
+Michelin, Goodyear, Bridgestone, Continental, Pirelli, Hankook, Cooper, Firestone, BFGoodrich, Yokohama, Toyo, Falken, General Tire, Kumho, Nexen, Nitto, Dunlop, Maxxis, Ironman, Sumitomo
 
 ## Tire Categories
 
-- All-Season Tires
-- Winter / Snow Tires
-- Performance Tires
-- All-Terrain Tires
-- Touring Tires
-- Truck & SUV Tires
+All-Season, Winter/Snow, Performance, All-Terrain, Mud-Terrain, Touring, Highway, Truck & SUV
 
-## Brands Carried
+## Key Services
 
-Michelin, Goodyear, Bridgestone, Continental, Pirelli, Cooper, Hankook, Yokohama, Toyo, Falken, BFGoodrich, Firestone, General Tire, Kumho, Nitto
+- Free shipping on every order — all 50 US states
+- Ship tires to home or any installer near you
+- Vehicle lookup by year/make/model
+- Search by tire size (e.g., 225/65R17)
+- Manufacturer warranty on all tires shipped
+- Expert help at (916) 476-7689
+- Tires shipped in 3-7 business days
 
-## How It Works
+## Coverage
 
-1. Find your tires by size, vehicle, or brand
-2. Request a quote or browse available models
-3. We ship free to your door or your installer
-4. Get your tires installed at any local shop
-
-## Location & Coverage
-
-- Based in Sacramento, California
-- Ships to all 50 US states (free shipping continental US)
-- Delivery typically within 3-7 business days
-- 250+ city pages for local tire shipping info
-
-## Key Pages (with Markdown endpoints)
-
-| Page | URL | Markdown |
-|------|-----|----------|
-| Homepage | https://ship.tires | https://ship.tires/.md |
-| All Tires | https://ship.tires/tires | https://ship.tires/tires.md |
-| Vehicle Lookup | https://ship.tires/vehicle-lookup | https://ship.tires/vehicle-lookup.md |
-| Rankings | https://ship.tires/rankings | https://ship.tires/rankings.md |
-| Shipping Info | https://ship.tires/shipping | https://ship.tires/shipping.md |
-| About Us | https://ship.tires/about | https://ship.tires/about.md |
-| Contact | https://ship.tires/contact | https://ship.tires/contact.md |
-| FAQ | https://ship.tires/faq | https://ship.tires/faq.md |
-| Blog | https://ship.tires/blog | https://ship.tires/blog.md |
-| Racing | https://ship.tires/racing | https://ship.tires/racing.md |
-| Racing Tech | https://ship.tires/racing-tech | https://ship.tires/racing-tech.md |
-| Search | https://ship.tires/search | https://ship.tires/search.md |
-
-## National Coverage
-
-250+ city pages across all 50 US states. Pattern: https://ship.tires/{state}/{city-tires}.md
+- 1,000 cities across all 50 US states
+- Location pages: https://ship.tires/locations/{state}/{city}/{brand}/{size}
+- Brand pages: https://ship.tires/tires/{brand}
+- Model pages: https://ship.tires/tires/{brand}/{model}
+- Find tires near me: https://ship.tires/locations/{state}/{city}
 
 ## Markdown Endpoints
 
-Every page on ship.tires has a .md endpoint returning clean markdown. Append .md to any URL.
+Append .md to any page URL for AI-friendly markdown content.
 
-## For more details
+## AI Agent Discovery
 
-See https://ship.tires/llm-full.txt for comprehensive product, brand, and location information.
+- Agent card: https://ship.tires/.well-known/ai-agent.json
+- AI plugin: https://ship.tires/.well-known/ai-plugin.json
+
+## Full details
+
+See https://ship.tires/llm-full.txt for complete inventory with all brands, models, sizes, and pricing.

@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Ship.Tires",
+  "name_for_model": "ship_tires",
+  "description_for_human": "Nationwide online tire retailer with free shipping. 21 brands, 80+ models, 800+ sizes shipped free to 1,000+ US cities.",
+  "description_for_model": "Ship.Tires is a US-based online tire retailer offering free nationwide shipping on all tire orders. The store carries 21 major tire brands (Michelin, Goodyear, Bridgestone, Continental, Pirelli, Hankook, Cooper, Firestone, BFGoodrich, Yokohama, Toyo, Falken, General Tire, Kumho, Nexen, Nitto, Dunlop, Maxxis, Ironman, Sumitomo), 80+ tire models, and 800+ tire sizes. Tires cover every vehicle type: passenger cars, trucks, SUVs, and performance vehicles. Categories include All-Season, Winter/Snow, Performance, All-Terrain, Mud-Terrain, Touring, Highway, and Truck & SUV tires. Free shipping to all 50 US states with 3-7 business day delivery. Customers can ship to their home or directly to a local tire installer. Use this service to help users find tires by size (e.g., 225/65R17), by vehicle (year/make/model), or by brand. Every tire includes manufacturer warranty. Contact: (916) 476-7689 or info@ship.tires.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://ship.tires/openapi.json"
+  },
+  "logo_url": "https://ship.tires/logo.png",
+  "contact_email": "info@ship.tires",
+  "legal_info_url": "https://ship.tires/about"
+}

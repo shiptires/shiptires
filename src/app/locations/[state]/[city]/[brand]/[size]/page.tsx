@@ -84,8 +84,8 @@ export async function generateMetadata({
     vehicles.length > 0 ? ` Fits ${vehicles.slice(0, 2).join(", ")}.` : "";
 
   return {
-    title: `${brand.name} ${displaySize} Tires in ${city.name}, ${state.abbreviation} — from $${lowestPrice}`,
-    description: `Buy ${brand.name} ${displaySize} tires with free shipping to ${city.name}, ${state.abbreviation}. ${models.length} model${models.length > 1 ? "s" : ""} available from $${lowestPrice}/tire.${vehicleText} Order online, delivered free.`,
+    title: `${brand.name} ${displaySize} Tires Near Me in ${city.name}, ${state.abbreviation} — Shipped Free from $${lowestPrice}`,
+    description: `${brand.name} ${displaySize} tires near me in ${city.name}, ${state.abbreviation}. ${models.length} model${models.length > 1 ? "s" : ""} from $${lowestPrice}/tire shipped free.${vehicleText} Free shipping — ship to your door or installer near ${city.name}.`,
   };
 }
 
@@ -226,8 +226,8 @@ export default async function SizePage({
               <span className="text-gray-300">{displaySize}</span>
             </div>
             <h1 className="mt-4 text-3xl font-bold sm:text-4xl">
-              {brand.name} {displaySize} Tires in {city.name},{" "}
-              {state.abbreviation}
+              {brand.name} {displaySize} Tires Near Me in {city.name},{" "}
+              {state.abbreviation} — Shipped Free
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-gray-300">
               <span>
@@ -243,7 +243,7 @@ export default async function SizePage({
                 /tire
               </span>
               <span className="text-gray-500">|</span>
-              <span className="text-green-400">Free Shipping to {city.name}</span>
+              <span className="text-green-400">Shipped Free to {city.name}</span>
             </div>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default async function SizePage({
               {/* Intro */}
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
-                  Buy {brand.name} {displaySize} Tires in {city.name}
+                  Buy {brand.name} {displaySize} Tires Near Me in {city.name} — Free Shipping
                 </h2>
                 <p className="mt-3 text-gray-600 leading-relaxed">
                   {introText}
@@ -455,7 +455,7 @@ export default async function SizePage({
               {otherBrands.length > 0 && (
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
-                    Other {displaySize} Tires in {city.name}
+                    Other {displaySize} Tires Near Me in {city.name}
                   </h2>
                   <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
                     {otherBrands.slice(0, 9).map(({ brand: ob, lowestPrice: lp, modelCount }) => (
@@ -515,7 +515,7 @@ export default async function SizePage({
                     Get a Quote
                   </h3>
                   <p className="mt-1 text-sm text-gray-500">
-                    {brand.name} {displaySize} shipped free to {city.name}.
+                    {brand.name} {displaySize} shipped free to {city.name}. Free shipping on every order.
                   </p>
                   <div className="mt-4 space-y-3">
                     <Link
@@ -585,7 +585,7 @@ export default async function SizePage({
                           d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      Fast nationwide delivery
+                      Tires shipped fast — 3-7 business days
                     </li>
                     <li className="flex items-start gap-2">
                       <svg

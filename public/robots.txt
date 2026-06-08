@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ship.tires/sitemap.xml
+
+# AI/LLM Resources
+# See https://ship.tires/llm.txt for a brief overview
+# See https://ship.tires/llms.txt for standard LLM context
+# See https://ship.tires/llm-full.txt for complete inventory with all brands, models, sizes, and pricing
+# See https://ship.tires/.well-known/ai-agent.json for AI agent discovery
+# Append .md to any page URL for AI-friendly markdown content
