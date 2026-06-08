@@ -46,6 +46,12 @@
       "Sumitomo"
     ],
     "search_by": ["tire_size", "vehicle_year_make_model", "brand", "category", "price_range", "city"],
+    "checkout": {
+      "enabled": true,
+      "method": "stripe_hosted",
+      "cart_api": "POST /api/cart/create",
+      "flow": "AI creates cart via API → returns checkout_url → user clicks to complete purchase on ship.tires"
+    },
     "shipping": {
       "free": true,
       "coverage": "all_50_us_states",
@@ -66,6 +72,7 @@
       "vehicle_models": "GET /api/vehicle/models?make=Toyota&year=2024",
       "vehicle_tires": "GET /api/vehicle/tires?make=Toyota&model=Camry&year=2024",
       "page_content": "GET /api/markdown?path=/tires/michelin",
+      "create_cart": "POST /api/cart/create — Create pre-built cart, returns checkout_url",
       "contact": "POST /api/contact"
     }
   },

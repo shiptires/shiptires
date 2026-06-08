@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { states } from "@/data/locations";
 import { brands } from "@/data/brands";
+import AddToCartButton from "@/components/AddToCartButton";
 import {
   toLocationSlug,
   findState,
@@ -284,10 +285,20 @@ export default async function SizePage({
                           <td className="py-3 pr-4 font-bold text-gray-900">
                             ${si.price}
                           </td>
-                          <td className="py-3">
+                          <td className="py-3 flex items-center gap-2">
+                            <AddToCartButton
+                              brand={brand.name}
+                              brandSlug={brand.slug}
+                              model={model.name}
+                              modelSlug={model.slug}
+                              size={si.size}
+                              price={si.price}
+                              loadIndex={si.loadIndex}
+                              speedRating={si.speedRating}
+                            />
                             <Link
                               href={`/contact?tire=${encodeURIComponent(`${brand.name} ${model.name}`)}&size=${encodeURIComponent(realSize)}&city=${encodeURIComponent(city.name)}`}
-                              className="inline-flex items-center rounded-md bg-orange px-3 py-1.5 text-xs font-bold text-white hover:bg-orange-dark transition-colors"
+                              className="inline-flex items-center rounded-md bg-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-300 transition-colors"
                             >
                               Get Quote
                             </Link>
@@ -344,12 +355,24 @@ export default async function SizePage({
                       ${si.price}/tire
                     </span>
                     <span className="text-gray-500">{model.warranty}</span>
-                    <Link
-                      href={`/contact?tire=${encodeURIComponent(`${brand.name} ${model.name}`)}&size=${encodeURIComponent(realSize)}&city=${encodeURIComponent(city.name)}`}
-                      className="ml-auto rounded-md bg-orange px-4 py-2 text-xs font-bold text-white hover:bg-orange-dark transition-colors"
-                    >
-                      Get Quote for {city.name}
-                    </Link>
+                    <div className="ml-auto flex items-center gap-2">
+                      <AddToCartButton
+                        brand={brand.name}
+                        brandSlug={brand.slug}
+                        model={model.name}
+                        modelSlug={model.slug}
+                        size={si.size}
+                        price={si.price}
+                        loadIndex={si.loadIndex}
+                        speedRating={si.speedRating}
+                      />
+                      <Link
+                        href={`/contact?tire=${encodeURIComponent(`${brand.name} ${model.name}`)}&size=${encodeURIComponent(realSize)}&city=${encodeURIComponent(city.name)}`}
+                        className="rounded-md bg-gray-200 px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-300 transition-colors"
+                      >
+                        Get Quote
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}

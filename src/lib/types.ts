@@ -119,3 +119,27 @@ export interface QuoteRequest {
   shippingZip: string;
   message?: string;
 }
+
+export interface CartItem {
+  brand: string;
+  brandSlug: string;
+  model: string;
+  modelSlug: string;
+  size: string;
+  price: number;
+  quantity: number;
+  loadIndex: number;
+  speedRating: string;
+}
+
+export interface ShippingAddress {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  state: string;
+  zip: string;
+}

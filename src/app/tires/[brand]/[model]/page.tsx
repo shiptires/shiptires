@@ -3,6 +3,7 @@ import Link from "next/link";
 import { brands } from "@/data/brands";
 import QuoteRequestForm from "@/components/QuoteRequestForm";
 import TireCard from "@/components/TireCard";
+import AddToCartButton from "@/components/AddToCartButton";
 import type { Metadata } from "next";
 
 export async function generateStaticParams() {
@@ -193,10 +194,20 @@ export default async function ModelPage({
                           <td className="py-3 pr-4 text-gray-600">{size.loadIndex}</td>
                           <td className="py-3 pr-4 text-gray-600">{size.speedRating}</td>
                           <td className="py-3 pr-4 font-bold text-gray-900">${size.price}</td>
-                          <td className="py-3">
+                          <td className="py-3 flex items-center gap-2">
+                            <AddToCartButton
+                              brand={brand.name}
+                              brandSlug={brand.slug}
+                              model={model.name}
+                              modelSlug={model.slug}
+                              size={size.size}
+                              price={size.price}
+                              loadIndex={size.loadIndex}
+                              speedRating={size.speedRating}
+                            />
                             <Link
                               href={`/contact?tire=${encodeURIComponent(`${brand.name} ${model.name}`)}&size=${encodeURIComponent(size.size)}`}
-                              className="inline-flex items-center rounded-md bg-orange px-3 py-1.5 text-xs font-bold text-white hover:bg-orange-dark transition-colors"
+                              className="inline-flex items-center rounded-md bg-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-300 transition-colors"
                             >
                               Get Quote
                             </Link>

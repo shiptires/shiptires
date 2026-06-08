@@ -1,7 +1,27 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { chatbotConfig } from "@/lib/chatbot-config";
+import { brands } from "@/data/brands";
 
 const anthropic = new Anthropic();
+
+// Build condensed catalog for system prompt injection
+function buildCatalogPrompt(): string {
+  const lines: string[] = ["CATALOG DATA (use these exact slugs for CREATE_CHECKOUT):"];
+  for (const brand of brands) {
+    for (const model of brand.models) {
+      const sizes = model.sizes
+        .map((s) => `${s.size}=$${s.price}`)
+        .join(", ");
+      lines.push(
+        `${brand.name} (${brand.slug}) — ${model.name} (${model.slug}) [${model.type}] ${model.warranty}: ${sizes}`
+      );
+    }
+  }
+  return lines.join("\n");
+}
+
+const catalogPrompt = buildCatalogPrompt();
+const fullSystemPrompt = `${chatbotConfig.systemPrompt}\n\n${catalogPrompt}`;
 
 export async function POST(req: Request) {
   try {
@@ -14,7 +34,7 @@ export async function POST(req: Request) {
     const stream = anthropic.messages.stream({
       model: "claude-sonnet-4-20250514",
       max_tokens: 1024,
-      system: chatbotConfig.systemPrompt,
+      system: fullSystemPrompt,
       messages: messages.map((m: { role: string; content: string }) => ({
         role: m.role as "user" | "assistant",
         content: m.content,

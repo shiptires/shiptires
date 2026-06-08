@@ -5,6 +5,8 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ChatBot from "@/components/ChatBot";
+import CookieConsent from "@/components/CookieConsent";
+import ClientProviders from "@/components/ClientProviders";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -201,19 +203,25 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
         />
+        <Script id="consent-defaults" strategy="beforeInteractive">
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('consent','default',{analytics_storage:'denied'});`}
+        </Script>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-JQ5FYZVLXK"
           strategy="afterInteractive"
         />
         <Script id="gtag-init" strategy="afterInteractive">
-          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JQ5FYZVLXK');`}
+          {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JQ5FYZVLXK');var c=localStorage.getItem('ship-tires-cookie-consent');if(c==='granted'){gtag('consent','update',{analytics_storage:'granted'});}`}
         </Script>
       </head>
       <body className="min-h-full flex flex-col">
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <ChatBot />
+        <ClientProviders>
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <ChatBot />
+          <CookieConsent />
+        </ClientProviders>
       </body>
     </html>
   );

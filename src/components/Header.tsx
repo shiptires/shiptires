@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import CartIcon from "@/components/CartIcon";
 
 const navigation = [
   { name: "Tires", href: "/tires" },
@@ -73,6 +74,7 @@ export default function Header() {
               >
                 (916) 476-7689
               </a>
+              <CartIcon />
               <Link
                 href="/contact"
                 className="inline-flex items-center gap-2 rounded-lg bg-orange px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-orange-light red-glow"
@@ -83,6 +85,7 @@ export default function Header() {
 
             {/* Mobile menu button */}
             <div className="flex items-center gap-3 lg:hidden">
+              <CartIcon />
               <Link
                 href="/contact"
                 className="inline-flex items-center justify-center rounded-lg bg-orange px-3 py-2 text-xs font-bold text-white"

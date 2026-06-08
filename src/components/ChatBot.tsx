@@ -8,6 +8,22 @@ interface Message {
   content: string;
 }
 
+// Parse [CREATE_CHECKOUT:...] commands from assistant messages
+// and replace them with checkout links
+function processMessageContent(
+  content: string,
+  onCheckoutCommand: (json: string) => void
+): string {
+  const regex = /\[CREATE_CHECKOUT:(\{.*?\})\]/g;
+  let match;
+  let processed = content;
+  while ((match = regex.exec(content)) !== null) {
+    onCheckoutCommand(match[1]);
+    processed = processed.replace(match[0], "[Creating checkout link...]");
+  }
+  return processed;
+}
+
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -15,8 +31,23 @@ export default function ChatBot() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [autoOpened, setAutoOpened] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-open after 3s on first visit (sessionStorage)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const key = "ship-tires-chatbot-opened";
+    if (!sessionStorage.getItem(key)) {
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+        setAutoOpened(true);
+        sessionStorage.setItem(key, "1");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -31,6 +62,39 @@ export default function ChatBot() {
       inputRef.current.focus();
     }
   }, [isOpen]);
+
+  // Handle CREATE_CHECKOUT commands
+  const handleCheckoutCommand = useCallback(async (jsonStr: string) => {
+    try {
+      const data = JSON.parse(jsonStr);
+      const res = await fetch("/api/cart/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, source: "chatbot" }),
+      });
+      const result = await res.json();
+      if (result.checkout_url) {
+        const linkMsg = `Your order is ready! Click here to complete checkout:\n${result.checkout_url}\n\nSubtotal: $${result.subtotal?.toFixed(2)} — Free shipping included.`;
+        setMessages((prev) => {
+          // Replace the "[Creating checkout link...]" placeholder
+          const updated = [...prev];
+          const lastIdx = updated.length - 1;
+          if (updated[lastIdx]?.role === "assistant") {
+            updated[lastIdx] = {
+              ...updated[lastIdx],
+              content: updated[lastIdx].content.replace(
+                "[Creating checkout link...]",
+                linkMsg
+              ),
+            };
+          }
+          return updated;
+        });
+      }
+    } catch {
+      // Silently fail — the message still shows
+    }
+  }, []);
 
   const sendMessage = async () => {
     const trimmed = input.trim();
@@ -89,6 +153,23 @@ export default function ChatBot() {
           }
         }
       }
+
+      // After streaming is done, check for checkout commands
+      const checkoutRegex = /\[CREATE_CHECKOUT:(\{.*?\})\]/g;
+      let match;
+      while ((match = checkoutRegex.exec(assistantContent)) !== null) {
+        // Process the command
+        const processed = processMessageContent(assistantContent, () => {});
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: processed,
+          };
+          return updated;
+        });
+        handleCheckoutCommand(match[1]);
+      }
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -104,6 +185,29 @@ export default function ChatBot() {
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  // Render message content with clickable links
+  const renderContent = (content: string) => {
+    // Convert URLs to clickable links
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = content.split(urlRegex);
+    return parts.map((part, i) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "#2563EB", textDecoration: "underline", wordBreak: "break-all" }}
+          >
+            {part.includes("/checkout/") ? "Complete Checkout" : part}
+          </a>
+        );
+      }
+      return part;
+    });
   };
 
   const { colors } = chatbotConfig;
@@ -234,7 +338,7 @@ export default function ChatBot() {
                     whiteSpace: "pre-wrap",
                   }}
                 >
-                  {msg.content}
+                  {msg.role === "assistant" ? renderContent(msg.content) : msg.content}
                 </div>
               </div>
             ))}

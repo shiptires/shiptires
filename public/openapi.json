@@ -388,6 +388,75 @@
         }
       }
     },
+    "/api/cart/create": {
+      "post": {
+        "operationId": "createCart",
+        "summary": "Create a pre-built cart with a shareable checkout link",
+        "description": "Creates a cart session with specified tire items and returns a checkout URL the customer can use to complete their purchase. Cart links expire after 7 days. Prices are validated server-side against the catalog. Use this to generate checkout links for customers in chat or AI conversations.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["items"],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "description": "Tire items to add to the cart",
+                    "items": {
+                      "type": "object",
+                      "required": ["brandSlug", "modelSlug", "size"],
+                      "properties": {
+                        "brandSlug": { "type": "string", "description": "Brand slug (e.g., 'michelin', 'goodyear')" },
+                        "modelSlug": { "type": "string", "description": "Model slug (e.g., 'defender-ltx-ms-2', 'pilot-sport-4s')" },
+                        "size": { "type": "string", "description": "Tire size (e.g., '225/65R17')" },
+                        "quantity": { "type": "integer", "description": "Number of tires (default: 4)", "default": 4 }
+                      }
+                    }
+                  },
+                  "source": { "type": "string", "description": "Source identifier (e.g., 'chatgpt', 'chatbot')" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cart created with checkout URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "checkout_url": { "type": "string", "format": "uri", "description": "URL for customer to complete checkout" },
+                    "session_id": { "type": "string", "description": "Cart session ID" },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "brand": { "type": "string" },
+                          "model": { "type": "string" },
+                          "size": { "type": "string" },
+                          "price": { "type": "number" },
+                          "quantity": { "type": "integer" }
+                        }
+                      }
+                    },
+                    "subtotal": { "type": "number", "description": "Total before tax in USD" },
+                    "expires_at": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid items or brand/model/size not found"
+          }
+        }
+      }
+    },
     "/api/contact": {
       "post": {
         "operationId": "submitInquiry",
