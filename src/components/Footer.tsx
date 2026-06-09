@@ -30,9 +30,9 @@ const companyLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-rubber text-ink-grey">
+    <footer className="bg-rubber">
       {/* Hairline top rule */}
-      <div className="h-px bg-ink-grey/30" />
+      <div className="h-px bg-white/10" />
 
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -44,11 +44,11 @@ export default function Footer() {
                 alt="Ship.Tires"
                 width={400}
                 height={200}
-                className="h-16 w-auto lg:h-20 brightness-200 invert"
+                className="h-16 w-auto lg:h-20"
                 unoptimized
               />
             </Link>
-            <p className="mt-4 text-sm leading-relaxed text-ink-grey">
+            <p className="mt-4 text-sm leading-relaxed text-white/60">
               Tires shipped free nationwide. 21 brands, 100+ models, 800+ sizes
               delivered to your door or local installer.
             </p>
@@ -68,7 +68,7 @@ export default function Footer() {
             <ul className="space-y-2">
               {tireLinks.map((link) => (
                 <li key={link.name}>
-                  <Link href={link.href} className="text-sm text-ink-grey transition-colors hover:text-label-white">
+                  <Link href={link.href} className="text-sm text-white/60 transition-colors hover:text-white">
                     {link.name}
                   </Link>
                 </li>
@@ -84,7 +84,7 @@ export default function Footer() {
             <ul className="space-y-2">
               {topBrands.map((brand) => (
                 <li key={brand.name}>
-                  <Link href={brand.href} className="text-sm text-ink-grey transition-colors hover:text-label-white">
+                  <Link href={brand.href} className="text-sm text-white/60 transition-colors hover:text-white">
                     {brand.name}
                   </Link>
                 </li>
@@ -112,7 +112,7 @@ export default function Footer() {
               <li>
                 <a
                   href="mailto:info@ship.tires"
-                  className="flex items-center gap-2 text-sm text-ink-grey transition-colors hover:text-label-white"
+                  className="flex items-center gap-2 text-sm text-white/60 transition-colors hover:text-white"
                 >
                   <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
@@ -123,7 +123,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/contact"
-                  className="flex items-center gap-2 text-sm text-ink-grey transition-colors hover:text-label-white"
+                  className="flex items-center gap-2 text-sm text-white/60 transition-colors hover:text-white"
                 >
                   <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
@@ -136,21 +136,21 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 border-t border-ink-grey/20 pt-8">
+        <div className="mt-12 border-t border-white/10 pt-8">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <p className="text-sm text-ink-grey">
+            <p className="text-sm text-white/50">
               &copy; {new Date().getFullYear()} Ship.Tires. All rights reserved.
             </p>
             <div className="flex flex-wrap justify-center gap-6">
               {companyLinks.map((link) => (
-                <Link key={link.name} href={link.href} className="text-sm text-ink-grey hover:text-label-white transition-colors">
+                <Link key={link.name} href={link.href} className="text-sm text-white/50 hover:text-white transition-colors">
                   {link.name}
                 </Link>
               ))}
             </div>
           </div>
-          <div className="mt-4 text-center text-xs text-ink-grey/50">
-            <a href="https://sigmaagents.ai" target="_blank" rel="noopener noreferrer" className="hover:text-ink-grey transition-colors">
+          <div className="mt-4 text-center text-xs text-white/30">
+            <a href="https://sigmaagents.ai" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">
               Powered by Sigma Agents
             </a>
           </div>

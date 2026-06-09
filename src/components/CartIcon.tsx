@@ -9,7 +9,7 @@ export default function CartIcon() {
   return (
     <Link
       href="/cart"
-      className="relative inline-flex items-center justify-center rounded-md p-2 text-ink-grey hover:text-rubber transition-colors"
+      className="relative inline-flex items-center justify-center rounded-md p-2 text-white/70 hover:text-white transition-colors"
       aria-label={`Cart with ${totalItems} items`}
     >
       <svg
