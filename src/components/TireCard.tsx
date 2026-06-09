@@ -1,17 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { TireModel } from "@/lib/types";
-
-const typeColors: Record<string, string> = {
-  "all-season": "bg-blue text-white",
-  winter: "bg-sky-500 text-white",
-  summer: "bg-amber-500 text-white",
-  performance: "bg-orange text-white",
-  "all-terrain": "bg-green-600 text-white",
-  "mud-terrain": "bg-amber-800 text-white",
-  highway: "bg-gray-600 text-white",
-  touring: "bg-purple-600 text-white",
-};
+import { getLogoUrl } from "@/lib/api-helpers";
+import { brands } from "@/data/brands";
 
 const typeLabels: Record<string, string> = {
   "all-season": "All-Season",
@@ -24,17 +15,6 @@ const typeLabels: Record<string, string> = {
   touring: "Touring",
 };
 
-const typeImages: Record<string, string> = {
-  "all-season": "https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=400&q=70",
-  winter: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=400&q=70",
-  summer: "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=400&q=70",
-  performance: "https://images.unsplash.com/photo-1684779343332-5a8f8d53b75f?w=400&q=70",
-  "all-terrain": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400&q=70",
-  "mud-terrain": "https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=400&q=70",
-  highway: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=400&q=70",
-  touring: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&q=70",
-};
-
 export default function TireCard({
   model,
   brandSlug,
@@ -42,39 +22,38 @@ export default function TireCard({
   model: TireModel;
   brandSlug: string;
 }) {
-  const imageUrl = typeImages[model.type] || typeImages["all-season"];
+  const brand = brands.find((b) => b.slug === brandSlug);
+  const logoUrl = brand ? getLogoUrl(brand.domain) : null;
 
   return (
     <Link
       href={`/tires/${brandSlug}/${model.slug}`}
-      className="group block overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-lg hover:border-orange/30"
+      className="group block overflow-hidden rounded-lg border border-ink-grey/15 bg-white transition-all hover:shadow-md hover:border-safety-orange/30"
     >
-      {/* Tire type image */}
-      <div className="relative h-36 overflow-hidden bg-navy">
-        <Image
-          src={imageUrl}
-          alt={model.name}
-          fill
-          className="object-cover opacity-50 group-hover:opacity-40 group-hover:scale-105 transition-all duration-500"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy via-navy/60 to-transparent" />
-        <div className="absolute bottom-3 left-4 right-4">
-          <h3 className="font-bold text-white text-sm group-hover:text-orange transition-colors">
-            {model.name}
-          </h3>
-        </div>
-        <div className="absolute top-3 right-3">
-          <span
-            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold ${typeColors[model.type] || "bg-gray-200 text-gray-700"}`}
-          >
-            {typeLabels[model.type] || model.type}
-          </span>
-        </div>
+      {/* Brand logo + type badge header */}
+      <div className="relative flex items-center justify-between border-b border-ink-grey/10 bg-label-white px-4 py-3">
+        {logoUrl && (
+          <div className="flex h-8 w-8 items-center justify-center rounded bg-white p-0.5">
+            <Image
+              src={logoUrl}
+              alt={brand?.name || brandSlug}
+              width={28}
+              height={28}
+              className="h-7 w-7 object-contain"
+              unoptimized
+            />
+          </div>
+        )}
+        <span className="inline-flex items-center rounded border border-ink-grey/20 px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-ink-grey">
+          {typeLabels[model.type] || model.type}
+        </span>
       </div>
 
       <div className="p-4">
-        <p className="text-xs text-gray-500 line-clamp-2">
+        <h3 className="font-display text-base font-bold text-rubber group-hover:text-safety-orange transition-colors">
+          {model.name}
+        </h3>
+        <p className="mt-1 text-xs text-ink-grey line-clamp-2">
           {model.description}
         </p>
 
@@ -82,28 +61,28 @@ export default function TireCard({
           {model.features.slice(0, 2).map((feature) => (
             <span
               key={feature}
-              className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-[10px] text-gray-600"
+              className="inline-flex items-center rounded bg-kraft/30 px-2 py-0.5 text-[10px] text-rubber/70"
             >
               {feature}
             </span>
           ))}
         </div>
 
-        <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+        <div className="mt-3 flex items-center justify-between border-t border-ink-grey/10 pt-3">
           <div>
-            <span className="text-xs text-gray-500">From </span>
-            <span className="text-base font-black text-gray-900">
+            <span className="text-xs text-ink-grey">From </span>
+            <span className="text-base font-mono font-bold text-rubber">
               ${model.priceRange[0]}
             </span>
-            <span className="text-xs text-gray-500"> /tire</span>
+            <span className="text-xs text-ink-grey"> /tire</span>
           </div>
-          <div className="text-[10px] text-gray-400 font-medium">
+          <div className="text-[10px] font-mono text-ink-grey">
             {model.sizes.length} sizes
           </div>
         </div>
 
         {model.warranty && (
-          <div className="mt-1.5 text-[10px] text-gray-400">
+          <div className="mt-1.5 text-[10px] font-mono text-ink-grey">
             Warranty: {model.warranty}
           </div>
         )}

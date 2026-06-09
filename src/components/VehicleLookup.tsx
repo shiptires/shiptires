@@ -74,24 +74,24 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
         onResult?.(sizes);
       })
       .catch(() => {
-        setError("Could not load tire sizes. Please call us for help!");
+        setError("Could not load tire sizes. Please call or text us for help!");
         setTireSizes([]);
       })
       .finally(() => setLoading(null));
   }, [year, make, model, onResult]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Year */}
       <div>
-        <label htmlFor="v-year" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="v-year" className="block text-xs font-mono uppercase tracking-wider text-ink-grey mb-1">
           Year
         </label>
         <select
           id="v-year"
           value={year}
           onChange={(e) => setYear(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none bg-white text-gray-900"
+          className="w-full rounded-md border border-ink-grey/20 px-4 py-2.5 text-sm focus:border-safety-orange focus:ring-2 focus:ring-safety-orange/20 focus:outline-none bg-white text-rubber"
         >
           <option value="">Select Year</option>
           {yearRange.map((y) => (
@@ -102,7 +102,7 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
 
       {/* Make */}
       <div>
-        <label htmlFor="v-make" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="v-make" className="block text-xs font-mono uppercase tracking-wider text-ink-grey mb-1">
           Make
         </label>
         <select
@@ -110,7 +110,7 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
           value={make}
           onChange={(e) => setMake(e.target.value)}
           disabled={!year || loading === "makes"}
-          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none bg-white text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="w-full rounded-md border border-ink-grey/20 px-4 py-2.5 text-sm focus:border-safety-orange focus:ring-2 focus:ring-safety-orange/20 focus:outline-none bg-white text-rubber disabled:bg-label-white disabled:text-ink-grey/50 disabled:cursor-not-allowed"
         >
           <option value="">{loading === "makes" ? "Loading..." : "Select Make"}</option>
           {makes.map((m) => (
@@ -121,7 +121,7 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
 
       {/* Model */}
       <div>
-        <label htmlFor="v-model" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="v-model" className="block text-xs font-mono uppercase tracking-wider text-ink-grey mb-1">
           Model
         </label>
         <select
@@ -129,7 +129,7 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
           value={model}
           onChange={(e) => setModel(e.target.value)}
           disabled={!make || loading === "models"}
-          className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-blue focus:ring-2 focus:ring-blue/20 focus:outline-none bg-white text-gray-900 disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="w-full rounded-md border border-ink-grey/20 px-4 py-2.5 text-sm focus:border-safety-orange focus:ring-2 focus:ring-safety-orange/20 focus:outline-none bg-white text-rubber disabled:bg-label-white disabled:text-ink-grey/50 disabled:cursor-not-allowed"
         >
           <option value="">{loading === "models" ? "Loading..." : "Select Model"}</option>
           {models.map((m) => (
@@ -139,8 +139,8 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
       </div>
 
       {loading === "tires" && (
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <svg className="animate-spin h-4 w-4 text-blue" viewBox="0 0 24 24" fill="none">
+        <div className="flex items-center gap-2 text-sm text-ink-grey">
+          <svg className="animate-spin h-4 w-4 text-safety-orange" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
@@ -149,23 +149,23 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
       )}
 
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+        <div className="rounded-md bg-safety-orange/5 border border-safety-orange/20 p-3 text-sm text-rubber">
           {error}
-          <a href="tel:+19164767689" className="ml-1 font-semibold underline">Call (916) 476-7689</a>
+          <a href="tel:+12792388473" className="ml-1 font-mono font-semibold underline">(279) 238-8473 (TIRE)</a>
         </div>
       )}
 
       {tireSizes.length > 0 && (
-        <div className="rounded-lg bg-green-50 border border-green-200 p-4">
-          <h4 className="text-sm font-semibold text-green-800 mb-2">
-            Compatible Tire Sizes for {year} {make} {model}:
+        <div className="rounded-md border-2 border-dashed border-safety-orange/30 bg-safety-orange/5 p-4">
+          <h4 className="text-xs font-mono uppercase tracking-wider text-rubber mb-2">
+            Compatible sizes for {year} {make} {model}:
           </h4>
           <div className="flex flex-wrap gap-2">
             {tireSizes.map((size) => (
               <a
                 key={size}
                 href={`/search?size=${encodeURIComponent(size)}`}
-                className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800 hover:bg-green-200 transition-colors"
+                className="inline-flex items-center rounded-md border border-safety-orange/30 bg-white px-3 py-1 text-sm font-mono font-semibold text-rubber hover:bg-safety-orange hover:text-white transition-colors"
               >
                 {size}
               </a>
@@ -175,11 +175,11 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
       )}
 
       {year && make && model && tireSizes.length === 0 && !loading && !error && (
-        <div className="rounded-lg bg-blue/5 border border-blue/20 p-4 text-sm text-gray-700">
-          <p className="font-medium">Can&apos;t find your tire size?</p>
+        <div className="rounded-md border border-ink-grey/20 bg-kraft/10 p-4 text-sm text-rubber">
+          <p className="font-bold">Can&apos;t find your tire size?</p>
           <p className="mt-1">
-            Call us at <a href="tel:+19164767689" className="font-semibold text-blue underline">(916) 476-7689</a> or{" "}
-            <a href="/contact" className="font-semibold text-blue underline">request a quote</a> — we&apos;ll find the right fit.
+            Call or text us at <a href="tel:+12792388473" className="font-mono font-semibold text-safety-orange underline">(279) 238-8473 (TIRE)</a> or{" "}
+            <a href="/contact" className="font-semibold text-safety-orange underline">request a quote</a> — we&apos;ll find the right fit.
           </p>
         </div>
       )}

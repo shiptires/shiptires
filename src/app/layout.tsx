@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Inter } from "next/font/google";
+import { Archivo_Black, Source_Sans_3, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -8,41 +8,38 @@ import ChatBot from "@/components/ChatBot";
 import CookieConsent from "@/components/CookieConsent";
 import ClientProviders from "@/components/ClientProviders";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const archivoBlack = Archivo_Black({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-archivo-black",
+  display: "swap",
+});
+
+const sourceSans = Source_Sans_3({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-source-sans",
+  display: "swap",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  variable: "--font-ibm-plex-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
-    default: "Ship.Tires — Tires Shipped Fast. Installed Near You.",
+    default: "Tires Shipped Free. Near You. | Ship.Tires",
     template: "%s | Ship.Tires",
   },
   description:
-    "Tires shipped free nationwide. Browse 21 top brands, 800+ sizes shipped free to 1,000 cities. Find tires near me — ship to your door or local installer. Call (916) 476-7689.",
-  keywords: [
-    "tires near me",
-    "buy tires online",
-    "tires shipped free",
-    "free tire shipping",
-    "ship tires",
-    "tire shipping",
-    "tires delivered",
-    "tire delivery",
-    "Michelin tires near me",
-    "Goodyear tires near me",
-    "Bridgestone tires near me",
-    "Michelin tires",
-    "Goodyear tires",
-    "Bridgestone tires",
-    "all-season tires",
-    "winter tires",
-    "performance tires",
-    "tire sizes",
-    "tire quotes",
-    "nationwide tire delivery",
-  ],
+    "Tires shipped free nationwide. 21 brands, 100+ models, 800+ sizes shipped to your door or installer. Call or text (279) 238-8473 to order.",
   openGraph: {
-    title: "Ship.Tires — Tires Shipped Free. Near You.",
+    title: "Tires Shipped Free. Near You.",
     description:
-      "Free nationwide tire shipping. 21 brands, 80+ models, shipped free to 1,000 cities. Find tires near me.",
+      "Free nationwide tire shipping. 21 brands, 100+ models, 800+ sizes shipped to your door or installer.",
     url: "https://ship.tires",
     siteName: "Ship.Tires",
     type: "website",
@@ -51,15 +48,15 @@ export const metadata: Metadata = {
         url: "https://ship.tires/logo.png",
         width: 1200,
         height: 630,
-        alt: "Ship.Tires - Tires Shipped Free Nationwide",
+        alt: "Ship.Tires — Tires Shipped Free Nationwide",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ship.Tires — Tires Shipped Free. Near You.",
+    title: "Tires Shipped Free. Near You.",
     description:
-      "Free nationwide tire shipping. 21 brands, 80+ models, shipped free to 1,000 cities. Find tires near me.",
+      "Free nationwide tire shipping. 21 brands, 100+ models, 800+ sizes shipped to your door or installer.",
     images: ["https://ship.tires/logo.png"],
   },
   icons: {
@@ -70,9 +67,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  alternates: {
-    canonical: "https://ship.tires",
-  },
+  alternates: {},
   metadataBase: new URL("https://ship.tires"),
 };
 
@@ -81,11 +76,11 @@ const jsonLd = {
   "@type": ["Organization", "Store"],
   name: "Ship.Tires",
   url: "https://ship.tires",
-  telephone: "+1-916-476-7689",
+  telephone: "+1-279-238-8473",
   email: "info@ship.tires",
   logo: "https://ship.tires/logo.png",
   description:
-    "Tires shipped free nationwide. 21 brands, 800+ sizes shipped to 1,000 cities. Free shipping on every order — ship to your door or installer near you.",
+    "Tires shipped free nationwide. 21 brands, 100+ models, 800+ sizes shipped to your door or installer.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Sacramento",
@@ -105,7 +100,7 @@ const jsonLd = {
       { "@type": "OfferCatalog", name: "Winter Tires" },
       { "@type": "OfferCatalog", name: "Performance Tires" },
       { "@type": "OfferCatalog", name: "All-Terrain Tires" },
-      { "@type": "OfferCatalog", name: "All-Terrain Tires" },
+      { "@type": "OfferCatalog", name: "Mud-Terrain Tires" },
       { "@type": "OfferCatalog", name: "Touring Tires" },
       { "@type": "OfferCatalog", name: "Truck & SUV Tires" },
     ],
@@ -127,7 +122,7 @@ const serviceSchema = {
     url: "https://ship.tires",
   },
   description:
-    "Tires shipped free to your door or local installer near you. Browse 21 premium brands, search by vehicle or tire size, and get competitive quotes. Free shipping on every order.",
+    "Tires shipped free to your door or local installer. Browse 21 brands, search by vehicle or tire size, and get competitive quotes. Free shipping on every order.",
   serviceType: [
     "Tire Sales",
     "Tire Shipping",
@@ -148,7 +143,8 @@ const serviceSchema = {
         itemOffered: {
           "@type": "Service",
           name: "Free Tire Shipping",
-          description: "Free shipping on all tire orders to anywhere in the continental United States. Most orders arrive within 3-7 business days.",
+          description:
+            "Free shipping on all tire orders to anywhere in the continental United States. Most orders arrive within 3-7 business days.",
         },
       },
       {
@@ -156,7 +152,8 @@ const serviceSchema = {
         itemOffered: {
           "@type": "Service",
           name: "Ship to Installer",
-          description: "Ship tires directly to your preferred local tire installer for convenient installation.",
+          description:
+            "Ship tires directly to your preferred local tire installer for convenient installation.",
         },
       },
       {
@@ -164,7 +161,8 @@ const serviceSchema = {
         itemOffered: {
           "@type": "Service",
           name: "Vehicle Tire Lookup",
-          description: "Find compatible tire sizes by entering your vehicle year, make, and model.",
+          description:
+            "Find compatible tire sizes by entering your vehicle year, make, and model.",
         },
       },
       {
@@ -172,7 +170,8 @@ const serviceSchema = {
         itemOffered: {
           "@type": "Service",
           name: "Tire Size Search",
-          description: "Search our catalog by tire size to find all compatible tires from 20+ premium brands.",
+          description:
+            "Search our catalog by tire size to find all compatible tires from 21 brands.",
         },
       },
       {
@@ -180,7 +179,8 @@ const serviceSchema = {
         itemOffered: {
           "@type": "Service",
           name: "Free Price Quotes",
-          description: "Request a free tire quote by phone, email, or online form. We respond within hours.",
+          description:
+            "Request a free tire quote by phone, email, or online form. We respond within hours.",
         },
       },
     ],
@@ -193,7 +193,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${archivoBlack.variable} ${sourceSans.variable} ${ibmPlexMono.variable} h-full antialiased`}
+    >
       <head>
         <script
           type="application/ld+json"
@@ -214,7 +217,7 @@ export default function RootLayout({
           {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JQ5FYZVLXK');var c=localStorage.getItem('ship-tires-cookie-consent');if(c==='granted'){gtag('consent','update',{analytics_storage:'granted'});}`}
         </Script>
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col font-body">
         <ClientProviders>
           <Header />
           <main className="flex-1">{children}</main>
