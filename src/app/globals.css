@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
+  /* Freight manifest theme */
   --color-rubber: #141414;
   --color-label-white: #FAFAF7;
   --color-safety-orange: #FF5C00;
@@ -10,6 +11,29 @@
   --font-display: var(--font-archivo-black), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+
+  /* Legacy aliases for inner pages */
+  --color-navy: #141414;
+  --color-navy-light: #1c1c1c;
+  --color-navy-dark: #0a0a0a;
+  --color-blue: #FF5C00;
+  --color-blue-light: #FF7A33;
+  --color-blue-dark: #E05200;
+  --color-orange: #FF5C00;
+  --color-orange-light: #FF7A33;
+  --color-orange-dark: #E05200;
+  --color-cream: #FAFAF7;
+  --color-gray-50: #fafaf9;
+  --color-gray-100: #f5f5f4;
+  --color-gray-200: #e7e5e4;
+  --color-gray-300: #d6d3d1;
+  --color-gray-400: #a8a29e;
+  --color-gray-500: #78716c;
+  --color-gray-600: #57534e;
+  --color-gray-700: #44403c;
+  --color-gray-800: #292524;
+  --color-gray-900: #1c1917;
+  --font-sans: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 html {

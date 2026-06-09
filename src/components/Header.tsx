@@ -71,10 +71,10 @@ export default function Header() {
               </a>
               <CartIcon />
               <Link
-                href="/contact"
+                href="/tires"
                 className="inline-flex items-center gap-2 rounded-md bg-safety-orange px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-safety-orange/90 ml-2 whitespace-nowrap"
               >
-                Get a Quote
+                Shop Tires
               </Link>
             </div>
 
@@ -82,10 +82,10 @@ export default function Header() {
             <div className="flex items-center gap-3 ml-auto lg:hidden">
               <CartIcon />
               <Link
-                href="/contact"
+                href="/tires"
                 className="inline-flex items-center justify-center rounded-md bg-safety-orange px-3 py-2 text-xs font-bold text-white"
               >
-                Quote
+                Shop
               </Link>
               <button
                 type="button"
@@ -131,11 +131,11 @@ export default function Header() {
                 (279) 238-8473 (TIRE)
               </a>
               <Link
-                href="/contact"
+                href="/tires"
                 onClick={() => setMobileMenuOpen(false)}
                 className="mt-2 flex items-center justify-center rounded-md bg-safety-orange px-4 py-3 text-sm font-bold text-white"
               >
-                Get a Free Quote
+                Shop All Tires
               </Link>
             </div>
           </div>
