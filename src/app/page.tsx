@@ -1,10 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { tireCategories } from "@/data/tire-categories";
-import { getStats, getAllBrands, getTopBrandsForType, brandSummaryToBrand } from "@/lib/db";
+import { getStats, getAllBrands, getTopBrandsForType, brandSummaryToBrand, getModelsByBrand, modelSummaryToModel } from "@/lib/db";
 import { getActiveRebates } from "@/lib/rebates";
 import { getLogoUrl } from "@/lib/api-helpers";
+import { getBrandLogo } from "@/lib/curated-brands";
 import SearchPanel from "@/components/SearchPanel";
+import TireCard from "@/components/TireCard";
 import type { Metadata } from "next";
 
 const countryCode: Record<string, string> = {
@@ -97,6 +99,19 @@ export default async function HomePage() {
   for (const cat of tireCategories) {
     const typeBrandRows = await dbTimeout(getTopBrandsForType(cat.type), []);
     categoryBrandsMap.set(cat.type, typeBrandRows.map(brandSummaryToBrand));
+  }
+
+  // Fetch featured tire models from top 6 brands for the showcase
+  const showcaseBrands = ["michelin", "goodyear", "bridgestone", "continental", "cooper", "pirelli"];
+  const featuredTires: { brand: ReturnType<typeof brandSummaryToBrand>; models: ReturnType<typeof modelSummaryToModel>[] }[] = [];
+  for (const slug of showcaseBrands) {
+    const brand = brands.find((b) => b.slug === slug);
+    if (!brand) continue;
+    const modelRows = await dbTimeout(getModelsByBrand(slug), []);
+    const models = modelRows.slice(0, 2).map(modelSummaryToModel);
+    if (models.length > 0) {
+      featuredTires.push({ brand, models });
+    }
   }
 
   const brandCount = String(stats.brandCount || 34);
@@ -299,6 +314,45 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* SECTION 2.5: FEATURED TIRES — Top Brands Showcase */}
+      {featuredTires.length > 0 && (
+        <section className="py-14 sm:py-16 bg-white border-t border-ink-grey/10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2">Featured</div>
+            <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight mb-3">
+              Top Tires from Leading Brands
+            </h2>
+            <p className="text-ink-grey mb-8 max-w-2xl">
+              Shop best-selling tires from the most trusted names in the industry. Every tire ships free to your door or installer.
+            </p>
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {featuredTires.flatMap(({ brand, models }) =>
+                models.map((model) => (
+                  <TireCard
+                    key={`${brand.slug}-${model.slug}`}
+                    model={model}
+                    brandSlug={brand.slug}
+                    brandName={brand.name}
+                    brandLogo={brand.logoUrl || getBrandLogo(brand.name)}
+                  />
+                ))
+              ).slice(0, 8)}
+            </div>
+            <div className="mt-8 text-center">
+              <Link
+                href="/tires"
+                className="inline-flex items-center gap-2 rounded-md bg-safety-orange px-8 py-3 text-sm font-bold text-white hover:bg-safety-orange/90 transition-colors"
+              >
+                Shop All Brands
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* SECTION 3: TIRE CATEGORIES — Full Descriptions + Brands */}
       <section className="py-14 sm:py-16 bg-white border-t border-ink-grey/10">
