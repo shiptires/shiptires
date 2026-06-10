@@ -1,11 +1,11 @@
 import { getAllBrands, getModelsByBrand, toSlug } from "@/lib/db";
 
 export async function GET() {
-  const brandRows = getAllBrands();
+  const brandRows = await getAllBrands();
 
-  const data = brandRows.map((b) => {
+  const data = await Promise.all(brandRows.map(async (b) => {
     const slug = toSlug(b.make_name);
-    const models = getModelsByBrand(slug);
+    const models = await getModelsByBrand(slug);
 
     return {
       name: b.make_name,
@@ -25,7 +25,7 @@ export async function GET() {
       })),
       url: `https://ship.tires/tires/${slug}`,
     };
-  });
+  }));
 
   return Response.json(
     {

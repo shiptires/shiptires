@@ -13,10 +13,6 @@ EnvironmentFile=/opt/ship-tires/.env
 Environment=NODE_ENV=production
 Environment=PORT=3200
 
-# Security
-NoNewPrivileges=true
-ProtectSystem=strict
-ReadWritePaths=/opt/ship-tires
 
 [Install]
 WantedBy=multi-user.target

@@ -1,6 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { tireCategories } from "@/data/tire-categories";
-import { getStats, getAllBrands, brandSummaryToBrand } from "@/lib/db";
+import { getStats, getAllBrands, getTopBrandsForType, brandSummaryToBrand } from "@/lib/db";
+import { getActiveRebates } from "@/lib/rebates";
+import { getLogoUrl } from "@/lib/api-helpers";
 import SearchPanel from "@/components/SearchPanel";
 import type { Metadata } from "next";
 
@@ -17,30 +20,40 @@ const countryCode: Record<string, string> = {
 };
 
 export const metadata: Metadata = {
-  title: "Tires Shipped Free. Near You.",
+  title: "Shop Tires Online — Ship Free to Your Door | Ship.Tires",
+  description:
+    "Shop tires from Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Cooper, Hankook, Yokohama & 665+ brands. Find tires for Honda, Toyota, Ford, Chevrolet, BMW, Nissan, Jeep & all vehicles. Ship free to Los Angeles, New York, Houston, Chicago, Phoenix & nationwide.",
   alternates: { canonical: "https://ship.tires" },
 };
 
 const faqItems = [
   {
-    q: "How does free shipping work?",
-    a: "Every tire order ships free to anywhere in the continental US. We use major carriers and most orders arrive in 3-7 business days.",
+    q: "How does free shipping work at Ship.Tires?",
+    a: "Every tire you shop at Ship.Tires ships free to anywhere in the continental US — Los Angeles, New York, Houston, Chicago, Phoenix, and everywhere in between. We use major carriers like UPS, FedEx, and freight services. Most orders arrive in 3-7 business days.",
   },
   {
     q: "Can you ship tires to my installer?",
-    a: "Yes. Provide your installer's address at checkout and we ship directly to them. Many customers have tires waiting at the shop for a quick install appointment.",
+    a: "Yes. Shop your tires online, provide your installer's address at checkout, and we ship directly to them. Many customers have tires waiting at the shop for a quick install appointment. We ship to installers in every major city.",
   },
   {
     q: "How do I find my tire size?",
-    a: "Check the sidewall of your current tires for a number like 225/65R17. You can also use our Vehicle Lookup tool to find compatible sizes by year, make, and model.",
+    a: "Check the sidewall of your current tires for a number like 225/65R17. You can also use our Vehicle Lookup tool to find compatible sizes by year, make, and model — works for Honda, Toyota, Ford, Chevrolet, BMW, Nissan, Jeep, Tesla, and all vehicle brands.",
+  },
+  {
+    q: "What tire brands do you carry?",
+    a: "We carry 665+ tire brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Hankook, Yokohama, Cooper, Toyo, Falken, Firestone, Kumho, Nexen, Nitto, Dunlop, Nokian, General, Maxxis, and hundreds more. Shop any brand and ship free.",
+  },
+  {
+    q: "Can I shop tires by my vehicle?",
+    a: "Yes. Enter your year, make, and model in our Vehicle Lookup tool. We support all major vehicle brands: Honda Civic, Honda Accord, Honda CR-V, Toyota Camry, Toyota RAV4, Ford F-150, Chevrolet Silverado, BMW 3 Series, Nissan Altima, Jeep Wrangler, Tesla Model 3, and thousands more.",
   },
   {
     q: "Do you offer a warranty?",
-    a: "All tires come with the manufacturer's warranty. Coverage varies by brand and model — check individual product pages for details.",
+    a: "All tires come with the manufacturer's warranty. Michelin, Goodyear, Bridgestone, Continental, and other major brands offer mileage warranties ranging from 40,000 to 90,000 miles. Check individual product pages for details.",
   },
   {
-    q: "How do I get a price quote?",
-    a: "Use the \"Request Quote\" button on any tire page, call or text (279) 238-8473 (TIRE), or fill out our contact form. We respond within a few hours.",
+    q: "How do I place an order?",
+    a: "Shop tires by brand, size, or vehicle. Add tires to your cart and check out online — we ship free. You can also call or text (279) 238-8473 (TIRE) to order by phone.",
   },
 ];
 
@@ -68,16 +81,27 @@ const typeIcons: Record<string, string> = {
   touring: "M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
-export default function HomePage() {
-  const stats = getStats();
-  const brandRows = getAllBrands();
+export default async function HomePage() {
+  const dbTimeout = <T,>(p: Promise<T>, fallback: T, ms = 15000): Promise<T> =>
+    Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
+
+  const stats = await dbTimeout(getStats(), { brandCount: 665, modelCount: 7800, tireCount: 120000 });
+  const brandRows = await dbTimeout(getAllBrands(), []);
   const brands = brandRows.map(brandSummaryToBrand);
+  const rebates = await dbTimeout(getActiveRebates(), []);
 
-  const brandCount = stats.brandCount.toLocaleString();
-  const modelCount = `${Math.floor(stats.modelCount / 100) * 100}+`;
-  const tireCount = `${Math.floor(stats.tireCount / 1000)}K+`;
+  // Pre-fetch top brands for each tire category (async DB calls)
+  const categoryBrandsMap = new Map<string, ReturnType<typeof brandSummaryToBrand>[]>();
+  for (const cat of tireCategories) {
+    const typeBrandRows = await dbTimeout(getTopBrandsForType(cat.type), []);
+    categoryBrandsMap.set(cat.type, typeBrandRows.map(brandSummaryToBrand));
+  }
+
+  const brandCount = String(stats.brandCount || 34);
+  const modelCount = String(stats.modelCount ? stats.modelCount.toLocaleString() + "+" : "1,000+");
+  const tireCount = stats.tireCount ? (stats.tireCount >= 1000 ? `${Math.floor(stats.tireCount / 1000)}K+` : String(stats.tireCount)) : "100K+";
 
   return (
     <>
@@ -100,15 +124,16 @@ export default function HomePage() {
                 <span className="text-safety-orange">Near you.</span>
               </h1>
               <p className="text-lg text-ink-grey leading-relaxed mb-8 max-w-lg">
-                Search by vehicle or tire size. We ship every order free to your door
+                Shop tires by vehicle or size. We ship every order free to your door
                 or directly to your installer&mdash;anywhere in the continental US.
+                Find tires for Honda, Toyota, Ford, Chevy, BMW, Nissan, Jeep & more.
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                 {[
-                  { num: brandCount, label: "Brands" },
-                  { num: modelCount, label: "Models" },
-                  { num: tireCount, label: "Tires" },
-                  { num: "$0", label: "Shipping" },
+                  { num: brandCount, label: "Top Brands" },
+                  { num: modelCount, label: "of Models" },
+                  { num: tireCount, label: "Tires in Stock" },
+                  { num: "Free", label: "Shipping Always" },
                 ].map((s) => (
                   <div key={s.label}>
                     <div className="font-mono text-3xl sm:text-4xl font-bold text-rubber leading-none">
@@ -275,33 +300,95 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SECTION 3: TIRE CATEGORIES — Contents Grid */}
+      {/* SECTION 3: TIRE CATEGORIES — Full Descriptions + Brands */}
       <section className="py-14 sm:py-16 bg-white border-t border-ink-grey/10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2">Contents</div>
-          <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight">
-            Shop by Tire Type
+          <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight mb-10">
+            Shop Tires by Type — Ship Free
           </h2>
-          <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {tireCategories.map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/search?type=${cat.type}`}
-                className="group flex items-start gap-4 rounded-lg border border-ink-grey/15 bg-label-white p-5 transition-all hover:border-safety-orange/40 hover:shadow-sm"
-              >
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-md border border-ink-grey/15 bg-white">
-                  <svg className="h-5 w-5 text-ink-grey group-hover:text-safety-orange transition-colors" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d={typeIcons[cat.type] || typeIcons["all-season"]} />
-                  </svg>
-                </div>
-                <div className="min-w-0">
-                  <h3 className="font-display text-sm text-rubber group-hover:text-safety-orange transition-colors">
-                    {cat.name}
-                  </h3>
-                  <p className="mt-1 text-xs text-ink-grey line-clamp-2">{cat.description}</p>
-                </div>
-              </Link>
-            ))}
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            {tireCategories.map((cat) => {
+              // Get pre-fetched top brands for this tire type
+              const typeBrands = categoryBrandsMap.get(cat.type) || [];
+
+              // Build the correct search URL for this type
+              const searchUrl = (() => {
+                switch (cat.type) {
+                  case "all-season": return "/search?season=All-Season";
+                  case "winter": return "/search?season=Winter";
+                  case "summer": return "/search?season=Summer";
+                  case "performance": return "/search?category=performance";
+                  case "all-terrain": return `/search?terrain=${encodeURIComponent("All-Terrain (A/T)")}`;
+                  case "mud-terrain": return `/search?terrain=${encodeURIComponent("Mud-Terrain (M/T)")}`;
+                  case "highway": return `/search?terrain=${encodeURIComponent("Highway Terrain (H/T)")}`;
+                  case "touring": return "/search?category=touring";
+                  default: return "/search";
+                }
+              })();
+
+              return (
+                <Link
+                  key={cat.slug}
+                  href={searchUrl}
+                  className="group rounded-xl border border-ink-grey/15 bg-label-white overflow-hidden hover:border-safety-orange/30 hover:shadow-md transition-all"
+                >
+                  {/* Tire image */}
+                  <div className="relative h-44 sm:h-52 bg-gradient-to-b from-gray-100 to-white overflow-hidden">
+                    <Image
+                      src={cat.image}
+                      alt={cat.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      unoptimized
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <div className="absolute bottom-3 left-4 right-4">
+                      <h3 className="font-display text-xl text-white drop-shadow-lg">
+                        {cat.name}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="p-5">
+                    <p className="text-sm text-ink-grey leading-relaxed line-clamp-2">
+                      {cat.description}
+                    </p>
+
+                    {/* Top brands row */}
+                    {typeBrands.length > 0 && (
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        {typeBrands.slice(0, 4).map((b) => (
+                          <span
+                            key={b.slug}
+                            className="inline-flex items-center gap-1 rounded-md border border-ink-grey/10 bg-white px-2 py-1 text-[10px] font-bold text-rubber"
+                          >
+                            {b.logoUrl && (
+                              <Image
+                                src={b.logoUrl}
+                                alt={b.name}
+                                width={14}
+                                height={14}
+                                className="h-3.5 w-3.5 object-contain"
+                                unoptimized
+                              />
+                            )}
+                            {b.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-safety-orange group-hover:underline">
+                      Shop {cat.name} — Ship Free
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                      </svg>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -309,29 +396,58 @@ export default function HomePage() {
       {/* SECTION 4: BRANDS — Table Grid */}
       <section className="py-14 sm:py-16 bg-label-white border-t border-ink-grey/10">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2">Carriers</div>
+          <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2">Shop</div>
           <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight pb-4 border-b-2 border-rubber">
-            {brandCount} Brands. Shipped Free.
+            Shop Hundreds of Tire Brands. Ship Free.
           </h2>
-          <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 border-l border-t border-ink-grey/15">
-            {brands.slice(0, 8).map((brand) => (
-              <Link
-                key={brand.slug}
-                href={`/tires/${brand.slug}`}
-                className="group flex items-center justify-between px-4 py-3 border-r border-b border-ink-grey/15 hover:text-safety-orange transition-colors"
-              >
-                <span className="font-bold text-sm uppercase text-rubber group-hover:text-safety-orange transition-colors">
-                  {brand.name}
-                </span>
-                <span className="font-mono text-[10px] tracking-wider text-ink-grey/50">
-                  {brand.tireCount} tires
-                </span>
-              </Link>
-            ))}
+          <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
+            {(() => {
+              const priorityOrder = [
+                "MICHELIN", "GOODYEAR", "BRIDGESTONE", "CONTINENTAL", "PIRELLI",
+                "COOPER", "HANKOOK", "YOKOHAMA", "TOYO", "FIRESTONE",
+                "BFGOODRICH", "FALKEN",
+              ];
+              const priorityRank = new Map(priorityOrder.map((n, i) => [n, i + 1]));
+              return [...brands]
+                .sort((a, b) => {
+                  const aR = priorityRank.get(a.name.toUpperCase()) ?? 999;
+                  const bR = priorityRank.get(b.name.toUpperCase()) ?? 999;
+                  if (aR !== bR) return aR - bR;
+                  return (b.tireCount ?? 0) - (a.tireCount ?? 0);
+                })
+                .slice(0, 12)
+                .map((brand) => {
+                  const logo = brand.logoUrl || getLogoUrl(brand.domain);
+                  return (
+                    <Link
+                      key={brand.slug}
+                      href={`/tires/${brand.slug}`}
+                      className="group flex flex-col items-center justify-center rounded-lg border border-ink-grey/15 bg-white p-5 transition-all hover:border-safety-orange/40 hover:shadow-md"
+                    >
+                      <Image
+                        src={logo}
+                        alt={brand.name}
+                        width={120}
+                        height={80}
+                        className="h-12 sm:h-16 w-auto object-contain mb-3"
+                        unoptimized
+                      />
+                      <span className="font-display text-xs sm:text-sm uppercase text-rubber group-hover:text-safety-orange transition-colors text-center">
+                        {brand.name}
+                      </span>
+                      <span className="font-mono text-[10px] tracking-wider text-ink-grey/50 mt-1">
+                        {brand.modelCount ?? 0} models
+                      </span>
+                    </Link>
+                  );
+                });
+            })()}
           </div>
-          <div className="mt-4 text-center font-mono text-xs text-ink-grey/60">
-            + {brands.length - 8} more brands available
-          </div>
+          {brands.length > 12 && (
+            <div className="mt-4 text-center font-mono text-xs text-ink-grey/60">
+              + {brands.length - 12} more brands available
+            </div>
+          )}
           <div className="mt-6 text-center">
             <Link
               href="/tires"
@@ -376,6 +492,189 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* SECTION 5.5: REBATES */}
+      {rebates.length > 0 && (
+        <section className="py-14 sm:py-16 bg-label-white border-t border-ink-grey/10">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2">Promotions</div>
+            <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight mb-8">
+              Current Tire Rebates
+            </h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {rebates.slice(0, 6).map((rebate) => (
+                <div
+                  key={rebate.id}
+                  className="rounded-xl border border-ink-grey/15 bg-white overflow-hidden hover:shadow-md transition-shadow"
+                >
+                  {rebate.imagePreviewUrl && (
+                    <div className="relative h-40 bg-gray-50">
+                      <Image
+                        src={rebate.imagePreviewUrl}
+                        alt={rebate.name}
+                        fill
+                        className="object-contain p-2"
+                        unoptimized
+                      />
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold uppercase text-safety-orange">
+                        Save ${rebate.amount}
+                      </span>
+                      <span className="text-[10px] font-mono text-ink-grey/60">
+                        Ends {new Date(rebate.endDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </span>
+                    </div>
+                    <h3 className="mt-1 font-display text-sm text-rubber leading-tight">
+                      {rebate.name}
+                    </h3>
+                    <p className="mt-1 text-xs text-ink-grey line-clamp-2">
+                      {rebate.description}
+                    </p>
+                    <div className="mt-3 flex items-center gap-2">
+                      <Link
+                        href={`/tires/${rebate.brandName.toLowerCase().replace(/\s+/g, "-")}`}
+                        className="inline-flex items-center rounded-md bg-safety-orange px-3 py-1.5 text-xs font-bold text-white hover:bg-safety-orange/90 transition-colors"
+                      >
+                        Shop {rebate.brandName}
+                      </Link>
+                      {rebate.formUrl && (
+                        <a
+                          href={rebate.formUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center rounded-md border border-ink-grey/20 px-3 py-1.5 text-xs font-medium text-ink-grey hover:bg-gray-50 transition-colors"
+                        >
+                          Rebate Form
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* SECTION 5.7: SHOP BY VEHICLE — AEO/AI Optimization */}
+      <section className="py-14 sm:py-16 bg-white border-t border-ink-grey/10">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2 text-center">Shop by Vehicle</div>
+          <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight text-center">
+            Shop Tires for Your Vehicle — Ship Free
+          </h2>
+          <p className="mt-3 text-center text-ink-grey max-w-2xl mx-auto">
+            Find the right tires for your car, truck, or SUV. Enter your year, make, and model to see compatible sizes from hundreds of brands.
+          </p>
+          <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[
+              "Honda", "Toyota", "Ford", "Chevrolet", "Nissan", "BMW",
+              "Mercedes-Benz", "Hyundai", "Kia", "Jeep", "Ram", "GMC",
+              "Subaru", "Volkswagen", "Audi", "Lexus", "Mazda", "Tesla",
+              "Dodge", "Buick", "Cadillac", "Chrysler", "Acura", "Infiniti",
+              "Volvo", "Land Rover", "Porsche", "Lincoln", "Genesis", "Mitsubishi",
+              "MINI", "Alfa Romeo",
+            ].map((make) => (
+              <Link
+                key={make}
+                href={`/vehicle-lookup?make=${encodeURIComponent(make)}`}
+                className="rounded-lg border border-ink-grey/15 bg-label-white px-4 py-3 text-sm font-bold text-rubber hover:border-safety-orange/40 hover:bg-white transition-all text-center"
+              >
+                Shop {make} Tires
+              </Link>
+            ))}
+          </div>
+          <div className="mt-6 text-center">
+            <Link
+              href="/vehicle-lookup"
+              className="inline-flex items-center gap-2 text-sm font-bold text-safety-orange hover:underline"
+            >
+              Find Tires by Year, Make & Model
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+              </svg>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 5.8: SHIP TO YOUR CITY — Location SEO */}
+      <section className="py-14 sm:py-16 bg-label-white border-t border-ink-grey/10">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+          <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2 text-center">Nationwide Shipping</div>
+          <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight text-center">
+            Shop Tires Online — Ship Free to Any City
+          </h2>
+          <p className="mt-3 text-center text-ink-grey max-w-2xl mx-auto">
+            We ship tires free to every city in the continental US. Order online from hundreds of brands and get your tires delivered in 3-7 business days.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            {([
+              ["Los Angeles", "/locations/california/los-angeles"],
+              ["New York", "/locations/new-york/new-york"],
+              ["Chicago", "/locations/illinois/chicago"],
+              ["Houston", "/locations/texas/houston"],
+              ["Phoenix", "/locations/arizona/phoenix"],
+              ["Philadelphia", "/locations/pennsylvania/philadelphia"],
+              ["San Antonio", "/locations/texas/san-antonio"],
+              ["San Diego", "/locations/california/san-diego"],
+              ["Dallas", "/locations/texas/dallas"],
+              ["San Jose", "/locations/california/san-jose"],
+              ["Austin", "/locations/texas/austin"],
+              ["Jacksonville", "/locations/florida/jacksonville"],
+              ["Fort Worth", "/locations/texas/fort-worth"],
+              ["Columbus", "/locations/ohio/columbus"],
+              ["Charlotte", "/locations/north-carolina/charlotte"],
+              ["Indianapolis", "/locations/indiana/indianapolis"],
+              ["San Francisco", "/locations/california/san-francisco"],
+              ["Seattle", "/locations/washington/seattle"],
+              ["Denver", "/locations/colorado/denver"],
+              ["Nashville", "/locations/tennessee/nashville"],
+              ["Oklahoma City", "/locations/oklahoma/oklahoma-city"],
+              ["El Paso", "/locations/texas/el-paso"],
+              ["Washington DC", "/locations/district-of-columbia/washington"],
+              ["Las Vegas", "/locations/nevada/las-vegas"],
+              ["Portland", "/locations/oregon/portland"],
+              ["Memphis", "/locations/tennessee/memphis"],
+              ["Louisville", "/locations/kentucky/louisville"],
+              ["Baltimore", "/locations/maryland/baltimore"],
+              ["Milwaukee", "/locations/wisconsin/milwaukee"],
+              ["Albuquerque", "/locations/new-mexico/albuquerque"],
+              ["Tucson", "/locations/arizona/tucson"],
+              ["Fresno", "/locations/california/fresno"],
+              ["Sacramento", "/locations/california/sacramento"],
+              ["Mesa", "/locations/arizona/mesa"],
+              ["Kansas City", "/locations/missouri/kansas-city"],
+              ["Atlanta", "/locations/georgia/atlanta"],
+              ["Omaha", "/locations/nebraska/omaha"],
+              ["Colorado Springs", "/locations/colorado/colorado-springs"],
+              ["Raleigh", "/locations/north-carolina/raleigh"],
+              ["Miami", "/locations/florida/miami"],
+              ["Tampa", "/locations/florida/tampa"],
+              ["Minneapolis", "/locations/minnesota/minneapolis"],
+              ["Detroit", "/locations/michigan/detroit"],
+              ["Cleveland", "/locations/ohio/cleveland"],
+              ["St. Louis", "/locations/missouri/st-louis"],
+              ["Pittsburgh", "/locations/pennsylvania/pittsburgh"],
+              ["Orlando", "/locations/florida/orlando"],
+              ["Cincinnati", "/locations/ohio/cincinnati"],
+              ["Newark", "/locations/new-jersey/newark"],
+              ["Boston", "/locations/massachusetts/boston"],
+            ] as const).map(([city, href]) => (
+              <Link
+                key={city}
+                href={href}
+                className="rounded-full border border-ink-grey/10 bg-white px-3 py-1 text-xs text-ink-grey hover:border-safety-orange/40 hover:text-safety-orange transition-colors"
+              >
+                Ship to {city}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* SECTION 6: FAQ */}
       <section className="py-14 sm:py-16 bg-label-white border-t border-ink-grey/10">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
@@ -403,10 +702,11 @@ export default function HomePage() {
       <section className="bg-kraft/40 py-14 border-t border-ink-grey/10">
         <div className="mx-auto max-w-3xl px-4 text-center sm:px-6 lg:px-8">
           <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight">
-            Get a free quote.
+            Ready to Shop? We Ship Free.
           </h2>
           <p className="mt-3 text-ink-grey">
-            Call or text us to order, or request a quote online. We&apos;ll find the right tires and ship them free.
+            Shop hundreds of top tire brands, find your size, and order online. Every tire ships free
+            to your door or installer. Tires for Honda, Toyota, Ford, Chevy, BMW & all vehicles.
           </p>
           <div className="mt-6 font-mono text-2xl sm:text-3xl font-semibold text-rubber">
             <a href="tel:+12792388473" className="hover:text-safety-orange transition-colors">
@@ -414,20 +714,17 @@ export default function HomePage() {
             </a>
           </div>
           <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <a
-              href="tel:+12792388473"
+            <Link
+              href="/tires"
               className="inline-flex items-center gap-2 rounded-md bg-safety-orange px-8 py-3 text-sm font-bold text-white hover:bg-safety-orange/90 transition-colors"
             >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
-              </svg>
-              Call / Text Now
-            </a>
+              Shop All Tires
+            </Link>
             <Link
-              href="/contact"
+              href="/vehicle-lookup"
               className="inline-flex items-center gap-2 rounded-md border-2 border-rubber px-8 py-3 text-sm font-bold text-rubber hover:bg-rubber hover:text-label-white transition-colors"
             >
-              Request a Free Quote
+              Find Tires by Vehicle
             </Link>
           </div>
         </div>

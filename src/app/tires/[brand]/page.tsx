@@ -4,15 +4,19 @@ import Link from "next/link";
 import {
   getBrandBySlug,
   getModelsByBrand,
+  getDistinctSizesForBrand,
   getManufacturer,
   brandSummaryToBrand,
   modelSummaryToModel,
 } from "@/lib/db";
 import { getLogoUrl } from "@/lib/api-helpers";
+import { getActiveRebates, getRebatesForBrand } from "@/lib/rebates";
 import TireCard from "@/components/TireCard";
+import BrandSizeLookup from "@/components/BrandSizeLookup";
+import VehicleLookup from "@/components/VehicleLookup";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,
@@ -20,14 +24,14 @@ export async function generateMetadata({
   params: Promise<{ brand: string }>;
 }): Promise<Metadata> {
   const { brand: brandSlug } = await params;
-  const brandRow = getBrandBySlug(brandSlug);
+  const brandRow = await getBrandBySlug(brandSlug);
   if (!brandRow) return {};
 
-  const models = getModelsByBrand(brandSlug);
+  const models = await getModelsByBrand(brandSlug);
 
   return {
-    title: `${brandRow.make_name} Tires — All Models & Sizes`,
-    description: `Shop ${brandRow.make_name} tires with free shipping. Browse ${models.length} models. ${brandRow.tire_count} tires available.`,
+    title: `Shop ${brandRow.make_name} Tires — ${models.length} Models, Ship Free`,
+    description: `Shop ${brandRow.make_name} tires online and ship free. ${models.length} models, ${brandRow.tire_count} sizes available. Find ${brandRow.make_name} tires for Honda, Toyota, Ford, Chevrolet, BMW & all vehicles. Free shipping to Los Angeles, New York, Houston, Chicago & nationwide.`,
     alternates: { canonical: `https://ship.tires/tires/${brandSlug}` },
   };
 }
@@ -38,14 +42,17 @@ export default async function BrandPage({
   params: Promise<{ brand: string }>;
 }) {
   const { brand: brandSlug } = await params;
-  const brandRow = getBrandBySlug(brandSlug);
+  const brandRow = await getBrandBySlug(brandSlug);
 
   if (!brandRow) notFound();
 
   const brand = brandSummaryToBrand(brandRow);
-  const modelRows = getModelsByBrand(brandSlug);
+  const modelRows = await getModelsByBrand(brandSlug);
   const models = modelRows.map(modelSummaryToModel);
-  const manufacturer = getManufacturer(brandRow.make_name);
+  const manufacturer = await getManufacturer(brandRow.make_name);
+  const popularSizes = await getDistinctSizesForBrand(brandSlug);
+  const allRebates = await getActiveRebates();
+  const brandRebates = getRebatesForBrand(allRebates, brandRow.make_name);
 
   const logoUrl = brand.logoUrl || getLogoUrl(brand.domain);
 
@@ -54,47 +61,152 @@ export default async function BrandPage({
       {/* Brand Header */}
       <div className="bg-navy py-12 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4">
-            <Link href="/tires" className="text-sm text-gray-400 hover:text-white">
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <Link href="/tires" className="hover:text-white">
               All Brands
             </Link>
-            <span className="text-gray-600">/</span>
-            <span className="text-sm text-gray-300">{brand.name}</span>
+            <span>/</span>
+            <span className="text-gray-300">{brand.name}</span>
           </div>
           <div className="mt-6 flex items-center gap-6">
-            <div className="flex-shrink-0 rounded-xl bg-white p-3">
+            <div className="flex-shrink-0 rounded-xl bg-white p-4">
               <Image
                 src={logoUrl}
                 alt={brand.name}
-                width={80}
-                height={80}
-                className="h-16 w-16 object-contain"
+                width={160}
+                height={160}
+                className="h-20 w-20 sm:h-24 sm:w-24 object-contain"
                 unoptimized
               />
             </div>
             <div>
-              <h1 className="text-3xl font-bold sm:text-4xl">Shop & Ship {brand.name} Car, Truck & SUV Tires — Free Delivery</h1>
+              <h1 className="text-3xl font-bold sm:text-4xl">
+                Shop {brand.name} Tires — Ship Free
+              </h1>
               <p className="mt-1 text-gray-400">
-                {models.length} models &middot; {brand.tireCount} tires
+                {models.length} models &middot;{" "}
+                {(brand.tireCount ?? 0).toLocaleString()} tires &middot; Ship free
+                to your door or installer
               </p>
             </div>
           </div>
-          {manufacturer?.dot_reg_url && (
-            <p className="mt-4 max-w-3xl text-gray-300">
-              Manufacturer registered with the US Department of Transportation.
-            </p>
-          )}
         </div>
       </div>
 
-      {/* Models Grid */}
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        {models.length > 0 ? (
-          <>
-            <h2 className="text-2xl font-bold text-gray-900">
-              All {brand.name} Models ({models.length})
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 space-y-12">
+        {/* Find Your Size + Vehicle Lookup */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-gray-900">
+              Find {brand.name} Tires by Size
             </h2>
-            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <p className="mt-1 text-sm text-gray-500">
+              Enter your tire size from your sidewall or door jamb sticker
+            </p>
+            <div className="mt-4">
+              <BrandSizeLookup brandSlug={brand.slug} brandName={brand.name} />
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-gray-900">
+              Find {brand.name} Tires by Vehicle
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Select your year, make, and model to find compatible sizes
+            </p>
+            <div className="mt-4">
+              <VehicleLookup />
+            </div>
+          </div>
+        </div>
+
+        {/* Active Rebates */}
+        {brandRebates.length > 0 && (
+          <div className="space-y-4">
+            {brandRebates.map((rebate) => (
+              <div
+                key={rebate.id}
+                className="rounded-xl border-2 border-safety-orange/30 bg-white overflow-hidden shadow-sm"
+              >
+                {rebate.imageHorizontalUrl && (
+                  <div className="relative h-32 sm:h-44 bg-gradient-to-r from-gray-50 to-white">
+                    <Image
+                      src={rebate.imageHorizontalUrl}
+                      alt={rebate.name}
+                      fill
+                      className="object-contain"
+                      unoptimized
+                    />
+                  </div>
+                )}
+                <div className="p-5">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center rounded-full bg-safety-orange/10 px-3 py-1 text-xs font-bold text-safety-orange">
+                      SAVE ${rebate.amount}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Valid {new Date(rebate.startDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })} – {new Date(rebate.endDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </span>
+                  </div>
+                  <h3 className="mt-2 text-lg font-bold text-gray-900">{rebate.name}</h3>
+                  <p className="mt-1 text-sm text-gray-600">{rebate.description}</p>
+                  {rebate.formUrl && (
+                    <a
+                      href={rebate.formUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-3 inline-flex items-center gap-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                      </svg>
+                      Download Rebate Form
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Popular Sizes */}
+        {popularSizes.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Popular {brand.name} Sizes
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Most common tire sizes available from {brand.name}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {popularSizes.map((s) => {
+                const display = `${s.width}/${s.aspect_ratio}R${s.rim_size}`;
+                const slug = `${s.width}-${s.aspect_ratio}r${s.rim_size}`.toLowerCase();
+                return (
+                  <Link
+                    key={slug}
+                    href={`/tires/size/${slug}`}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-mono font-medium text-gray-900 shadow-sm hover:shadow-md hover:border-blue transition-all"
+                  >
+                    {display}
+                    <span className="text-xs text-gray-400">
+                      ({s.count})
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Models Grid */}
+        {models.length > 0 ? (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Shop All {brand.name} Models ({models.length}) — Ship Free
+            </h2>
+            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {models.map((model) => (
                 <TireCard
                   key={model.slug}
@@ -105,7 +217,7 @@ export default async function BrandPage({
                 />
               ))}
             </div>
-          </>
+          </div>
         ) : (
           <div className="rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
             <div className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
@@ -115,7 +227,8 @@ export default async function BrandPage({
               {brand.name} Tires Coming Soon
             </h2>
             <p className="mt-2 text-gray-500">
-              We&apos;re currently importing the full {brand.name} catalog. Check back soon or contact us for availability.
+              We&apos;re currently importing the full {brand.name} catalog.
+              Check back soon or contact us for availability.
             </p>
             <div className="mt-6">
               <a
@@ -129,24 +242,27 @@ export default async function BrandPage({
         )}
 
         {/* CTA */}
-        <div className="mt-12 rounded-xl bg-navy p-8 text-center text-white">
-          <h3 className="text-xl font-bold">Need Help Choosing a {brand.name} Tire?</h3>
-          <p className="mt-2 text-gray-400">
-            Our tire experts can help you find the perfect {brand.name} tire for your vehicle.
+        <div className="rounded-xl bg-orange p-8 text-center text-white">
+          <h3 className="text-xl font-bold">
+            Free Shipping on Every {brand.name} Tire
+          </h3>
+          <p className="mt-2 text-white/90">
+            Pick your size, add to cart, and we ship free to your door or local
+            installer.
           </p>
           <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href={`/search?brand=${brand.slug}`}
+              className="rounded-lg bg-white px-6 py-3 text-sm font-bold text-orange hover:bg-gray-50 transition-colors"
+            >
+              Search All {brand.name} Tires
+            </Link>
             <a
               href="tel:+12792388473"
-              className="inline-flex items-center gap-2 rounded-lg bg-orange px-6 py-3 text-sm font-bold text-white hover:bg-orange-light transition-colors"
+              className="rounded-lg border-2 border-white px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors"
             >
               Call/Text (279) 238-8473 (TIRE)
             </a>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-600 px-6 py-3 text-sm font-bold text-white hover:bg-navy-light transition-colors"
-            >
-              Request a Quote
-            </Link>
           </div>
         </div>
       </div>

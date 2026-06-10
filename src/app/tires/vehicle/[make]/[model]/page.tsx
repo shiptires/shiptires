@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getTiresBySize, toSlug, tireRowToSize } from "@/lib/db";
+import Image from "next/image";
+import { searchTires, toSlug } from "@/lib/db";
 import type { TireRow } from "@/lib/db";
 import { lookupTireSizes } from "@/data/tire-sizes";
+import { getMakeContent, getModelContent, getModelsForMake } from "@/data/vehicle-content";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,
@@ -15,10 +17,12 @@ export async function generateMetadata({
   const { make, model } = await params;
   const makeName = decodeURIComponent(make).replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const modelName = decodeURIComponent(model).replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  const sizes = lookupTireSizes(makeName, modelName);
+  const sizeText = sizes.slice(0, 3).join(", ");
 
   return {
-    title: `Best Tires for ${makeName} ${modelName} — All Sizes & Prices`,
-    description: `Find the best tires for your ${makeName} ${modelName}. Compare prices, sizes, and brands. Free shipping nationwide on all tire orders.`,
+    title: `Shop ${makeName} ${modelName} Tires — ${sizeText} | Ship Free`,
+    description: `Find the best tires for your ${makeName} ${modelName}. Popular sizes: ${sizeText}. Compare brands like Michelin, Bridgestone, Goodyear. Free shipping on every order at Ship.Tires.`,
     alternates: { canonical: `https://ship.tires/tires/vehicle/${make}/${model}` },
   };
 }
@@ -52,13 +56,19 @@ export default async function VehicleTiresPage({
     notFound();
   }
 
-  // Query DB for all tires matching those sizes
+  // Search API for tires matching this vehicle's sizes
   const allTires: TireRow[] = [];
   for (const sizeStr of compatibleSizes) {
     const match = sizeStr.match(/^(\d{2,3})\/(\d{2,3})R(\d{2,3})$/i);
     if (match) {
-      const tires = getTiresBySize(match[1], match[2], match[3]);
-      allTires.push(...tires);
+      const result = await searchTires({
+        width: match[1],
+        aspectRatio: match[2],
+        rimSize: match[3],
+        limit: 100,
+        page: 1,
+      });
+      allTires.push(...result.tires);
     }
   }
 
@@ -76,7 +86,7 @@ export default async function VehicleTiresPage({
         tireCount: 0,
         minPrice: Infinity,
         maxPrice: 0,
-        imageUrl: tire.image_url_1,
+        imageUrl: tire.thumbnail_url ?? tire.image_0100_url,
         sizes: [],
       });
     }
@@ -107,11 +117,16 @@ export default async function VehicleTiresPage({
     bySeason.get(key)!.push(g);
   }
 
+  // Get SEO content
+  const makeContent = getMakeContent(make);
+  const modelContent = getModelContent(make, model);
+  const otherModels = getModelsForMake(make).filter((m) => m.modelSlug !== model);
+
   const vehicleSchema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: `Tires for ${makeName} ${modelName}`,
-    description: `Find and compare tires for your ${makeName} ${modelName}. ${tireGroups.length} tire options available.`,
+    description: `Shop tires for your ${makeName} ${modelName}. ${tireGroups.length} tire options across ${compatibleSizes.length} sizes. Free shipping.`,
     url: `https://ship.tires/tires/vehicle/${make}/${model}`,
     about: {
       "@type": "Vehicle",
@@ -132,26 +147,28 @@ export default async function VehicleTiresPage({
         <div className="bg-navy py-12 text-white">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-2 text-sm text-gray-400">
-              <Link href="/tires" className="hover:text-white">All Brands</Link>
+              <Link href="/tires" className="hover:text-white transition-colors">All Brands</Link>
               <span>/</span>
-              <Link href="/vehicle-lookup" className="hover:text-white">Vehicle Lookup</Link>
+              <Link href="/vehicle-lookup" className="hover:text-white transition-colors">Shop by Vehicle</Link>
               <span>/</span>
-              <span className="text-gray-300">{makeName} {modelName}</span>
+              <Link href={`/tires/vehicle/${make}`} className="hover:text-white transition-colors">{makeName}</Link>
+              <span>/</span>
+              <span className="text-gray-300">{modelName}</span>
             </div>
-            <h1 className="mt-4 text-3xl font-bold sm:text-4xl">
-              Tires for {makeName} {modelName}
+            <h1 className="mt-4 text-3xl font-bold sm:text-4xl lg:text-5xl">
+              Find Tires for Your {makeName} {modelName}
             </h1>
-            <p className="mt-2 text-gray-400">
+            <p className="mt-2 text-lg text-gray-300">
               {tireGroups.length} tire options across {compatibleSizes.length} compatible sizes — Free shipping
             </p>
 
-            {/* Compatible sizes */}
+            {/* Compatible sizes — clickable */}
             <div className="mt-4 flex flex-wrap gap-2">
               {compatibleSizes.map((size) => (
                 <Link
                   key={size}
                   href={`/tires/size/${size.toLowerCase().replace(/\//g, "-")}`}
-                  className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-sm font-mono text-white hover:bg-white/20 transition-colors"
+                  className="inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-sm font-mono font-semibold text-white hover:bg-safety-orange transition-colors"
                 >
                   {size}
                 </Link>
@@ -161,6 +178,35 @@ export default async function VehicleTiresPage({
         </div>
 
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          {/* SEO intro text */}
+          {modelContent && (
+            <div className="mb-8 rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
+              <p className="text-gray-600 leading-relaxed">
+                {modelContent.intro}
+              </p>
+              <p className="mt-3 text-gray-600 leading-relaxed">
+                Popular tire sizes for the {makeName} {modelName} include{" "}
+                {compatibleSizes.slice(0, 3).map((s, i) => (
+                  <span key={s}>
+                    <Link href={`/tires/size/${s.toLowerCase().replace(/\//g, "-")}`} className="font-semibold text-blue hover:underline">{s}</Link>
+                    {i < Math.min(compatibleSizes.length, 3) - 2 ? ", " : i < Math.min(compatibleSizes.length, 3) - 1 ? ", and " : ""}
+                  </span>
+                ))}
+                , depending on your specific year and trim level. Choose from trusted brands including{" "}
+                {(makeContent?.popularBrands ?? ["Michelin", "Bridgestone", "Goodyear", "Continental"]).slice(0, 4).map((b, i, arr) => (
+                  <span key={b}>
+                    <Link href={`/tires/${b.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`} className="font-semibold text-blue hover:underline">{b}</Link>
+                    {i < arr.length - 2 ? ", " : i < arr.length - 1 ? ", and " : ""}
+                  </span>
+                ))}
+                .
+              </p>
+              <p className="mt-3 text-sm text-gray-500">
+                Every {makeName} {modelName} tire purchase includes FREE shipping to your home or a local installer and access to over 10,000 installation locations nationwide.
+              </p>
+            </div>
+          )}
+
           {tireGroups.length === 0 ? (
             <div className="rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
               <h2 className="text-xl font-bold text-gray-900">No Tires Found Yet</h2>
@@ -169,9 +215,9 @@ export default async function VehicleTiresPage({
               </p>
               <a
                 href="tel:+12792388473"
-                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-orange px-6 py-3 text-sm font-bold text-white"
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-safety-orange px-6 py-3 text-sm font-bold text-white"
               >
-                Call/Text (279) 238-8473
+                Call/Text (279) 238-TIRE
               </a>
             </div>
           ) : (
@@ -179,7 +225,7 @@ export default async function VehicleTiresPage({
               {[...bySeason.entries()].map(([season, tires]) => (
                 <div key={season} className="mb-12">
                   <h2 className="text-2xl font-bold text-gray-900 border-b border-gray-200 pb-3 mb-6">
-                    {season} Tires ({tires.length})
+                    {season} Tires for {makeName} {modelName} ({tires.length})
                   </h2>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {tires.map((tire) => {
@@ -188,37 +234,58 @@ export default async function VehicleTiresPage({
                         <Link
                           key={`${tire.brandSlug}-${tire.modelSlug}`}
                           href={`/tires/${tire.brandSlug}/${tire.modelSlug}`}
-                          className="group block rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-blue"
+                          className="group flex gap-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-safety-orange"
                         >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="text-xs font-bold uppercase text-gray-500">{tire.brandName}</p>
-                              <h3 className="mt-1 text-lg font-bold text-gray-900 group-hover:text-blue transition-colors">
-                                {tire.modelName}
-                              </h3>
-                            </div>
-                            <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
-                              {tire.season}
-                            </span>
-                          </div>
-                          <div className="mt-3 flex flex-wrap gap-1">
-                            {tire.sizes.slice(0, 3).map((s) => (
-                              <span key={s} className="rounded bg-gray-100 px-2 py-0.5 text-xs font-mono text-gray-600">{s}</span>
-                            ))}
-                            {tire.sizes.length > 3 && (
-                              <span className="text-xs text-gray-400">+{tire.sizes.length - 3} more</span>
-                            )}
-                          </div>
-                          <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
-                            {hasPrice ? (
-                              <span className="text-lg font-bold text-gray-900">
-                                From ${tire.minPrice}
-                                <span className="text-xs text-gray-500"> /tire</span>
-                              </span>
+                          {/* Tire image */}
+                          <div className="flex-shrink-0 w-20 h-20 rounded-lg bg-gray-50 flex items-center justify-center overflow-hidden">
+                            {tire.imageUrl ? (
+                              <Image
+                                src={tire.imageUrl}
+                                alt={`${tire.brandName} ${tire.modelName}`}
+                                width={80}
+                                height={80}
+                                className="object-contain"
+                                unoptimized
+                              />
                             ) : (
-                              <span className="text-sm font-bold text-safety-orange">Request Quote</span>
+                              <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10" strokeWidth="1.5" />
+                                <circle cx="12" cy="12" r="3" strokeWidth="1.5" />
+                              </svg>
                             )}
-                            <span className="text-xs text-gray-400">{tire.tireCount} sizes</span>
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <p className="text-xs font-bold uppercase text-gray-500">{tire.brandName}</p>
+                                <h3 className="text-base font-bold text-gray-900 group-hover:text-safety-orange transition-colors">
+                                  {tire.modelName}
+                                </h3>
+                              </div>
+                              <span className="ml-2 flex-shrink-0 inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+                                {tire.season}
+                              </span>
+                            </div>
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {tire.sizes.slice(0, 3).map((s) => (
+                                <span key={s} className="rounded bg-gray-100 px-2 py-0.5 text-xs font-mono text-gray-600">{s}</span>
+                              ))}
+                              {tire.sizes.length > 3 && (
+                                <span className="text-xs text-gray-400">+{tire.sizes.length - 3}</span>
+                              )}
+                            </div>
+                            <div className="mt-2 flex items-center justify-between">
+                              {hasPrice ? (
+                                <span className="text-base font-bold text-gray-900">
+                                  From ${tire.minPrice}
+                                  <span className="text-xs text-gray-500"> /tire</span>
+                                </span>
+                              ) : (
+                                <span className="text-sm font-bold text-safety-orange">Shop Tires &rarr;</span>
+                              )}
+                              <span className="text-xs text-gray-400">{tire.tireCount} sizes</span>
+                            </div>
                           </div>
                         </Link>
                       );
@@ -227,6 +294,26 @@ export default async function VehicleTiresPage({
                 </div>
               ))}
             </>
+          )}
+
+          {/* Other models from this make */}
+          {otherModels.length > 0 && (
+            <div className="mt-8 rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Other {makeName} Models
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {otherModels.map((m) => (
+                  <Link
+                    key={m.modelSlug}
+                    href={`/tires/vehicle/${make}/${m.modelSlug}`}
+                    className="rounded-full border border-gray-200 bg-gray-50 px-4 py-1.5 text-sm font-medium text-gray-700 hover:border-safety-orange hover:text-safety-orange transition-colors"
+                  >
+                    {makeName} {m.model}
+                  </Link>
+                ))}
+              </div>
+            </div>
           )}
 
           {/* CTA */}
@@ -238,13 +325,13 @@ export default async function VehicleTiresPage({
             <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <a
                 href="tel:+12792388473"
-                className="inline-flex items-center gap-2 rounded-lg bg-orange px-6 py-3 text-sm font-bold text-white hover:bg-orange-light transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg bg-safety-orange px-6 py-3 text-sm font-bold text-white hover:opacity-90 transition-opacity"
               >
-                Call/Text (279) 238-8473 (TIRE)
+                Call/Text (279) 238-TIRE
               </a>
               <Link
                 href="/contact"
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-600 px-6 py-3 text-sm font-bold text-white hover:bg-navy-light transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg border border-gray-600 px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors"
               >
                 Request a Quote
               </Link>

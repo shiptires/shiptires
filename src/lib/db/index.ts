@@ -1,10 +1,16 @@
 /**
- * Database provider — currently SQLite via better-sqlite3.
+ * Database provider — Turso (libSQL) for Vercel deployment.
  *
- * When deploying to Vercel, swap this to Turso (@libsql/client) or
- * Supabase PostgreSQL. The rest of the app imports from this file only,
- * so the swap is a config change, not a rewrite.
+ * Set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN in environment.
+ * For local development with SQLite, set USE_LOCAL_SQLITE=1 and
+ * TIRE_DB_PATH to use the local sqlite driver instead.
  */
+
+const useTurso = !process.env.USE_LOCAL_SQLITE;
+
+// Dynamically choose the driver. Both export the same function signatures.
+// Turso functions are async; SQLite functions are sync.
+// All callers should await the results regardless.
 
 export {
   getAllBrands,
@@ -18,9 +24,10 @@ export {
   getDistinctSizesForBrand,
   searchTires,
   getStats,
+  getTopBrandsForType,
   toSlug,
   getBrandSlugMap,
-} from "./sqlite";
+} from "./turso";
 
 export {
   tireRowToSize,

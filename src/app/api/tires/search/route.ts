@@ -17,7 +17,7 @@ export async function GET(req: Request) {
   const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100);
   const page = parseInt(searchParams.get("page") || "1") || 1;
 
-  const result = searchTires({
+  const result = await searchTires({
     brand,
     size,
     season,

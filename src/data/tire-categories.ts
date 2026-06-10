@@ -6,7 +6,7 @@ export const tireCategories: TireCategory[] = [
     slug: "all-season",
     type: "all-season",
     description:
-      "All-season tires are engineered for year-round versatility, delivering reliable traction in dry, wet, and light snow conditions. They strike the perfect balance between comfort, tread life, and all-weather capability, making them the most popular choice for everyday drivers.",
+      "All-season tires from Michelin, Goodyear, Bridgestone, Continental, and Cooper deliver year-round traction in dry, wet, and light snow. Shop the Michelin Defender, Goodyear Assurance, and Bridgestone Turanza — the most popular all-season tires for Honda, Toyota, Ford, and all vehicles. Ship free.",
     image:
       "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80",
     features: [
@@ -22,7 +22,7 @@ export const tireCategories: TireCategory[] = [
     slug: "winter",
     type: "winter",
     description:
-      "Winter tires are purpose-built for cold weather, ice, and heavy snow using specialized rubber compounds that stay flexible below 45°F. Their aggressive siping and deep tread patterns channel slush and bite into packed snow, providing stopping power and control when it matters most.",
+      "Winter tires from Michelin, Bridgestone, Nokian, Continental, and Pirelli are purpose-built for cold weather, ice, and heavy snow. Shop the Michelin X-Ice, Bridgestone Blizzak, and Nokian Hakkapeliitta — trusted by drivers in the coldest climates. Ship free to your door.",
     image:
       "https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=800&q=80",
     features: [
@@ -38,7 +38,7 @@ export const tireCategories: TireCategory[] = [
     slug: "summer",
     type: "summer",
     description:
-      "Summer tires deliver maximum grip and razor-sharp handling in warm, dry, and wet conditions. Their streamlined tread designs and high-performance compounds provide superior cornering and braking for drivers who demand the most from their vehicle during the warmer months.",
+      "Summer tires from Michelin, Pirelli, Continental, Bridgestone, and Yokohama deliver maximum grip in warm and wet conditions. Shop the Michelin Pilot Sport, Pirelli P Zero, and Continental ExtremeContact — engineered for BMW, Mercedes, Porsche, and sport-tuned vehicles. Ship free.",
     image:
       "https://images.unsplash.com/photo-1525609004556-c46c5d6cf66c?w=800&q=80",
     features: [
@@ -53,7 +53,7 @@ export const tireCategories: TireCategory[] = [
     slug: "performance",
     type: "performance",
     description:
-      "Performance tires are engineered for speed enthusiasts and sport-tuned vehicles, offering exceptional grip at higher speeds and aggressive cornering capability. Built with sticky compounds and reinforced sidewalls, they transform your driving experience on both the street and the track.",
+      "Performance tires from Michelin, Pirelli, Continental, Falken, and Nitto are built for speed and precision. Shop the Michelin Pilot Sport 4S, Pirelli P Zero, and Nitto NT555 — ultra-high-performance tires for Mustang, Camaro, BMW M, and every sports car. Ship free.",
     image:
       "https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=80",
     features: [
@@ -69,7 +69,7 @@ export const tireCategories: TireCategory[] = [
     slug: "all-terrain",
     type: "all-terrain",
     description:
-      "All-terrain tires bridge the gap between highway comfort and off-road capability, making them ideal for trucks and SUVs that split time between pavement and trails. Their rugged tread patterns handle gravel, dirt, and mud while still providing a civilized on-road ride.",
+      "All-terrain tires from BFGoodrich, Falken, Toyo, Cooper, and Nitto handle gravel, dirt, and trails while keeping a smooth highway ride. Shop the BFGoodrich KO2, Falken Wildpeak, and Toyo Open Country — top-rated for F-150, Tacoma, Jeep Wrangler, and every truck and SUV. Ship free.",
     image:
       "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80",
     features: [
@@ -85,7 +85,7 @@ export const tireCategories: TireCategory[] = [
     slug: "mud-terrain",
     type: "mud-terrain",
     description:
-      "Mud-terrain tires are the ultimate choice for serious off-road adventurers, featuring massive tread lugs and deep voids that claw through deep mud, rocks, and sand. While they trade some on-road refinement for raw trail capability, nothing else comes close in extreme terrain.",
+      "Mud-terrain tires from BFGoodrich, Nitto, Toyo, Mickey Thompson, and Cooper are built for extreme off-road. Shop the BFGoodrich KM3, Nitto Trail Grappler, and Toyo Open Country M/T — massive tread lugs that claw through mud, rocks, and sand. Ship free to your door.",
     image:
       "https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=800&q=80",
     features: [
@@ -101,7 +101,7 @@ export const tireCategories: TireCategory[] = [
     slug: "highway",
     type: "highway",
     description:
-      "Highway tires are optimized for long-distance driving and daily commuting on paved roads, offering a smooth, quiet ride with excellent fuel efficiency. Designed primarily for trucks, SUVs, and vans, they deliver predictable handling and impressive tread life for high-mileage drivers.",
+      "Highway tires from Michelin, Cooper, Firestone, Hankook, and General are optimized for trucks, SUVs, and vans on paved roads. Shop the Michelin Defender LTX, Cooper Discoverer HTP, and Firestone Destination — smooth ride, long tread life, and free shipping on every order.",
     image:
       "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=80",
     features: [
@@ -116,7 +116,7 @@ export const tireCategories: TireCategory[] = [
     slug: "touring",
     type: "touring",
     description:
-      "Touring tires prioritize ride comfort and refined handling for sedans, crossovers, and luxury vehicles. They combine a plush, vibration-dampening ride with dependable all-season traction and some of the longest tread life warranties in the industry.",
+      "Touring tires from Michelin, Continental, Bridgestone, Pirelli, and Hankook deliver premium comfort for sedans, crossovers, and luxury vehicles. Shop the Michelin Primacy, Continental PureContact, and Bridgestone Ecopia — up to 80,000-mile warranties and free shipping.",
     image:
       "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=80",
     features: [

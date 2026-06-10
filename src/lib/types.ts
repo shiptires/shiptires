@@ -18,6 +18,7 @@ export interface TireModel {
   slug: string;
   type: TireType;
   sizes: TireSize[];
+  sizeCount?: number; // from API tire_count when sizes aren't loaded yet
   features: string[];
   warranty: string; // e.g. "70,000 miles"
   speedRatings: string[];

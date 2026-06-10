@@ -37,15 +37,10 @@ export interface TireRow {
   upc: string | null;
   ean: string | null;
   asin: string | null;
-  image_url_1: string | null;
-  image_url_2: string | null;
-  image_url_3: string | null;
-  image_url_4: string | null;
-  image_url_5: string | null;
-  image_url_6: string | null;
-  image_url_7: string | null;
-  image_url_8: string | null;
-  image_url_9: string | null;
+  image_0100_url: string | null;
+  image_0200_url: string | null;
+  image_0301_url: string | null;
+  image_0302_url: string | null;
   thumbnail_url: string | null;
   angle_image_url: string | null;
   front_image_url: string | null;
@@ -87,7 +82,7 @@ export interface ModelSummaryRow {
   season: string | null;
   terrain: string | null;
   category: string | null;
-  image_url_1: string | null;
+  thumbnail_url: string | null;
 }
 
 export interface SearchParams {

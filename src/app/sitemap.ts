@@ -1,14 +1,18 @@
 import type { MetadataRoute } from "next";
-import { getAllBrands, getModelsByBrand, toSlug, getDistinctSizes } from "@/lib/db";
+import { getAllBrands, toSlug } from "@/lib/db";
+// NOTE: Model/size pages are discovered by Google via brand pages + internal links (ISR).
+// We intentionally do NOT query per-brand models here — that was causing 665+ DB queries
+// during build, overwhelming Turso with 29 concurrent Vercel workers.
 import { blogPosts } from "@/data/blog-posts";
 import { states } from "@/data/locations";
 import { racingArticles } from "@/data/racing-articles";
 import { racingTechArticles } from "@/data/racing-tech";
 import { toLocationSlug } from "@/lib/location-seo";
+import { vehicleMakes } from "@/data/vehicle-content";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600; // Rebuild sitemap hourly, not every 5 min
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://ship.tires";
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -31,40 +35,33 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/racing-tech`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.6 },
   ];
 
-  // Brand pages from DB
-  const brandRows = getAllBrands();
-  const brandPages = brandRows.map((b) => ({
-    url: `${baseUrl}/tires/${toSlug(b.make_name)}`,
+  // Single DB query for brands only — NO per-brand model queries during build
+  let brandPages: MetadataRoute.Sitemap = [];
+
+  try {
+    const brandRows = await getAllBrands();
+    brandPages = brandRows.map((b) => ({
+      url: `${baseUrl}/tires/${toSlug(b.make_name)}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }));
+  } catch {
+    console.warn("[sitemap] DB unavailable for brands, skipping brand pages");
+  }
+
+  // Model and size pages are discovered via ISR — no build-time DB queries needed
+  // Google will discover them through brand pages and internal links
+
+  // Vehicle make pages
+  const vehicleMakePages: MetadataRoute.Sitemap = vehicleMakes.map((m) => ({
+    url: `${baseUrl}/tires/vehicle/${m.slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));
 
-  // Model pages from DB
-  const modelPages: MetadataRoute.Sitemap = [];
-  for (const b of brandRows) {
-    const brandSlug = toSlug(b.make_name);
-    const models = getModelsByBrand(brandSlug);
-    for (const m of models) {
-      modelPages.push({
-        url: `${baseUrl}/tires/${brandSlug}/${toSlug(m.model_name)}`,
-        lastModified: new Date(),
-        changeFrequency: "weekly" as const,
-        priority: 0.7,
-      });
-    }
-  }
-
-  // Size pages — top 200 most popular sizes
-  const sizes = getDistinctSizes();
-  const sizePages = sizes.slice(0, 200).map((s) => ({
-    url: `${baseUrl}/tires/size/${s.width}-${s.aspect_ratio}r${s.rim_size}`,
-    lastModified: new Date(),
-    changeFrequency: "weekly" as const,
-    priority: 0.6,
-  }));
-
-  // Vehicle pages — common vehicles from tire-sizes data
+  // Vehicle model pages — common vehicles from tire-sizes data
   const vehiclePages: MetadataRoute.Sitemap = [
     "honda/accord", "honda/civic", "honda/cr-v", "honda/pilot",
     "toyota/camry", "toyota/corolla", "toyota/rav4", "toyota/highlander", "toyota/tacoma",
@@ -128,16 +125,44 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }))
   );
 
+  // City + brand pages (top 6 priority brands per city — no DB query needed)
+  const topBrandSlugs = ["michelin", "goodyear", "bridgestone", "continental", "pirelli", "cooper"];
+  const cityBrandPages = states.flatMap((state) =>
+    state.cities.flatMap((city) =>
+      topBrandSlugs.map((brandSlug) => ({
+        url: `${baseUrl}/locations/${state.slug}/${toLocationSlug(city.slug)}/${brandSlug}`,
+        lastModified: new Date(),
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+      }))
+    )
+  );
+
+  // Installer pages — main page + popular zip codes
+  const installerPages: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}/installers`, lastModified: new Date(), changeFrequency: "weekly" as const, priority: 0.8 },
+    ...["90001","10001","60601","77001","85001","19101","78201","92101",
+      "75201","95624","95828","32801","30301","33101","98101","02101",
+      "80201","55401","63101","97201","84101","37201","28201","23220",
+      "46201","43201","73101","53201","64101","89101"].map((zip) => ({
+      url: `${baseUrl}/installers/${zip}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
+  ];
+
   return [
     ...staticPages,
     ...brandPages,
-    ...modelPages,
-    ...sizePages,
+    ...vehicleMakePages,
     ...vehiclePages,
     ...blogPages,
     ...racingPages,
     ...racingTechPages,
     ...statePages,
     ...cityPages,
+    ...cityBrandPages,
+    ...installerPages,
   ];
 }

@@ -24,7 +24,7 @@ import {
 } from "@/lib/location-seo";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 export const dynamicParams = true;
 
 function parseSizeSlug(sizeSlug: string): { width: string; aspect: string; rim: string } | null {
@@ -52,12 +52,12 @@ export async function generateMetadata({
 
   const state = findState(stateSlug);
   const city = state ? findCity(state, citySlug) : undefined;
-  const brandRow = getBrandBySlug(brandSlug);
+  const brandRow = await getBrandBySlug(brandSlug);
   const parsed = parseSizeSlug(sizeSlug);
   if (!state || !city || !brandRow || !parsed) return {};
 
   const brand = brandSummaryToBrand(brandRow);
-  const tires = getTiresByBrandAndSize(brandSlug, parsed.width, parsed.aspect, parsed.rim);
+  const tires = await getTiresByBrandAndSize(brandSlug, parsed.width, parsed.aspect, parsed.rim);
   if (tires.length === 0) return {};
 
   const displaySize = slugToDisplaySize(sizeSlug);
@@ -95,12 +95,12 @@ export default async function SizePage({
 
   const state = findState(stateSlug);
   const city = state ? findCity(state, citySlug) : undefined;
-  const brandRow = getBrandBySlug(brandSlug);
+  const brandRow = await getBrandBySlug(brandSlug);
   const parsed = parseSizeSlug(sizeSlug);
   if (!state || !city || !brandRow || !parsed) notFound();
 
   const brand = brandSummaryToBrand(brandRow);
-  const tires = getTiresByBrandAndSize(brandSlug, parsed.width, parsed.aspect, parsed.rim);
+  const tires = await getTiresByBrandAndSize(brandSlug, parsed.width, parsed.aspect, parsed.rim);
   if (tires.length === 0) notFound();
 
   const displaySize = slugToDisplaySize(sizeSlug);
@@ -129,7 +129,7 @@ export default async function SizePage({
   const sizeInfo = parseTireSize(realSize);
 
   // Other brands with this size
-  const allSizeTires = getTiresBySize(parsed.width, parsed.aspect, parsed.rim);
+  const allSizeTires = await getTiresBySize(parsed.width, parsed.aspect, parsed.rim);
   const otherBrandMap = new Map<string, { count: number; minPrice: number }>();
   for (const t of allSizeTires) {
     if (t.make_name === brandRow.make_name) continue;
@@ -149,7 +149,7 @@ export default async function SizePage({
     .slice(0, 9);
 
   // Related sizes from same brand
-  const brandSizes = getDistinctSizesForBrand(brandSlug);
+  const brandSizes = await getDistinctSizesForBrand(brandSlug);
   const relatedSizes = brandSizes
     .filter((s) => !(s.width === parsed.width && s.aspect_ratio === parsed.aspect && s.rim_size === parsed.rim))
     .slice(0, 12);

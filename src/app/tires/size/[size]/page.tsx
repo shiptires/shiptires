@@ -4,11 +4,11 @@ import { getTiresBySize, toSlug } from "@/lib/db";
 import type { TireRow } from "@/lib/db";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 function parseSizeSlug(slug: string): { width: string; aspect: string; rim: string; display: string } | null {
-  // slug format: "225-65r17" or "225-50r17"
-  const match = slug.match(/^(\d{2,3})-(\d{2,3})r(\d{2,3})$/i);
+  // slug format: "225-65r17" or "225-50r17" or "275-80r22.5"
+  const match = slug.match(/^(\d{2,3})-(\d{2,3})r(\d{2,3}(?:\.\d)?)$/i);
   if (!match) return null;
   return {
     width: match[1],
@@ -58,7 +58,7 @@ export default async function SizePage({
 
   if (!parsed) notFound();
 
-  const tires = getTiresBySize(parsed.width, parsed.aspect, parsed.rim);
+  const tires = await getTiresBySize(parsed.width, parsed.aspect, parsed.rim);
 
   // Group by brand+model
   const grouped = new Map<string, GroupedModel>();
@@ -75,7 +75,7 @@ export default async function SizePage({
         price: tire.price_map ?? 0,
         speedRating: tire.speed_rating ?? "",
         loadRating: tire.load_rating ?? "",
-        imageUrl: tire.image_url_1,
+        imageUrl: tire.thumbnail_url ?? tire.image_0100_url,
         tireCount: 0,
       });
     }

@@ -6,7 +6,7 @@ import { states } from "@/data/locations";
 import { toLocationSlug } from "@/lib/location-seo";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 interface PlaceResult {
   name: string;
@@ -104,13 +104,13 @@ export default async function InstallerZipPage({
   }
 
   // Get popular brands from DB
-  const brandRows = getAllBrands();
+  const brandRows = await getAllBrands();
   const topBrands = brandRows
     .sort((a, b) => b.tire_count - a.tire_count)
     .slice(0, 12)
     .map(brandSummaryToBrand);
 
-  const dbStats = getStats();
+  const dbStats = await getStats();
 
   // Schema.org markup
   const schemaData = {

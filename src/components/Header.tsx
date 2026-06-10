@@ -15,8 +15,11 @@ const navigation = [
   { name: "Contact", href: "/contact" },
 ];
 
-export default function Header() {
+export default function Header({ brandCount, modelCount, tireCount }: { brandCount?: number; modelCount?: number; tireCount?: number } = {}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const brands = brandCount ? `${brandCount}` : "120+";
+  const models = modelCount ? `${Math.floor(modelCount / 100) * 100}+` : "800+";
+  const tires = tireCount ? `${Math.floor(tireCount / 1000)}K+` : "120K+";
 
   return (
     <header className="sticky top-0 z-50">
@@ -25,7 +28,9 @@ export default function Header() {
         <div className="flex whitespace-nowrap ticker-scroll">
           {Array.from({ length: 2 }).map((_, i) => (
             <span key={i} className="flex items-center gap-6 mr-6 tracking-wide">
-              <span>■ FREE SHIPPING — CONTINENTAL US</span>
+              <span>■ SHOP ALL TIRES — SHIP FREE</span>
+              <span className="text-ink-grey/50">·</span>
+              <span>FREE SHIPPING — CONTINENTAL US</span>
               <span className="text-ink-grey/50">·</span>
               <span>EST. TRANSIT <span className="font-bold">3–7 BUSINESS DAYS</span></span>
               <span className="text-ink-grey/50">·</span>
@@ -33,7 +38,7 @@ export default function Header() {
               <span className="text-ink-grey/50">·</span>
               <span>CALL/TEXT <a href="tel:+12792388473" className="font-bold underline">(279) 238-8473</a></span>
               <span className="text-ink-grey/50">·</span>
-              <span>21 BRANDS · 100+ MODELS · 800+ SIZES</span>
+              <span>SHOP {brands} BRANDS · {models} MODELS · {tires} TIRES</span>
             </span>
           ))}
         </div>

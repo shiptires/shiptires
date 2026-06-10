@@ -4,7 +4,7 @@ import type { TireModel, TireType } from "@/lib/types";
 import TireCard from "@/components/TireCard";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Search Tires — Filter by Size, Brand & Type",
@@ -48,14 +48,16 @@ export default async function SearchPage({
   const size = sp.size || "";
   const season = sp.season || "";
   const terrain = sp.terrain || "";
+  const category = sp.category || "";
   const q = sp.q || "";
   const page = parseInt(sp.page || "1") || 1;
 
-  const result = searchTires({
+  const result = await searchTires({
     brand: brand || undefined,
     size: size || undefined,
     season: season || undefined,
     terrain: terrain || undefined,
+    category: category || undefined,
     query: q || undefined,
     page,
     limit: 24,
@@ -108,7 +110,7 @@ export default async function SearchPage({
         speedRatings: [...new Set(group.tires.map((t) => t.speed_rating).filter(Boolean) as string[])],
         priceRange: [minPrice, maxPrice],
         description: `${group.brandName} ${group.modelName} — ${sizes.length} size${sizes.length !== 1 ? "s" : ""} available.`,
-        image: first.image_url_1 ?? undefined,
+        image: first.thumbnail_url ?? first.image_0100_url ?? undefined,
       },
       brandSlug: group.brandSlug,
       brandName: group.brandName,
@@ -116,7 +118,7 @@ export default async function SearchPage({
     });
   }
 
-  const brandRows = getAllBrands();
+  const brandRows = await getAllBrands();
 
   // Build current search query for pagination links
   const queryParts: string[] = [];
@@ -124,6 +126,7 @@ export default async function SearchPage({
   if (size) queryParts.push(`size=${encodeURIComponent(size)}`);
   if (season) queryParts.push(`season=${encodeURIComponent(season)}`);
   if (terrain) queryParts.push(`terrain=${encodeURIComponent(terrain)}`);
+  if (category) queryParts.push(`category=${encodeURIComponent(category)}`);
   if (q) queryParts.push(`q=${encodeURIComponent(q)}`);
   const baseQuery = queryParts.length > 0 ? queryParts.join("&") + "&" : "";
 

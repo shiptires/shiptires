@@ -2,7 +2,9 @@ import { getStripe } from "@/lib/stripe";
 import { getSupabase } from "@/lib/supabase";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
+}
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -61,7 +63,7 @@ export async function POST(req: Request) {
           )
           .join("\n");
 
-        await resend.emails.send({
+        await getResend().emails.send({
           from: "Ship.Tires <orders@ship.tires>",
           to: session.customer_email,
           subject: "Order Confirmation — Ship.Tires",

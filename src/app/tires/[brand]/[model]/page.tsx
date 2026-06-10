@@ -11,12 +11,14 @@ import {
   toSlug,
 } from "@/lib/db";
 import { getLogoUrl } from "@/lib/api-helpers";
-import QuoteRequestForm from "@/components/QuoteRequestForm";
+import CartSidebar from "@/components/CartSidebar";
 import TireCard from "@/components/TireCard";
 import AddToCartButton from "@/components/AddToCartButton";
+import SizeTable from "@/components/SizeTable";
+import TireImageLightbox from "@/components/TireImageLightbox";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const typeLabels: Record<string, string> = {
   "all-season": "All-Season",
@@ -35,17 +37,17 @@ export async function generateMetadata({
   params: Promise<{ brand: string; model: string }>;
 }): Promise<Metadata> {
   const { brand: brandSlug, model: modelSlug } = await params;
-  const data = getModelBySlug(brandSlug, modelSlug);
+  const data = await getModelBySlug(brandSlug, modelSlug);
   if (!data) return {};
 
   const model = tiresToModel(data.model, data.tires);
   const hasPrice = model.priceRange[0] > 0;
 
   return {
-    title: `${data.brand} ${model.name} — Prices, Sizes & Specs`,
+    title: `Shop ${data.brand} ${model.name} Tires — Prices, Sizes & Ship Free`,
     description: hasPrice
-      ? `Buy ${data.brand} ${model.name} tires from $${model.priceRange[0]}. Available in ${model.sizes.length} sizes. Free shipping.${model.warranty ? ` ${model.warranty} warranty.` : ""}`
-      : `${data.brand} ${model.name} tires — ${model.sizes.length} sizes available. Request a quote for pricing. Free shipping.`,
+      ? `Shop ${data.brand} ${model.name} tires from $${model.priceRange[0]}. ${model.sizes.length} sizes available. Ship free to your door or installer.${model.warranty ? ` ${model.warranty} warranty.` : ""} Fits Honda, Toyota, Ford, BMW & more.`
+      : `Shop ${data.brand} ${model.name} tires — ${model.sizes.length} sizes available. Ship free. Request a quote for pricing. Fits Honda, Toyota, Ford, BMW & more.`,
     alternates: { canonical: `https://ship.tires/tires/${brandSlug}/${modelSlug}` },
   };
 }
@@ -56,17 +58,17 @@ export default async function ModelPage({
   params: Promise<{ brand: string; model: string }>;
 }) {
   const { brand: brandSlug, model: modelSlug } = await params;
-  const data = getModelBySlug(brandSlug, modelSlug);
+  const data = await getModelBySlug(brandSlug, modelSlug);
 
   if (!data) notFound();
 
   const model = tiresToModel(data.model, data.tires);
-  const brandRow = getBrandBySlug(brandSlug);
+  const brandRow = await getBrandBySlug(brandSlug);
   const brand = brandRow ? brandSummaryToBrand(brandRow) : null;
   const logoUrl = brand?.logoUrl || getLogoUrl(brand?.domain || "");
 
   // Related models from same brand
-  const allModels = getModelsByBrand(brandSlug);
+  const allModels = await getModelsByBrand(brandSlug);
   const relatedModels = allModels
     .filter((m) => toSlug(m.model_name) !== modelSlug)
     .slice(0, 3)
@@ -119,14 +121,16 @@ export default async function ModelPage({
             <div className="mt-4 flex items-start gap-6">
               {model.image && (
                 <div className="hidden sm:block flex-shrink-0 rounded-xl bg-white p-2">
-                  <Image
-                    src={model.image}
-                    alt={`${data.brand} ${model.name}`}
-                    width={120}
-                    height={120}
-                    className="h-24 w-24 object-contain"
-                    unoptimized
-                  />
+                  <TireImageLightbox src={model.image} alt={`${data.brand} ${model.name}`}>
+                    <Image
+                      src={model.image}
+                      alt={`${data.brand} ${model.name}`}
+                      width={120}
+                      height={120}
+                      className="h-24 w-24 object-contain"
+                      unoptimized
+                    />
+                  </TireImageLightbox>
                 </div>
               )}
               <div>
@@ -142,7 +146,7 @@ export default async function ModelPage({
                       From <span className="text-xl font-bold text-white">${model.priceRange[0]}</span> — <span className="text-white">${model.priceRange[1]}</span> /tire
                     </span>
                   ) : (
-                    <span className="text-safety-orange font-bold">Request Quote for Pricing</span>
+                    <span className="text-safety-orange font-bold">Call for Pricing</span>
                   )}
                   <span className="text-gray-400">|</span>
                   <span className="text-gray-400">{model.sizes.length} sizes available</span>
@@ -216,62 +220,20 @@ export default async function ModelPage({
                 </dl>
               </div>
 
-              {/* Available Sizes */}
+              {/* Available Sizes — Grouped by Wheel Size */}
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
                   Available Sizes ({model.sizes.length})
                 </h2>
-                <div className="mt-4 overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-200 text-left text-xs font-medium uppercase text-gray-500">
-                        <th className="py-3 pr-4">Size</th>
-                        <th className="py-3 pr-4">Load Index</th>
-                        <th className="py-3 pr-4">Speed Rating</th>
-                        <th className="py-3 pr-4">Est. Price</th>
-                        <th className="py-3"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {model.sizes.map((size) => (
-                        <tr key={`${size.size}-${size.tireId}`} className="hover:bg-gray-50">
-                          <td className="py-3 pr-4 font-medium text-gray-900">{size.size}</td>
-                          <td className="py-3 pr-4 text-gray-600">{size.loadIndex || "—"}</td>
-                          <td className="py-3 pr-4 text-gray-600">{size.speedRating || "—"}</td>
-                          <td className="py-3 pr-4 font-bold text-gray-900">
-                            {size.price > 0 ? `$${size.price}` : "—"}
-                          </td>
-                          <td className="py-3 flex items-center gap-2">
-                            {size.price > 0 ? (
-                              <AddToCartButton
-                                brand={data.brand}
-                                brandSlug={brandSlug}
-                                model={model.name}
-                                modelSlug={model.slug}
-                                size={size.size}
-                                price={size.price}
-                                loadIndex={size.loadIndex}
-                                speedRating={size.speedRating}
-                              />
-                            ) : (
-                              <Link
-                                href={`/contact?tire=${encodeURIComponent(`${data.brand} ${model.name}`)}&size=${encodeURIComponent(size.size)}`}
-                                className="inline-flex items-center rounded-md bg-safety-orange px-3 py-1.5 text-xs font-bold text-white hover:bg-safety-orange/90 transition-colors"
-                              >
-                                Request Quote
-                              </Link>
-                            )}
-                            <Link
-                              href={`/contact?tire=${encodeURIComponent(`${data.brand} ${model.name}`)}&size=${encodeURIComponent(size.size)}`}
-                              className="inline-flex items-center rounded-md bg-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-300 transition-colors"
-                            >
-                              Get Quote
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="mt-4">
+                  <SizeTable
+                    sizes={model.sizes}
+                    brand={data.brand}
+                    brandSlug={brandSlug}
+                    modelName={model.name}
+                    modelSlug={model.slug}
+                    tireImage={model.image}
+                  />
                 </div>
               </div>
 
@@ -296,26 +258,9 @@ export default async function ModelPage({
               )}
             </div>
 
-            {/* Sidebar — Quote Form */}
+            {/* Sidebar — Live Cart */}
             <div className="lg:col-span-1">
-              <div className="sticky top-32 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-                <h3 className="text-lg font-bold text-gray-900">Request a Quote</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  Get pricing for the {data.brand} {model.name}. Free shipping included.
-                </p>
-                <div className="mt-4">
-                  <QuoteRequestForm
-                    defaultBrand={data.brand}
-                    defaultModel={model.name}
-                  />
-                </div>
-                <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
-                  <span>or call/text</span>
-                  <a href="tel:+12792388473" className="font-bold text-orange hover:underline">
-                    (279) 238-8473 (TIRE)
-                  </a>
-                </div>
-              </div>
+              <CartSidebar brand={data.brand} model={model.name} />
             </div>
           </div>
         </div>

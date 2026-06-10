@@ -98,7 +98,7 @@ export function getModelsByBrand(slug: string): ModelSummaryRow[] {
         MAX(season) as season,
         MAX(terrain) as terrain,
         MAX(category) as category,
-        MAX(image_url_1) as image_url_1
+        MAX(thumbnail_url) as thumbnail_url
       FROM tires
       WHERE make_name = ?
         AND model_name IS NOT NULL AND model_name != ''
@@ -300,6 +300,62 @@ export function searchTires(params: SearchParams): SearchResult {
 }
 
 // ---------------------------------------------------------------------------
+// Top brands by tire type
+// ---------------------------------------------------------------------------
+
+export function getTopBrandsForType(type: string): BrandSummaryRow[] {
+  const db = getDb();
+
+  let condition = "";
+  switch (type) {
+    case "all-season":
+      condition = "season IN ('All-Season', 'All-Weather')";
+      break;
+    case "winter":
+      condition = "season = 'Winter'";
+      break;
+    case "summer":
+      condition = "season = 'Summer'";
+      break;
+    case "performance":
+      condition = "(category LIKE '%performance%' OR category LIKE '%uhp%')";
+      break;
+    case "all-terrain":
+      condition = "terrain = 'All-Terrain (A/T)'";
+      break;
+    case "mud-terrain":
+      condition = "terrain = 'Mud-Terrain (M/T)'";
+      break;
+    case "highway":
+      condition = "terrain = 'Highway Terrain (H/T)'";
+      break;
+    case "touring":
+      condition = "category LIKE '%touring%'";
+      break;
+    default:
+      return [];
+  }
+
+  return db
+    .prepare(
+      `SELECT
+        t.make_name,
+        MAX(t.make_image_url) as make_image_url,
+        MAX(m.local_logo) as local_logo,
+        COUNT(*) as tire_count,
+        COUNT(DISTINCT t.model_name) as model_count
+      FROM tires t
+      LEFT JOIN manufacturers m ON UPPER(m.name) = UPPER(t.make_name)
+      WHERE ${condition}
+        AND t.make_name IS NOT NULL AND t.make_name != ''
+      GROUP BY t.make_name
+      ORDER BY tire_count DESC
+      LIMIT 6`
+    )
+    .all() as BrandSummaryRow[];
+}
+
+// ---------------------------------------------------------------------------
 // Stats
 // ---------------------------------------------------------------------------
 
@@ -329,40 +385,34 @@ function slugToBrandName(
   db: Database.Database,
   slug: string
 ): string | null {
-  // First try exact match against lowercased make_name
-  const rows = db
-    .prepare(
-      `SELECT DISTINCT make_name FROM tires
-      WHERE make_name IS NOT NULL AND make_name != ''`
-    )
-    .all() as { make_name: string }[];
-
-  for (const row of rows) {
-    if (toSlug(row.make_name) === slug) {
-      return row.make_name;
-    }
-  }
-  return null;
+  // Use the cached slug map instead of querying every time
+  const map = getBrandSlugMap();
+  return map.get(slug) ?? null;
 }
+
+// Cache for model name lookups per brand (populated lazily)
+const _modelSlugCaches = new Map<string, Map<string, string>>();
 
 function slugToModelName(
   db: Database.Database,
   brandName: string,
   slug: string
 ): string | null {
-  const rows = db
-    .prepare(
-      `SELECT DISTINCT model_name FROM tires
-      WHERE make_name = ? AND model_name IS NOT NULL AND model_name != ''`
-    )
-    .all(brandName) as { model_name: string }[];
-
-  for (const row of rows) {
-    if (toSlug(row.model_name) === slug) {
-      return row.model_name;
+  let cache = _modelSlugCaches.get(brandName);
+  if (!cache) {
+    cache = new Map();
+    const rows = db
+      .prepare(
+        `SELECT DISTINCT model_name FROM tires
+        WHERE make_name = ? AND model_name IS NOT NULL AND model_name != ''`
+      )
+      .all(brandName) as { model_name: string }[];
+    for (const row of rows) {
+      cache.set(toSlug(row.model_name), row.model_name);
     }
+    _modelSlugCaches.set(brandName, cache);
   }
-  return null;
+  return cache.get(slug) ?? null;
 }
 
 export function toSlug(name: string): string {

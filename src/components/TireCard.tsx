@@ -31,36 +31,54 @@ export default function TireCard({
       href={`/tires/${brandSlug}/${model.slug}`}
       className="group block overflow-hidden rounded-lg border border-ink-grey/15 bg-white transition-all hover:shadow-md hover:border-safety-orange/30"
     >
-      {/* Brand logo + type badge header */}
-      <div className="relative flex items-center justify-between border-b border-ink-grey/10 bg-label-white px-4 py-3">
+      {/* Tire image hero */}
+      <div className="relative bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-4 h-48">
+        {model.image ? (
+          <Image
+            src={model.image}
+            alt={`${brandName || brandSlug} ${model.name}`}
+            width={200}
+            height={200}
+            className="h-40 w-40 object-contain group-hover:scale-105 transition-transform"
+            unoptimized
+          />
+        ) : (
+          <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gray-100">
+            <svg className="h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-4.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z" />
+            </svg>
+          </div>
+        )}
+        {/* Type badge */}
+        <span className="absolute top-3 right-3 inline-flex items-center rounded bg-white/90 border border-ink-grey/20 px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-ink-grey shadow-sm">
+          {typeLabels[model.type] || model.type}
+        </span>
+        {/* Brand logo */}
         {brandLogo && (
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-white p-0.5">
+          <div className="absolute top-3 left-3 flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-sm border border-gray-100 p-1">
             <Image
               src={brandLogo}
               alt={brandName || brandSlug}
-              width={28}
-              height={28}
-              className="h-7 w-7 object-contain"
+              width={32}
+              height={32}
+              className="h-8 w-8 object-contain"
               unoptimized
             />
           </div>
         )}
-        <span className="inline-flex items-center rounded border border-ink-grey/20 px-2 py-0.5 text-[10px] font-mono font-semibold uppercase tracking-wider text-ink-grey">
-          {typeLabels[model.type] || model.type}
-        </span>
       </div>
 
-      <div className="p-4">
+      <div className="p-4 border-t border-ink-grey/10">
+        {brandName && (
+          <p className="text-[10px] font-mono uppercase tracking-wider text-ink-grey mb-0.5">{brandName}</p>
+        )}
         <h3 className="font-display text-base font-bold text-rubber group-hover:text-safety-orange transition-colors">
           {model.name}
         </h3>
-        <p className="mt-1 text-xs text-ink-grey line-clamp-2">
-          {model.description}
-        </p>
 
         {model.features.length > 0 && (
-          <div className="mt-2.5 flex flex-wrap gap-1">
-            {model.features.slice(0, 2).map((feature) => (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {model.features.slice(0, 3).map((feature) => (
               <span
                 key={feature}
                 className="inline-flex items-center rounded bg-kraft/30 px-2 py-0.5 text-[10px] text-rubber/70"
@@ -76,27 +94,26 @@ export default function TireCard({
             {hasPrice ? (
               <>
                 <span className="text-xs text-ink-grey">From </span>
-                <span className="text-base font-mono font-bold text-rubber">
+                <span className="text-lg font-mono font-bold text-rubber">
                   ${model.priceRange[0]}
                 </span>
                 <span className="text-xs text-ink-grey"> /tire</span>
               </>
             ) : (
               <span className="text-sm font-bold text-safety-orange">
-                Request Quote
+                Call for Price
               </span>
             )}
           </div>
-          <div className="text-[10px] font-mono text-ink-grey">
-            {model.sizes.length} sizes
-          </div>
+          <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700">
+            Free Ship
+          </span>
         </div>
 
-        {model.warranty && (
-          <div className="mt-1.5 text-[10px] font-mono text-ink-grey">
-            Warranty: {model.warranty}
-          </div>
-        )}
+        <div className="mt-1.5 flex items-center justify-between text-[10px] font-mono text-ink-grey">
+          <span>{model.sizeCount ?? model.sizes.length} sizes</span>
+          {model.warranty && <span>{model.warranty}</span>}
+        </div>
       </div>
     </Link>
   );

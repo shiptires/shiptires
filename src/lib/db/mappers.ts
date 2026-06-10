@@ -1,6 +1,7 @@
 import type { Brand, TireModel, TireSize, TireType } from "@/lib/types";
 import type { TireRow, BrandSummaryRow, ModelSummaryRow } from "./types";
 import { toSlug } from "./sqlite";
+import { getBrandLogo } from "../curated-brands";
 
 // ---------------------------------------------------------------------------
 // Map DB season/terrain/category to UI TireType
@@ -58,8 +59,8 @@ export function tireRowToSize(row: TireRow): TireSize {
     speedRating: row.speed_rating ?? "",
     price: row.price_map ?? 0,
     tireId: row.id,
-    imageUrl: resolveImage(row.local_thumbnail, row.thumbnail_url, row.image_url_1),
-    thumbnailUrl: resolveImage(row.local_thumbnail, row.thumbnail_url, row.image_url_1),
+    imageUrl: resolveImage(row.local_thumbnail, row.thumbnail_url, row.image_0100_url),
+    thumbnailUrl: resolveImage(row.local_thumbnail, row.thumbnail_url, row.image_0100_url),
     weight: row.weight ? parseFloat(row.weight) : undefined,
     treadDepth: row.tread_depth ?? undefined,
     utqg: row.utqg ?? undefined,
@@ -113,7 +114,7 @@ export function tiresToModel(
   const typeLabel = typeLabels[type];
   if (typeLabel) features.push(`${typeLabel} Tire`);
 
-  const image = resolveImage(first.local_thumbnail, first.thumbnail_url, first.image_url_1);
+  const image = resolveImage(first.local_thumbnail, first.thumbnail_url, first.image_0100_url);
 
   // Auto-generate description from specs
   const description = generateDescription(modelName, first, type, sizes.length);
@@ -159,6 +160,7 @@ function generateDescription(
 // ---------------------------------------------------------------------------
 
 export function brandSummaryToBrand(row: BrandSummaryRow): Brand {
+  const localLogo = getBrandLogo(row.make_name);
   return {
     name: row.make_name,
     slug: toSlug(row.make_name),
@@ -167,7 +169,7 @@ export function brandSummaryToBrand(row: BrandSummaryRow): Brand {
     founded: 0,
     description: "",
     models: [],
-    logoUrl: resolveImage(row.local_logo, row.make_image_url),
+    logoUrl: localLogo || resolveImage(row.local_logo, row.make_image_url),
     tireCount: row.tire_count,
     modelCount: row.model_count,
   };
@@ -184,12 +186,13 @@ export function modelSummaryToModel(row: ModelSummaryRow): TireModel {
     slug: toSlug(row.model_name),
     type,
     sizes: [],
+    sizeCount: row.tire_count ?? 0,
     features: [],
     warranty: "",
     speedRatings: [],
     priceRange: [row.min_price ?? 0, row.max_price ?? 0],
     description: `${row.model_name} — ${row.tire_count} size${row.tire_count !== 1 ? "s" : ""} available.`,
-    image: row.image_url_1 ?? undefined,
+    image: row.thumbnail_url ?? undefined,
   };
 }
 

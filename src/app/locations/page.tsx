@@ -5,9 +5,9 @@ import type { Metadata } from "next";
 import { toLocationSlug } from "@/lib/location-seo";
 
 export const metadata: Metadata = {
-  title: "Tire Shipping Locations — Free Delivery Nationwide",
+  title: "Shop Tires by Location — Ship Free to 1,000+ Cities Nationwide",
   description:
-    "Ship.Tires delivers tires free to 1,000+ cities across all 50 states. Browse by state, city, brand, and size. 20+ brands, 800+ sizes, shipped to your door.",
+    "Shop tires online and ship free to 1,000+ cities across all 50 states. 665+ brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli. Tires for Honda, Toyota, Ford, BMW & all vehicles. Ship to your door or local installer.",
   alternates: { canonical: "https://ship.tires/locations" },
 };
 

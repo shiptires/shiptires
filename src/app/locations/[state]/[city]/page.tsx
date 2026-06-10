@@ -14,18 +14,7 @@ import {
 } from "@/lib/location-seo";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
-export const dynamicParams = true;
-
-export async function generateStaticParams() {
-  const params: { state: string; city: string }[] = [];
-  for (const state of states) {
-    for (const city of state.cities) {
-      params.push({ state: state.slug, city: toLocationSlug(city.slug) });
-    }
-  }
-  return params;
-}
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,
@@ -37,11 +26,11 @@ export async function generateMetadata({
   const city = state ? findCity(state, citySlug) : undefined;
   if (!state || !city) return {};
 
-  const stats = getStats();
+  const stats = await getStats();
 
   return {
-    title: `Tires Near Me in ${city.name}, ${state.abbreviation} — ${stats.brandCount} Brands Shipped Free`,
-    description: `Find tires near me in ${city.name}, ${state.abbreviation}. ${stats.brandCount} brands, ${stats.modelCount}+ models shipped free to your door. Michelin, Goodyear, Bridgestone & more. Free shipping on every order.`,
+    title: `Shop Tires in ${city.name}, ${state.abbreviation} — ${stats.brandCount} Brands, Ship Free`,
+    description: `Shop tires in ${city.name}, ${state.abbreviation}. ${stats.brandCount} brands including Michelin, Goodyear, Bridgestone, Continental & Pirelli. Ship free to your door or installer. Tires for Honda, Toyota, Ford, BMW & all vehicles. ${stats.modelCount}+ models available.`,
     alternates: { canonical: `https://ship.tires/locations/${stateSlug}/${citySlug}` },
   };
 }
@@ -57,13 +46,27 @@ export default async function CityLocationsPage({
   if (!state || !city) notFound();
 
   const climate = getStateClimate(stateSlug);
-  const brandRows = getAllBrands();
+  const brandRows = await getAllBrands();
   const brands = brandRows.map(brandSummaryToBrand);
-  const stats = getStats();
+  const stats = await getStats();
 
-  // Top brands by tire count for the featured grid
+  // Priority brands in exact display order (most recognizable first)
+  const priorityOrder = [
+    "MICHELIN", "GOODYEAR", "BRIDGESTONE", "CONTINENTAL", "PIRELLI",
+    "COOPER", "HANKOOK", "YOKOHAMA", "TOYO", "FIRESTONE",
+    "BFGOODRICH", "FALKEN", "GENERAL", "KUMHO", "NEXEN",
+    "NITTO", "DUNLOP", "NOKIAN", "UNIROYAL", "KELLY",
+  ];
+  const priorityRank = new Map(priorityOrder.map((n, i) => [n, i + 1]));
+
+  // Top brands: priority brands first (in explicit order), then by tire count
   const topBrands = [...brands]
-    .sort((a, b) => (b.tireCount ?? 0) - (a.tireCount ?? 0))
+    .sort((a, b) => {
+      const aR = priorityRank.get(a.name.toUpperCase()) ?? 999;
+      const bR = priorityRank.get(b.name.toUpperCase()) ?? 999;
+      if (aR !== bR) return aR - bR;
+      return (b.tireCount ?? 0) - (a.tireCount ?? 0);
+    })
     .slice(0, 30);
 
   const schemaData = {

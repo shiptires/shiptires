@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { states } from "@/data/locations";
 import {
   getBrandBySlug,
@@ -17,7 +18,7 @@ import {
 } from "@/lib/location-seo";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 export const dynamicParams = true;
 
 export async function generateMetadata({
@@ -28,15 +29,15 @@ export async function generateMetadata({
   const { state: stateSlug, city: citySlug, brand: brandSlug } = await params;
   const state = findState(stateSlug);
   const city = state ? findCity(state, citySlug) : undefined;
-  const brandRow = getBrandBySlug(brandSlug);
+  const brandRow = await getBrandBySlug(brandSlug);
   if (!state || !city || !brandRow) return {};
 
   const brand = brandSummaryToBrand(brandRow);
-  const models = getModelsByBrand(brandSlug);
+  const models = await getModelsByBrand(brandSlug);
 
   return {
-    title: `${brand.name} Tires Near Me in ${city.name}, ${state.abbreviation} — ${models.length} Models Shipped Free`,
-    description: `${brand.name} tires near me in ${city.name}, ${state.abbreviation}. ${models.length} models, ${brand.tireCount} sizes shipped free. Free shipping on all ${brand.name} tires to your door or installer near ${city.name}.`,
+    title: `Shop ${brand.name} Tires in ${city.name}, ${state.abbreviation} — ${models.length} Models, Ship Free`,
+    description: `Shop ${brand.name} tires in ${city.name}, ${state.abbreviation}. ${models.length} models, ${brand.tireCount} sizes. Ship free to your door or installer near ${city.name}. ${brand.name} tires for Honda, Toyota, Ford, BMW & more. Free shipping on every order.`,
     alternates: { canonical: `https://ship.tires/locations/${stateSlug}/${citySlug}/${brandSlug}` },
   };
 }
@@ -49,19 +50,33 @@ export default async function CityBrandPage({
   const { state: stateSlug, city: citySlug, brand: brandSlug } = await params;
   const state = findState(stateSlug);
   const city = state ? findCity(state, citySlug) : undefined;
-  const brandRow = getBrandBySlug(brandSlug);
+  const brandRow = await getBrandBySlug(brandSlug);
   if (!state || !city || !brandRow) notFound();
 
   const brand = brandSummaryToBrand(brandRow);
-  const modelRows = getModelsByBrand(brandSlug);
+  const modelRows = await getModelsByBrand(brandSlug);
   const models = modelRows.map(modelSummaryToModel);
   const climate = getStateClimate(stateSlug);
 
+  // Priority brands in explicit order for cross-linking
+  const priorityOrder = [
+    "MICHELIN", "GOODYEAR", "BRIDGESTONE", "CONTINENTAL", "PIRELLI",
+    "COOPER", "HANKOOK", "YOKOHAMA", "TOYO", "FIRESTONE",
+    "BFGOODRICH", "FALKEN", "GENERAL", "KUMHO", "NEXEN",
+    "NITTO", "DUNLOP", "NOKIAN", "UNIROYAL", "KELLY",
+  ];
+  const priorityRank = new Map(priorityOrder.map((n, i) => [n, i + 1]));
+
   // Get other top brands for cross-linking
-  const allBrandRows = getAllBrands();
+  const allBrandRows = await getAllBrands();
   const otherBrands = allBrandRows
     .filter((b) => b.make_name !== brandRow.make_name)
-    .sort((a, b) => b.tire_count - a.tire_count)
+    .sort((a, b) => {
+      const aR = priorityRank.get(a.make_name.toUpperCase()) ?? 999;
+      const bR = priorityRank.get(b.make_name.toUpperCase()) ?? 999;
+      if (aR !== bR) return aR - bR;
+      return b.tire_count - a.tire_count;
+    })
     .slice(0, 20)
     .map(brandSummaryToBrand);
 
@@ -180,34 +195,52 @@ export default async function CityBrandPage({
               <h2 className="text-2xl font-bold text-gray-900">
                 {brand.name} Tire Lineup
               </h2>
-              <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {models.map((model) => (
                   <Link
                     key={model.slug}
                     href={`/tires/${brandSlug}/${model.slug}`}
-                    className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm hover:shadow-md hover:border-blue transition-all group"
+                    className="rounded-xl bg-white border border-gray-200 overflow-hidden shadow-sm hover:shadow-md hover:border-blue transition-all group"
                   >
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-bold text-gray-900 group-hover:text-blue transition-colors">
-                        {model.name}
-                      </h3>
-                      <span className="rounded-full bg-blue/10 px-3 py-1 text-xs font-medium text-blue">
+                    <div className="relative bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-4 h-44">
+                      {model.image ? (
+                        <Image
+                          src={model.image}
+                          alt={`${brand.name} ${model.name}`}
+                          width={160}
+                          height={160}
+                          className="h-36 w-36 object-contain group-hover:scale-105 transition-transform"
+                          unoptimized
+                        />
+                      ) : (
+                        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gray-100">
+                          <svg className="h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-4.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z" />
+                          </svg>
+                        </div>
+                      )}
+                      <span className="absolute top-2 right-2 rounded bg-white/90 border border-gray-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-600">
                         {getTypeLabel(model.type)}
                       </span>
                     </div>
-                    <p className="mt-2 text-sm text-gray-600 line-clamp-2">
-                      {model.description}
-                    </p>
-                    <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
-                      <span>{model.sizes.length > 0 ? `${model.sizes.length} sizes` : "Sizes available"}</span>
-                      {model.priceRange[0] > 0 && (
-                        <span className="font-bold text-gray-900">
-                          ${model.priceRange[0]}–${model.priceRange[1]}
-                        </span>
-                      )}
-                      {model.priceRange[0] === 0 && (
-                        <span className="text-orange font-medium">Request Quote</span>
-                      )}
+                    <div className="p-4 border-t border-gray-100">
+                      <p className="text-[10px] font-mono uppercase tracking-wider text-gray-400 mb-0.5">{brand.name}</p>
+                      <h3 className="font-bold text-gray-900 group-hover:text-blue transition-colors">
+                        {model.name}
+                      </h3>
+                      <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                        <span>{model.sizes.length > 0 ? `${model.sizes.length} sizes` : "Sizes available"}</span>
+                        {model.priceRange[0] > 0 ? (
+                          <span className="font-bold text-gray-900">
+                            From ${model.priceRange[0]}
+                          </span>
+                        ) : (
+                          <span className="text-orange font-medium">Call for Price</span>
+                        )}
+                      </div>
+                      <div className="mt-2 flex items-center justify-between">
+                        <span className="rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-bold text-green-700">Free Ship</span>
+                      </div>
                     </div>
                   </Link>
                 ))}

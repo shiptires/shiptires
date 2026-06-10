@@ -2,11 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 
 const tireLinks = [
-  { name: "All-Season Tires", href: "/search?type=all-season" },
-  { name: "Winter Tires", href: "/search?type=winter" },
-  { name: "Performance Tires", href: "/search?type=performance" },
-  { name: "All-Terrain Tires", href: "/search?type=all-terrain" },
-  { name: "Touring Tires", href: "/search?type=touring" },
+  { name: "All-Season Tires", href: "/search?season=All-Season" },
+  { name: "Winter Tires", href: "/search?season=Winter" },
+  { name: "Performance Tires", href: "/search?category=performance" },
+  { name: "All-Terrain Tires", href: "/search?terrain=All-Terrain+%28A%2FT%29" },
+  { name: "Touring Tires", href: "/search?category=touring" },
   { name: "All Brands", href: "/tires" },
 ];
 
@@ -22,6 +22,7 @@ const topBrands = [
 const companyLinks = [
   { name: "About Us", href: "/about" },
   { name: "Shipping Info", href: "/shipping" },
+  { name: "Find Installers", href: "/installers" },
   { name: "Vehicle Lookup", href: "/vehicle-lookup" },
   { name: "Blog", href: "/blog" },
   { name: "FAQ", href: "/faq" },
@@ -49,8 +50,8 @@ export default function Footer() {
               />
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-white/60">
-              Tires shipped free nationwide. 21 brands, 100+ models, 800+ sizes
-              delivered to your door or local installer.
+              Tires shipped free nationwide. 120+ brands delivered
+              to your door or local installer.
             </p>
             <div className="mt-4 flex items-center gap-2 text-sm font-mono text-kraft">
               <svg className="h-4 w-4 text-safety-orange" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

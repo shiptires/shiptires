@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["better-sqlite3", "zipcodes"],
+  staticPageGenerationTimeout: 180,
   images: {
     remotePatterns: [
       {

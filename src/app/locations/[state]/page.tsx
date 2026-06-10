@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { states } from "@/data/locations";
-import { brands } from "@/data/brands";
+import { getAllBrands, brandSummaryToBrand, getStats } from "@/lib/db";
 import { toLocationSlug, getStateClimate } from "@/lib/location-seo";
 import type { Metadata } from "next";
 
-export async function generateStaticParams() {
-  return states.map((s) => ({ state: s.slug }));
-}
+export const revalidate = 300;
+
+
 
 export async function generateMetadata({
   params,
@@ -17,9 +18,10 @@ export async function generateMetadata({
   const { state: stateSlug } = await params;
   const state = states.find((s) => s.slug === stateSlug);
   if (!state) return {};
+  const stats = await getStats();
   return {
     title: `Buy Tires in ${state.name} — Free Shipping to ${state.cities.length}+ Cities`,
-    description: `Shop tires online with free shipping to ${state.cities.length}+ cities in ${state.name}. ${brands.length} brands including Michelin, Goodyear, Bridgestone. Delivered to your door or local ${state.abbreviation} installer.`,
+    description: `Shop tires online with free shipping to ${state.cities.length}+ cities in ${state.name}. ${stats.brandCount} brands including Michelin, Goodyear, Bridgestone. Delivered to your door or local ${state.abbreviation} installer.`,
     alternates: { canonical: `https://ship.tires/locations/${stateSlug}` },
   };
 }
@@ -34,6 +36,28 @@ export default async function StatePage({
   if (!state) notFound();
 
   const climate = getStateClimate(stateSlug);
+  const brandRows = await getAllBrands();
+  const dbBrands = brandRows.map(brandSummaryToBrand);
+  const stats = await getStats();
+
+  // Priority brands in exact display order (most recognizable first)
+  const priorityOrder = [
+    "MICHELIN", "GOODYEAR", "BRIDGESTONE", "CONTINENTAL", "PIRELLI",
+    "COOPER", "HANKOOK", "YOKOHAMA", "TOYO", "FIRESTONE",
+    "BFGOODRICH", "FALKEN", "GENERAL", "KUMHO", "NEXEN",
+    "NITTO", "DUNLOP", "NOKIAN", "UNIROYAL", "KELLY",
+  ];
+  const priorityRank = new Map(priorityOrder.map((n, i) => [n, i + 1]));
+
+  // Top brands: priority brands first (in explicit order), then by tire count
+  const topBrands = [...dbBrands]
+    .sort((a, b) => {
+      const aR = priorityRank.get(a.name.toUpperCase()) ?? 999;
+      const bR = priorityRank.get(b.name.toUpperCase()) ?? 999;
+      if (aR !== bR) return aR - bR;
+      return (b.tireCount ?? 0) - (a.tireCount ?? 0);
+    })
+    .slice(0, 40);
 
   return (
     <div className="bg-gray-50">
@@ -51,7 +75,7 @@ export default async function StatePage({
           </h1>
           <p className="mt-3 text-lg text-gray-300">
             Free tire shipping to {state.cities.length}+ cities across{" "}
-            {state.name}. {brands.length} brands, 800+ sizes.
+            {state.name}. {stats.brandCount} brands, {stats.tireCount.toLocaleString()}+ tires.
           </p>
         </div>
       </div>
@@ -65,7 +89,7 @@ export default async function StatePage({
             Ship.Tires delivers to every city in {state.name} — free of charge.
             {state.name} drivers face {climate}, making it critical to choose
             the right tires for safety and performance. Browse our selection of{" "}
-            {brands.length}+ tire brands with models for every vehicle and
+            {stats.brandCount}+ tire brands with models for every vehicle and
             driving condition. We ship directly to your home or local{" "}
             {state.abbreviation} tire installer.
           </p>
@@ -102,22 +126,46 @@ export default async function StatePage({
           <h2 className="text-2xl font-bold text-gray-900">
             Brands Available in {state.name}
           </h2>
-          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-5">
-            {brands.map((brand) => (
-              <div
+          <p className="mt-2 text-gray-600">
+            Click any brand to browse their full tire catalog. All ship free to {state.name}.
+          </p>
+          <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {topBrands.map((brand) => (
+              <Link
                 key={brand.slug}
-                className="rounded-lg bg-white border border-gray-200 p-4 text-center shadow-sm"
+                href={`/tires/${brand.slug}`}
+                className="group rounded-lg bg-white border border-gray-200 p-4 shadow-sm hover:shadow-md hover:border-blue transition-all flex flex-col items-center text-center"
               >
-                <h3 className="font-bold text-gray-900 text-sm">
+                {brand.logoUrl ? (
+                  <Image
+                    src={brand.logoUrl}
+                    alt={brand.name}
+                    width={80}
+                    height={60}
+                    className="h-10 w-auto object-contain mb-2"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mb-2">
+                    <span className="text-xs font-bold text-gray-500">{brand.name.charAt(0)}</span>
+                  </div>
+                )}
+                <h3 className="font-bold text-gray-900 text-sm group-hover:text-blue transition-colors">
                   {brand.name}
                 </h3>
                 <p className="mt-1 text-xs text-gray-500">
-                  {brand.models.length} models ·{" "}
-                  {brand.models.reduce((s, m) => s + m.sizes.length, 0)} sizes
+                  {brand.modelCount ?? 0} models · {brand.tireCount ?? 0} tires
                 </p>
-              </div>
+              </Link>
             ))}
           </div>
+          {dbBrands.length > 40 && (
+            <div className="mt-4 text-center">
+              <Link href="/tires" className="text-blue hover:underline font-medium text-sm">
+                View all {dbBrands.length} brands →
+              </Link>
+            </div>
+          )}
         </div>
 
         <div className="rounded-xl bg-orange p-8 text-center text-white">
