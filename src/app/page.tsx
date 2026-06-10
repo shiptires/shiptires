@@ -101,14 +101,16 @@ export default async function HomePage() {
     categoryBrandsMap.set(cat.type, typeBrandRows.map(brandSummaryToBrand));
   }
 
-  // Fetch featured tire models from top 6 brands for the showcase
-  const showcaseBrands = ["michelin", "goodyear", "bridgestone", "continental", "cooper", "pirelli"];
+  // Fetch featured tire models from top brands for the showcase
+  const showcaseBrands = ["michelin", "goodyear", "bridgestone", "continental", "cooper", "pirelli", "radar"];
   const featuredTires: { brand: ReturnType<typeof brandSummaryToBrand>; models: ReturnType<typeof modelSummaryToModel>[] }[] = [];
   for (const slug of showcaseBrands) {
     const brand = brands.find((b) => b.slug === slug);
     if (!brand) continue;
     const modelRows = await dbTimeout(getModelsByBrand(slug), []);
-    const models = modelRows.slice(0, 2).map(modelSummaryToModel);
+    // Sort by tire_count descending so popular models come first (not alphabetical)
+    const sorted = [...modelRows].sort((a, b) => (b.tire_count ?? 0) - (a.tire_count ?? 0));
+    const models = sorted.slice(0, 2).map(modelSummaryToModel);
     if (models.length > 0) {
       featuredTires.push({ brand, models });
     }

@@ -48,7 +48,9 @@ export default async function BrandPage({
 
   const brand = brandSummaryToBrand(brandRow);
   const modelRows = await getModelsByBrand(brandSlug);
-  const models = modelRows.map(modelSummaryToModel);
+  // Sort by tire_count descending — popular models first, not alphabetical
+  const sortedRows = [...modelRows].sort((a, b) => (b.tire_count ?? 0) - (a.tire_count ?? 0));
+  const models = sortedRows.map(modelSummaryToModel);
   const manufacturer = await getManufacturer(brandRow.make_name);
   const popularSizes = await getDistinctSizesForBrand(brandSlug);
   const allRebates = await getActiveRebates();
