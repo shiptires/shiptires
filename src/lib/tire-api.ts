@@ -79,8 +79,10 @@ interface ApiTire {
   rim_size: string | null;
   load_rating: string | null;
   speed_rating: string | null;
-  thumbnail_url: string | null;
-  image_0100_url: string | null;
+  thumbnail_url?: string | null;
+  thumbnail_image?: string | null;
+  image_0100_url?: string | null;
+  image_0100?: string | null;
   season: string | null;
   terrain: string | null;
   category: string | null;
@@ -106,13 +108,36 @@ interface ApiTire {
 }
 
 interface ApiCatalogResponse {
-  data: ApiTire[];
+  data?: ApiTire[];
+  results?: { data: ApiTire[]; total: number; per_page: number; current_page: number; last_page: number; from: number; to: number };
   meta?: { total: number; per_page: number; current_page: number; last_page: number };
 }
 
 interface ApiPatternsResponse {
-  data: ApiPattern[];
+  data?: ApiPattern[];
+  results?: { data: ApiPattern[]; total: number; last_page: number; per_page: number };
   meta?: { total: number };
+}
+
+/** Unwrap API response — handles both {results: {data: [...]}} and {data: [...]} formats */
+function unwrapCatalog(raw: ApiCatalogResponse): { tires: ApiTire[]; total: number; lastPage: number } {
+  if (raw.results?.data) {
+    return { tires: raw.results.data, total: raw.results.total, lastPage: raw.results.last_page };
+  }
+  if (raw.data) {
+    return { tires: raw.data, total: raw.meta?.total ?? raw.data.length, lastPage: raw.meta?.last_page ?? 1 };
+  }
+  return { tires: [], total: 0, lastPage: 0 };
+}
+
+function unwrapPatterns(raw: ApiPatternsResponse): { patterns: ApiPattern[]; total: number; lastPage: number } {
+  if (raw.results?.data) {
+    return { patterns: raw.results.data, total: raw.results.total, lastPage: raw.results.last_page };
+  }
+  if (raw.data) {
+    return { patterns: raw.data, total: raw.meta?.total ?? raw.data.length, lastPage: 1 };
+  }
+  return { patterns: [], total: 0, lastPage: 0 };
 }
 
 // ---------------------------------------------------------------------------
@@ -139,13 +164,13 @@ export async function apiGetAllBrands(): Promise<BrandSummaryRow[]> {
 
 export async function apiGetModelsByBrand(brandName: string): Promise<ModelSummaryRow[]> {
   const encoded = encodeURIComponent(brandName);
-  const data = await apiFetch<ApiPatternsResponse | ApiPattern[]>(
+  const raw = await apiFetch<ApiPatternsResponse>(
     `/tire-patterns/catalog?make_name=${encoded}&per_page=200`
   );
-  if (!data) return [];
+  if (!raw) return [];
 
-  const patterns: ApiPattern[] = Array.isArray(data) ? data : (data as ApiPatternsResponse).data;
-  if (!patterns || patterns.length === 0) return [];
+  const { patterns } = unwrapPatterns(raw as ApiPatternsResponse);
+  if (patterns.length === 0) return [];
 
   return patterns.map((p) => ({
     model_name: p.name,
@@ -159,6 +184,17 @@ export async function apiGetModelsByBrand(brandName: string): Promise<ModelSumma
   }));
 }
 
+/** Get model count for a brand (from patterns endpoint total) */
+export async function apiGetBrandModelCount(brandName: string): Promise<number> {
+  const encoded = encodeURIComponent(brandName);
+  const raw = await apiFetch<ApiPatternsResponse>(
+    `/tire-patterns/catalog?make_name=${encoded}&per_page=1`
+  );
+  if (!raw) return 0;
+  const { total } = unwrapPatterns(raw as ApiPatternsResponse);
+  return total;
+}
+
 export async function apiGetModelBySlug(
   brandName: string,
   modelSlug: string
@@ -170,13 +206,15 @@ export async function apiGetModelBySlug(
   const maxPages = 30;
 
   while (page <= maxPages) {
-    const data = await apiFetch<ApiCatalogResponse>(
+    const raw = await apiFetch<ApiCatalogResponse>(
       `/tires/catalog?make_name=${encoded}&per_page=100&page=${page}`
     );
-    if (!data || !data.data || data.data.length === 0) break;
-    allTires = allTires.concat(data.data);
+    if (!raw) break;
+    const { tires, lastPage } = unwrapCatalog(raw);
+    if (tires.length === 0) break;
+    allTires = allTires.concat(tires);
 
-    if (!data.meta || page >= data.meta.last_page) break;
+    if (page >= lastPage) break;
     page++;
   }
 
@@ -252,18 +290,18 @@ export async function apiSearchTires(params: SearchParams): Promise<SearchResult
   if (params.rimSize) qp.set("rim_size", params.rimSize);
   if (params.query) qp.set("search", params.query);
 
-  const data = await apiFetch<ApiCatalogResponse>(
+  const raw = await apiFetch<ApiCatalogResponse>(
     `/tires/catalog?${qp.toString()}`,
     15000
   );
 
-  if (!data || !data.data) {
+  if (!raw) {
     return { tires: [], total: 0, page, limit, totalPages: 0 };
   }
 
-  const tires = data.data.map(apiTireToRow);
-  const total = data.meta?.total ?? tires.length;
-  const totalPages = data.meta?.last_page ?? Math.ceil(total / limit);
+  const { tires: apiTires, total, lastPage } = unwrapCatalog(raw);
+  const tires = apiTires.map(apiTireToRow);
+  const totalPages = lastPage || Math.ceil(total / limit);
 
   return { tires, total, page, limit, totalPages };
 }
@@ -282,12 +320,14 @@ export async function apiGetDistinctSizesForBrand(
   const maxPages = 10;
 
   while (page <= maxPages) {
-    const data = await apiFetch<ApiCatalogResponse>(
+    const raw = await apiFetch<ApiCatalogResponse>(
       `/tires/catalog?make_name=${encoded}&per_page=100&page=${page}`
     );
-    if (!data || !data.data || data.data.length === 0) break;
+    if (!raw) break;
+    const { tires: catalogTires, lastPage } = unwrapCatalog(raw);
+    if (catalogTires.length === 0) break;
 
-    for (const t of data.data) {
+    for (const t of catalogTires) {
       if (!t.width || !t.aspect_ratio || !t.rim_size) continue;
       const key = `${t.width}|${t.aspect_ratio}|${t.rim_size}`;
       const existing = sizeMap.get(key);
@@ -298,7 +338,7 @@ export async function apiGetDistinctSizesForBrand(
       }
     }
 
-    if (!data.meta || page >= data.meta.last_page) break;
+    if (page >= lastPage) break;
     page++;
   }
 
@@ -347,11 +387,11 @@ function apiTireToRow(t: ApiTire): TireRow {
     upc: t.upc ?? null,
     ean: t.ean ?? null,
     asin: t.asin ?? null,
-    image_0100_url: t.image_0100_url ?? null,
+    image_0100_url: t.image_0100_url ?? t.image_0100 ?? null,
     image_0200_url: null,
     image_0301_url: null,
     image_0302_url: null,
-    thumbnail_url: t.thumbnail_url,
+    thumbnail_url: t.thumbnail_url ?? t.thumbnail_image ?? null,
     angle_image_url: null,
     front_image_url: null,
     side_image_url: null,
