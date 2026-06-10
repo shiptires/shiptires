@@ -41,8 +41,8 @@ export default function ContactForm() {
         </svg>
         <h3 className="mt-4 text-lg font-semibold text-green-800">Message Sent!</h3>
         <p className="mt-2 text-sm text-green-700">
-          We&apos;ll get back to you within 24 hours. You can also call us at{" "}
-          <a href="tel:+19164767689" className="font-semibold underline">(916) 476-7689</a>.
+          We&apos;ll get back to you within 24 hours. You can also call or text us at{" "}
+          <a href="tel:+12792388473" className="font-semibold underline">(279) 238-8473 (TIRE)</a>.
         </p>
       </div>
     );
@@ -121,7 +121,7 @@ export default function ContactForm() {
 
       {status === "error" && (
         <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">
-          Something went wrong. Please try again or call us at (916) 476-7689.
+          Something went wrong. Please try again or call or text us at (279) 238-8473 (TIRE).
         </div>
       )}
 

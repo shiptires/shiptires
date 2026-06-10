@@ -55,6 +55,7 @@ export async function generateMetadata({
   return {
     title: `${brand.name} Tires Near Me in ${city.name}, ${state.abbreviation} — ${sizes.length} Sizes Shipped Free`,
     description: `${brand.name} tires near me in ${city.name}, ${state.abbreviation}. ${brand.models.length} models, ${sizes.length} sizes shipped free from $${lowestPrice}/tire. Free shipping on all ${brand.name} tires. Ship to your door or installer near ${city.name}.`,
+    alternates: { canonical: `https://ship.tires/locations/${stateSlug}/${citySlug}/${brandSlug}` },
   };
 }
 
@@ -86,46 +87,15 @@ export default async function CityBrandPage({
 
   const schemaData = {
     "@context": "https://schema.org",
-    "@type": "OfferCatalog",
+    "@type": "ItemList",
     name: `${brand.name} Tires in ${city.name}, ${state.abbreviation}`,
     description: `${brand.name} tires available for free shipping to ${city.name}, ${state.abbreviation}`,
-    numberOfItems: uniqueSizes.length,
+    numberOfItems: brand.models.length,
     itemListElement: brand.models.map((model, idx) => ({
-      "@type": "Offer",
+      "@type": "ListItem",
       position: idx + 1,
       name: `${brand.name} ${model.name}`,
-      priceCurrency: "USD",
-      lowPrice: model.priceRange[0],
-      highPrice: model.priceRange[1],
-      availability: "https://schema.org/InStock",
-      itemOffered: {
-        "@type": "Product",
-        name: `${brand.name} ${model.name}`,
-        brand: { "@type": "Brand", name: brand.name },
-        category: `${getTypeLabel(model.type)} Tires`,
-      },
-      seller: { "@type": "Organization", name: "Ship.Tires" },
-      areaServed: {
-        "@type": "City",
-        name: city.name,
-        containedInPlace: {
-          "@type": "State",
-          name: state.name,
-        },
-      },
-      shippingDetails: {
-        "@type": "OfferShippingDetails",
-        shippingRate: {
-          "@type": "MonetaryAmount",
-          value: "0",
-          currency: "USD",
-        },
-        shippingDestination: {
-          "@type": "DefinedRegion",
-          addressCountry: "US",
-          addressRegion: state.abbreviation,
-        },
-      },
+      url: `https://ship.tires/tires/${brandSlug}/${model.slug}`,
     })),
   };
 
@@ -161,7 +131,7 @@ export default async function CityBrandPage({
               <span className="text-gray-300">{brand.name}</span>
             </div>
             <h1 className="mt-4 text-3xl font-bold sm:text-4xl">
-              {brand.name} Tires Near Me in {city.name}, {state.abbreviation}
+              Shop & Ship {brand.name} Car, Truck & SUV Tires to {city.name}, {state.abbreviation}
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-gray-300">
               <span>
@@ -286,10 +256,10 @@ export default async function CityBrandPage({
                 Get a Quote
               </Link>
               <a
-                href="tel:+19164767689"
+                href="tel:+12792388473"
                 className="rounded-lg border-2 border-white px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors"
               >
-                Call (916) 476-7689
+                Call/Text (279) 238-8473 (TIRE)
               </a>
             </div>
           </div>

@@ -55,8 +55,8 @@ Notes: ${data.get("notes") || "None"}`,
         </svg>
         <h3 className="mt-3 text-lg font-semibold text-green-800">Quote Requested!</h3>
         <p className="mt-2 text-sm text-green-700">
-          We&apos;ll send you a quote within a few hours. Call{" "}
-          <a href="tel:+19164767689" className="font-semibold underline">(916) 476-7689</a> for immediate help.
+          We&apos;ll send you a quote within a few hours. Call or text{" "}
+          <a href="tel:+12792388473" className="font-semibold underline">(279) 238-8473 (TIRE)</a> for immediate help.
         </p>
       </div>
     );
@@ -118,7 +118,7 @@ Notes: ${data.get("notes") || "None"}`,
 
       {status === "error" && (
         <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-          Something went wrong. Please call us at (916) 476-7689.
+          Something went wrong. Please call or text us at (279) 238-8473 (TIRE).
         </div>
       )}
 

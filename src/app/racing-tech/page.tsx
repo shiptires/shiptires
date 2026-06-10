@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     "Racing Tech Center — How Racing R&D Powers Your Tires | Ship.Tires",
   description:
     "Discover how tire technology developed for Formula 1, Le Mans, and professional motorsport shapes the tires on your everyday vehicle. Deep dives into compounds, wet-weather engineering, heat management, and more.",
+  alternates: { canonical: "https://ship.tires/racing-tech" },
 };
 
 const categoryColors: Record<string, string> = {
@@ -219,10 +220,10 @@ export default function RacingTechCenterPage() {
               Shop Performance Tires
             </Link>
             <a
-              href="tel:+19164767689"
+              href="tel:+12792388473"
               className="inline-flex items-center gap-2 rounded-lg border-2 border-white px-8 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors"
             >
-              (916) 476-7689
+              Call/Text (279) 238-8473 (TIRE)
             </a>
           </div>
         </div>

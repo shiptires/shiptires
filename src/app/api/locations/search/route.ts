@@ -38,7 +38,7 @@ export async function GET(req: Request) {
     total: results.length,
     results: results.slice(0, limit),
     shipping: "Free shipping to all locations — all 50 US states",
-    contact: { phone: "(916) 476-7689", email: "info@ship.tires" },
+    contact: { phone: "(279) 238-8473", email: "info@ship.tires" },
   }, {
     headers: {
       "Cache-Control": "public, max-age=86400, s-maxage=86400",

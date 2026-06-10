@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Tire Blog — Guides, Tips & Expert Advice",
   description:
     "Learn about tire sizes, types, maintenance, and more. Expert tire guides from the Ship.Tires team.",
+  alternates: { canonical: "https://ship.tires/blog" },
 };
 
 export default function BlogPage() {

@@ -65,7 +65,7 @@ export async function POST(req: Request) {
           from: "Ship.Tires <orders@ship.tires>",
           to: session.customer_email,
           subject: "Order Confirmation — Ship.Tires",
-          text: `Thank you for your order!\n\nOrder Details:\n${itemLines}\n\nTotal: $${((session.amount_total || 0) / 100).toFixed(2)}\n\nYour tires will ship within 1-2 business days with free shipping.\nDelivery: 3-7 business days.\n\nQuestions? Call (916) 476-7689 or reply to this email.\n\n— Ship.Tires Team`,
+          text: `Thank you for your order!\n\nOrder Details:\n${itemLines}\n\nTotal: $${((session.amount_total || 0) / 100).toFixed(2)}\n\nYour tires will ship within 1-2 business days with free shipping.\nDelivery: 3-7 business days.\n\nQuestions? Call or text (279) 238-8473 or reply to this email.\n\n— Ship.Tires Team`,
         });
       }
     } catch {

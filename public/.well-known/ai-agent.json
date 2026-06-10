@@ -1,12 +1,12 @@
 {
   "name": "Ship.Tires",
-  "description": "Nationwide online tire retailer with free shipping on every order. 21 premium brands, 80+ models, 800+ sizes shipped free to 1,000+ US cities. Find tires near me — shipped free to your door or local installer.",
+  "description": "Shop & Ship Car, Truck & SUV Tires — Free Delivery. 21 brands, 80+ models, 800+ sizes shipped free to 1,000+ US cities. Find tires near me — shipped free to your door or local installer.",
   "url": "https://ship.tires",
   "provider": {
     "name": "Ship.Tires",
     "url": "https://ship.tires",
     "email": "info@ship.tires",
-    "phone": "(916) 476-7689"
+    "phone": "(279) 238-8473"
   },
   "capabilities": {
     "products": "tires",

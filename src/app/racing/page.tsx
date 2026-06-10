@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Racing Hub — Tire Strategy, Tech & Motorsport Intelligence | Ship.Tires",
   description:
     "Your source for racing tire intelligence. F1 tire strategy, Le Mans endurance tech, NASCAR rubber science, and how racing technology powers your everyday tires.",
+  alternates: { canonical: "https://ship.tires/racing" },
 };
 
 const series = [
@@ -221,8 +222,8 @@ export default function RacingHubPage() {
             <Link href="/tires" className="inline-flex items-center gap-2 rounded-lg bg-white px-8 py-3 text-sm font-bold text-orange shadow-lg hover:bg-gray-50 transition-colors">
               Shop Performance Tires
             </Link>
-            <a href="tel:+19164767689" className="inline-flex items-center gap-2 rounded-lg border-2 border-white px-8 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors">
-              (916) 476-7689
+            <a href="tel:+12792388473" className="inline-flex items-center gap-2 rounded-lg border-2 border-white px-8 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors">
+              Call/Text (279) 238-8473 (TIRE)
             </a>
           </div>
         </div>

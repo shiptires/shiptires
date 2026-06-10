@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "Free Shipping Info & Order Tracking — Nationwide Tire Delivery",
   description:
     "Free shipping on all tire orders. Track your order, see delivery timelines, and learn about our nationwide shipping. 3-7 business day delivery.",
+  alternates: { canonical: "https://ship.tires/shipping" },
 };
 
 export default function ShippingPage() {
@@ -124,8 +125,8 @@ export default function ShippingPage() {
               Need help with shipping or have questions about delivery? Our team is here to help.
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <a href="tel:+19164767689" className="inline-flex items-center gap-2 rounded-lg bg-orange px-5 py-2.5 text-sm font-bold text-white hover:bg-orange-dark transition-colors">
-                Call (916) 476-7689
+              <a href="tel:+12792388473" className="inline-flex items-center gap-2 rounded-lg bg-orange px-5 py-2.5 text-sm font-bold text-white hover:bg-orange-dark transition-colors">
+                Call/Text (279) 238-8473 (TIRE)
               </a>
               <Link href="/contact" className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors">
                 Contact Us

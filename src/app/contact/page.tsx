@@ -4,7 +4,8 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Contact Us — Get a Free Tire Quote",
   description:
-    "Contact Ship.Tires for a free quote, tire sizing help, or shipping questions. Call (916) 476-7689 or use our contact form.",
+    "Contact Ship.Tires for a free quote, tire sizing help, or shipping questions. Call or text (279) 238-8473 to order, or use our contact form.",
+  alternates: { canonical: "https://ship.tires/contact" },
 };
 
 export default function ContactPage() {
@@ -29,15 +30,15 @@ export default function ContactPage() {
               <h2 className="text-lg font-black text-gray-900">Get in Touch</h2>
               <ul className="mt-4 space-y-4">
                 <li>
-                  <a href="tel:+19164767689" className="flex items-center gap-3 text-gray-600 hover:text-orange transition-colors">
+                  <a href="tel:+12792388473" className="flex items-center gap-3 text-gray-600 hover:text-orange transition-colors">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange/10 border border-orange/20">
                       <svg className="h-5 w-5 text-orange" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
                       </svg>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500">Phone</p>
-                      <p className="font-bold">(916) 476-7689</p>
+                      <p className="text-xs text-gray-500">Call or Text</p>
+                      <p className="font-bold">(279) 238-8473 (TIRE)</p>
                     </div>
                   </a>
                 </li>

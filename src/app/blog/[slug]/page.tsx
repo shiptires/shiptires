@@ -20,6 +20,7 @@ export async function generateMetadata({
   return {
     title: post.title,
     description: post.excerpt,
+    alternates: { canonical: `https://ship.tires/blog/${slug}` },
   };
 }
 
@@ -134,8 +135,8 @@ export default async function BlogPostPage({
                 <Link href="/tires" className="rounded-lg bg-orange px-6 py-3 text-sm font-bold text-white hover:bg-orange-light transition-colors">
                   Browse Tires
                 </Link>
-                <a href="tel:+19164767689" className="rounded-lg border border-gray-600 px-6 py-3 text-sm font-bold text-white hover:bg-navy-light transition-colors">
-                  Call (916) 476-7689
+                <a href="tel:+12792388473" className="rounded-lg border border-gray-600 px-6 py-3 text-sm font-bold text-white hover:bg-navy-light transition-colors">
+                  Call/Text (279) 238-8473 (TIRE)
                 </a>
               </div>
             </div>

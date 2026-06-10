@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   title: "Tire Shipping Locations — Free Delivery Nationwide",
   description:
     "Ship.Tires delivers tires free to 1,000+ cities across all 50 states. Browse by state, city, brand, and size. 20+ brands, 800+ sizes, shipped to your door.",
+  alternates: { canonical: "https://ship.tires/locations" },
 };
 
 export default function LocationsIndex() {
@@ -18,7 +19,7 @@ export default function LocationsIndex() {
       <div className="bg-navy py-12 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold sm:text-4xl">
-            Tire Shipping Locations
+            Shop & Ship Car, Truck & SUV Tires — Free Delivery Nationwide
           </h1>
           <p className="mt-3 text-lg text-gray-300">
             Free tire shipping to {totalCities.toLocaleString()}+ cities across
@@ -92,10 +93,10 @@ export default function LocationsIndex() {
               Browse All Tires
             </Link>
             <a
-              href="tel:+19164767689"
+              href="tel:+12792388473"
               className="rounded-lg border-2 border-white px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors"
             >
-              Call (916) 476-7689
+              Call/Text (279) 238-8473 (TIRE)
             </a>
           </div>
         </div>

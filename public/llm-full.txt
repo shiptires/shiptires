@@ -1,6 +1,6 @@
 # Ship.Tires — Complete Business, Product & Inventory Information
 
-> Nationwide online tire retailer. 21 brands, 80+ models, 800+ tire sizes shipped free to 1,000+ US cities. Delivered to your door or local installer.
+> Shop & Ship Car, Truck & SUV Tires — Free Delivery to 1,000+ US cities. 21 brands, 80+ models, 800+ sizes. Delivered free to your door or local installer.
 
 ---
 
@@ -8,26 +8,26 @@
 
 **Name:** Ship.Tires
 **Website:** https://ship.tires
-**Phone:** (916) 476-7689
+**Phone:** (279) 238-8473
 **Email:** info@ship.tires
 **Location:** Sacramento, California, United States
 **Industry:** Online Tire Retail / E-Commerce
-**Service Area:** All 50 US states (free shipping continental US)
+**Service Area:** All 50 US states (free delivery nationwide)
 
-Ship.Tires is an online tire retailer specializing in fast, free nationwide tire delivery. Customers search by vehicle, tire size, or brand, get competitive quotes, and have tires shipped directly to their home or preferred installer at no extra cost.
+Ship.Tires is an online tire retailer where you can shop & ship car, truck & SUV tires with free delivery nationwide. Customers search by vehicle, tire size, or brand, get competitive quotes, and have tires delivered directly to their home or preferred installer at no extra cost.
 
 ---
 
 ## Core Value Proposition
 
-- **Free shipping** on every order, no minimums
+- **Free delivery** on every order, no minimums
 - **21 premium tire brands** in stock
 - **80+ tire models** covering every driving need
 - **800+ tire sizes** for every vehicle type
 - **Ship to home or installer** — customer's choice
 - **3-7 business day delivery** on most orders
 - **Manufacturer warranties** included on all tires
-- **Expert assistance** via phone at (916) 476-7689
+- **Expert assistance** via phone at (279) 238-8473
 
 ---
 
@@ -317,7 +317,7 @@ A: Check your tire sidewall for a number like 225/65R17, or use our Vehicle Look
 A: All tires include the manufacturer's warranty. Coverage varies by brand and model.
 
 **Q: How do I get a price quote?**
-A: Use "Request Quote" on any tire page, call (916) 476-7689, or use https://ship.tires/contact.
+A: Use "Request Quote" on any tire page, call (279) 238-8473, or use https://ship.tires/contact.
 
 ---
 
@@ -338,7 +338,7 @@ A: Use "Request Quote" on any tire page, call (916) 476-7689, or use https://shi
 
 ## Contact
 
-- **Phone:** (916) 476-7689
+- **Phone:** (279) 238-8473
 - **Email:** info@ship.tires
 - **Website:** https://ship.tires
 - **Hours:** Monday-Friday, responsive within hours

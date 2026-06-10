@@ -2,26 +2,52 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { chatbotConfig } from "@/lib/chatbot-config";
+import { useCart } from "@/contexts/CartContext";
+import { brands } from "@/data/brands";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
 
-// Parse [CREATE_CHECKOUT:...] commands from assistant messages
-// and replace them with checkout links
-function processMessageContent(
-  content: string,
-  onCheckoutCommand: (json: string) => void
-): string {
-  const regex = /\[CREATE_CHECKOUT:(\{.*?\})\]/g;
-  let match;
-  let processed = content;
-  while ((match = regex.exec(content)) !== null) {
-    onCheckoutCommand(match[1]);
-    processed = processed.replace(match[0], "[Creating checkout link...]");
+// Extract [CREATE_CHECKOUT:{...}] commands handling nested braces
+function extractCheckoutCommands(content: string): { json: string; fullMatch: string }[] {
+  const results: { json: string; fullMatch: string }[] = [];
+  const marker = "[CREATE_CHECKOUT:";
+  let searchFrom = 0;
+
+  while (searchFrom < content.length) {
+    const idx = content.indexOf(marker, searchFrom);
+    if (idx === -1) break;
+
+    const jsonStart = idx + marker.length;
+    if (content[jsonStart] !== "{") { searchFrom = jsonStart; continue; }
+
+    let depth = 0;
+    let jsonEnd = -1;
+    for (let i = jsonStart; i < content.length; i++) {
+      if (content[i] === "{") depth++;
+      else if (content[i] === "}") { depth--; if (depth === 0) { jsonEnd = i; break; } }
+    }
+
+    if (jsonEnd === -1 || content[jsonEnd + 1] !== "]") { searchFrom = jsonStart; continue; }
+
+    results.push({
+      json: content.substring(jsonStart, jsonEnd + 1),
+      fullMatch: content.substring(idx, jsonEnd + 2),
+    });
+    searchFrom = jsonEnd + 2;
   }
-  return processed;
+  return results;
+}
+
+function replaceCheckoutCommands(content: string, replacement: string): string {
+  const commands = extractCheckoutCommands(content);
+  let result = content;
+  for (const cmd of commands) {
+    result = result.replace(cmd.fullMatch, replacement);
+  }
+  return result;
 }
 
 export default function ChatBot() {
@@ -34,6 +60,7 @@ export default function ChatBot() {
   const [autoOpened, setAutoOpened] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { addItem } = useCart();
 
   // Auto-open after 3s on first visit (sessionStorage)
   useEffect(() => {
@@ -63,38 +90,67 @@ export default function ChatBot() {
     }
   }, [isOpen]);
 
-  // Handle CREATE_CHECKOUT commands
-  const handleCheckoutCommand = useCallback(async (jsonStr: string) => {
+  // Handle CREATE_CHECKOUT commands — add items directly to cart
+  const handleCheckoutCommand = useCallback((jsonStr: string) => {
     try {
       const data = JSON.parse(jsonStr);
-      const res = await fetch("/api/cart/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, source: "chatbot" }),
-      });
-      const result = await res.json();
-      if (result.checkout_url) {
-        const linkMsg = `Your order is ready! Click here to complete checkout:\n${result.checkout_url}\n\nSubtotal: $${result.subtotal?.toFixed(2)} — Free shipping included.`;
-        setMessages((prev) => {
-          // Replace the "[Creating checkout link...]" placeholder
-          const updated = [...prev];
-          const lastIdx = updated.length - 1;
-          if (updated[lastIdx]?.role === "assistant") {
-            updated[lastIdx] = {
-              ...updated[lastIdx],
-              content: updated[lastIdx].content.replace(
-                "[Creating checkout link...]",
-                linkMsg
-              ),
-            };
-          }
-          return updated;
+      const rawItems: { brandSlug: string; modelSlug: string; size: string; quantity?: number }[] = data.items;
+      if (!rawItems?.length) throw new Error("No items");
+
+      let subtotal = 0;
+      const addedNames: string[] = [];
+
+      for (const item of rawItems) {
+        const brand = brands.find((b) => b.slug === item.brandSlug);
+        if (!brand) throw new Error(`Brand not found: ${item.brandSlug}`);
+        const model = brand.models.find((m) => m.slug === item.modelSlug);
+        if (!model) throw new Error(`Model not found: ${item.modelSlug}`);
+        const size = model.sizes.find((s) => s.size === item.size);
+        if (!size) throw new Error(`Size not found: ${item.size}`);
+
+        const qty = item.quantity || 4;
+        addItem({
+          brand: brand.name,
+          brandSlug: brand.slug,
+          model: model.name,
+          modelSlug: model.slug,
+          size: size.size,
+          price: size.price,
+          quantity: qty,
+          loadIndex: size.loadIndex,
+          speedRating: size.speedRating,
         });
+        subtotal += size.price * qty;
+        addedNames.push(`${qty}x ${brand.name} ${model.name} ${size.size}`);
       }
+
+      const cartMsg = `Added to your cart!\n${addedNames.join("\n")}\nSubtotal: $${subtotal.toFixed(2)} — Free shipping included.\n\n[CART_LINK]`;
+      setMessages((prev) => {
+        const updated = [...prev];
+        const lastIdx = updated.length - 1;
+        if (updated[lastIdx]?.role === "assistant") {
+          updated[lastIdx] = {
+            ...updated[lastIdx],
+            content: updated[lastIdx].content.replace("[Creating checkout link...]", cartMsg),
+          };
+        }
+        return updated;
+      });
     } catch {
-      // Silently fail — the message still shows
+      const errorMsg = "I couldn't add those tires to your cart. Please call or text (279) 238-8473 (TIRE) to complete your order!";
+      setMessages((prev) => {
+        const updated = [...prev];
+        const lastIdx = updated.length - 1;
+        if (updated[lastIdx]?.role === "assistant") {
+          updated[lastIdx] = {
+            ...updated[lastIdx],
+            content: updated[lastIdx].content.replace("[Creating checkout link...]", errorMsg),
+          };
+        }
+        return updated;
+      });
     }
-  }, []);
+  }, [addItem]);
 
   const sendMessage = async () => {
     const trimmed = input.trim();
@@ -155,11 +211,9 @@ export default function ChatBot() {
       }
 
       // After streaming is done, check for checkout commands
-      const checkoutRegex = /\[CREATE_CHECKOUT:(\{.*?\})\]/g;
-      let match;
-      while ((match = checkoutRegex.exec(assistantContent)) !== null) {
-        // Process the command
-        const processed = processMessageContent(assistantContent, () => {});
+      const commands = extractCheckoutCommands(assistantContent);
+      if (commands.length > 0) {
+        const processed = replaceCheckoutCommands(assistantContent, "[Creating checkout link...]");
         setMessages((prev) => {
           const updated = [...prev];
           updated[updated.length - 1] = {
@@ -168,7 +222,9 @@ export default function ChatBot() {
           };
           return updated;
         });
-        handleCheckoutCommand(match[1]);
+        for (const cmd of commands) {
+          handleCheckoutCommand(cmd.json);
+        }
       }
     } catch {
       setMessages((prev) => [
@@ -189,11 +245,32 @@ export default function ChatBot() {
 
   // Render message content with clickable links
   const renderContent = (content: string) => {
-    // Convert URLs to clickable links
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const parts = content.split(urlRegex);
+    // Split on URLs and [CART_LINK] placeholders
+    const tokenRegex = /(https?:\/\/[^\s]+|\[CART_LINK\])/g;
+    const parts = content.split(tokenRegex);
     return parts.map((part, i) => {
-      if (urlRegex.test(part)) {
+      if (part === "[CART_LINK]") {
+        return (
+          <a
+            key={i}
+            href="/cart"
+            style={{
+              display: "inline-block",
+              marginTop: "8px",
+              padding: "8px 16px",
+              backgroundColor: "#DC2626",
+              color: "#ffffff",
+              borderRadius: "8px",
+              textDecoration: "none",
+              fontWeight: 600,
+              fontSize: "14px",
+            }}
+          >
+            View Cart & Checkout
+          </a>
+        );
+      }
+      if (/^https?:\/\//.test(part)) {
         return (
           <a
             key={i}
@@ -257,7 +334,8 @@ export default function ChatBot() {
             maxHeight: "calc(100vh - 48px)",
             backgroundColor: "#ffffff",
             borderRadius: "16px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
+            border: "2px solid #DC2626",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.25)",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
@@ -269,19 +347,27 @@ export default function ChatBot() {
             style={{
               backgroundColor: colors.primary,
               color: "#ffffff",
-              padding: "16px 20px",
+              padding: "12px 16px",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
               flexShrink: 0,
+              borderBottom: "2px solid #DC2626",
             }}
           >
-            <div>
-              <div style={{ fontWeight: 700, fontSize: "15px" }}>
-                {chatbotConfig.businessName}
-              </div>
-              <div style={{ fontSize: "12px", opacity: 0.85 }}>
-                Tire Expert AI
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <img
+                src="/logo.png"
+                alt="Ship.Tires"
+                style={{ height: "64px", width: "auto" }}
+              />
+              <div>
+                <div style={{ fontWeight: 700, fontSize: "16px" }}>
+                  {chatbotConfig.businessName}
+                </div>
+                <div style={{ fontSize: "12px", opacity: 0.85 }}>
+                  Tire Expert AI
+                </div>
               </div>
             </div>
             <button
@@ -364,7 +450,7 @@ export default function ChatBot() {
           <div
             style={{
               padding: "12px 16px",
-              borderTop: "1px solid #e5e5e5",
+              borderTop: "2px solid #DC2626",
               display: "flex",
               gap: "8px",
               flexShrink: 0,
@@ -385,6 +471,7 @@ export default function ChatBot() {
                 border: "1px solid #d1d5db",
                 outline: "none",
                 fontSize: "14px",
+                color: "#000000",
                 backgroundColor: isLoading ? "#f9fafb" : "#ffffff",
               }}
             />

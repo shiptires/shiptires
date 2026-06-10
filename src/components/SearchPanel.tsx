@@ -8,7 +8,7 @@ export default function SearchPanel() {
   const [tab, setTab] = useState<"vehicle" | "size">("vehicle");
 
   return (
-    <div className="rounded-lg bg-white border-2 border-dashed border-ink-grey/30 p-5 sm:p-6">
+    <div className="rounded-lg bg-white border-2 border-dashed border-ink-grey/30 p-3 sm:p-5">
       <div className="mb-1 text-[10px] font-display uppercase tracking-[0.2em] text-ink-grey">
         Contents Lookup
       </div>

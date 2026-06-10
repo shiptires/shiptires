@@ -89,7 +89,7 @@ export default async function CheckoutSuccessPage({
         </div>
 
         <p className="mt-8 text-sm text-gray-400">
-          Questions? Call <a href="tel:+19164767689" className="text-orange hover:underline">(916) 476-7689</a> or email{" "}
+          Questions? Call or text <a href="tel:+12792388473" className="text-orange hover:underline">(279) 238-8473 (TIRE)</a> or email{" "}
           <a href="mailto:info@ship.tires" className="text-orange hover:underline">info@ship.tires</a>
         </p>
       </div>

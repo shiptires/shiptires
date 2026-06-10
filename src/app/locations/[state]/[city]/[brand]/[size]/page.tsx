@@ -65,6 +65,7 @@ export async function generateMetadata({
   return {
     title: `${brand.name} ${displaySize} Tires Near Me in ${city.name}, ${state.abbreviation} — Shipped Free from $${lowestPrice}`,
     description: `${brand.name} ${displaySize} tires near me in ${city.name}, ${state.abbreviation}. ${models.length} model${models.length > 1 ? "s" : ""} from $${lowestPrice}/tire shipped free.${vehicleText} Free shipping — ship to your door or installer near ${city.name}.`,
+    alternates: { canonical: `https://ship.tires/locations/${stateSlug}/${citySlug}/${brandSlug}/${sizeSlug}` },
   };
 }
 
@@ -130,6 +131,7 @@ export default async function SizePage({
         "@type": "Product",
         name: `${brand.name} ${model.name} ${realSize}`,
         description: model.description,
+        image: `https://img.logo.dev/${brand.domain}?token=pk_X-1ZO13GSgeOoUrIuJ6MYw&size=120&format=png`,
         brand: { "@type": "Brand", name: brand.name },
         category: `${getTypeLabel(model.type)} Tires`,
         size: realSize,
@@ -205,8 +207,8 @@ export default async function SizePage({
               <span className="text-gray-300">{displaySize}</span>
             </div>
             <h1 className="mt-4 text-3xl font-bold sm:text-4xl">
-              {brand.name} {displaySize} Tires Near Me in {city.name},{" "}
-              {state.abbreviation} — Shipped Free
+              Shop & Ship {brand.name} {displaySize} Tires to {city.name},{" "}
+              {state.abbreviation} — Free Delivery
             </h1>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-gray-300">
               <span>
@@ -526,10 +528,10 @@ export default async function SizePage({
                       Request Quote
                     </Link>
                     <a
-                      href="tel:+19164767689"
+                      href="tel:+12792388473"
                       className="block w-full rounded-lg border-2 border-orange py-3 text-center text-sm font-bold text-orange hover:bg-orange/5 transition-colors"
                     >
-                      Call (916) 476-7689
+                      Call/Text (279) 238-8473 (TIRE)
                     </a>
                   </div>
                 </div>

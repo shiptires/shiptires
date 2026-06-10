@@ -147,10 +147,10 @@ export default function F1Page() {
               Shop Performance Tires
             </Link>
             <a
-              href="tel:+19164767689"
+              href="tel:+12792388473"
               className="inline-flex items-center gap-2 rounded-lg border-2 border-white px-8 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors"
             >
-              (916) 476-7689
+              Call/Text (279) 238-8473 (TIRE)
             </a>
           </div>
         </div>

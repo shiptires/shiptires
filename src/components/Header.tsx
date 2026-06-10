@@ -20,20 +20,28 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50">
-      {/* Freight manifest banner */}
-      <div className="bg-rubber text-label-white text-center text-xs sm:text-sm py-1.5 px-4 font-mono">
-        <span className="inline-flex items-center gap-1.5 sm:gap-2">
-          <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-          </svg>
-          <span className="sm:hidden">FREE SHIPPING &mdash; <a href="tel:+12792388473" className="underline">(279) 238-8473</a></span>
-          <span className="hidden sm:inline">FREE SHIPPING ON ALL ORDERS &mdash; Call or Text{" "}<a href="tel:+12792388473" className="underline font-semibold">(279) 238-8473 (TIRE)</a></span>
-        </span>
+      {/* Scrolling ticker banner */}
+      <div className="bg-rubber text-label-white text-xs py-1.5 font-mono overflow-hidden border-b-[3px] border-safety-orange">
+        <div className="flex whitespace-nowrap ticker-scroll">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <span key={i} className="flex items-center gap-6 mr-6 tracking-wide">
+              <span>■ FREE SHIPPING — CONTINENTAL US</span>
+              <span className="text-ink-grey/50">·</span>
+              <span>EST. TRANSIT <span className="font-bold">3–7 BUSINESS DAYS</span></span>
+              <span className="text-ink-grey/50">·</span>
+              <span>SHIP TO HOME OR INSTALLER</span>
+              <span className="text-ink-grey/50">·</span>
+              <span>CALL/TEXT <a href="tel:+12792388473" className="font-bold underline">(279) 238-8473</a></span>
+              <span className="text-ink-grey/50">·</span>
+              <span>21 BRANDS · 100+ MODELS · 800+ SIZES</span>
+            </span>
+          ))}
+        </div>
       </div>
 
       <div className="bg-rubber shadow-lg border-b border-white/10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-20 items-center lg:h-24">
+          <div className="flex h-28 items-center lg:h-32">
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link href="/" className="block">
@@ -42,7 +50,7 @@ export default function Header() {
                   alt="Ship.Tires — Tires Shipped Free"
                   width={400}
                   height={200}
-                  className="h-16 w-auto lg:h-20"
+                  className="h-24 w-auto lg:h-28 brightness-150"
                   priority
                   unoptimized
                 />
@@ -50,7 +58,7 @@ export default function Header() {
             </div>
 
             {/* Desktop Navigation + CTA */}
-            <div className="hidden lg:flex lg:items-center lg:gap-1 lg:ml-auto">
+            <div className="hidden lg:flex lg:items-center lg:gap-1 lg:ml-8">
               {navigation.map((item) => (
                 <Link
                   key={item.name}

@@ -83,6 +83,34 @@ body {
   animation: ticker-scroll 20s linear infinite;
 }
 
+/* Barcode visual — decorative CSS stripe */
+.barcode {
+  height: 40px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-rubber) 0px,
+    var(--color-rubber) 2px,
+    transparent 2px,
+    transparent 4px,
+    var(--color-rubber) 4px,
+    var(--color-rubber) 5px,
+    transparent 5px,
+    transparent 8px,
+    var(--color-rubber) 8px,
+    var(--color-rubber) 11px,
+    transparent 11px,
+    transparent 13px,
+    var(--color-rubber) 13px,
+    var(--color-rubber) 14px,
+    transparent 14px,
+    transparent 17px,
+    var(--color-rubber) 17px,
+    var(--color-rubber) 20px,
+    transparent 20px,
+    transparent 22px
+  );
+}
+
 .chat-scrollbar::-webkit-scrollbar {
   width: 4px;
 }

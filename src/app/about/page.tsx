@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "About Ship.Tires — America's Tire Delivery Network",
   description:
     "Ship.Tires is a nationwide tire shipping company delivering 20+ top brands to your door or local installer. Free shipping on every order.",
+  alternates: { canonical: "https://ship.tires/about" },
 };
 
 export default function AboutPage() {
@@ -44,7 +45,7 @@ export default function AboutPage() {
               Most people dread buying tires. The process is confusing, prices vary wildly, and finding the
               right size feels like a guessing game. We built Ship.Tires to fix that. Our vehicle lookup tool
               finds your exact tire size in seconds, our catalog has hundreds of options across every major
-              brand, and our team of tire experts is always a phone call away.
+              brand, and our team of tire experts is always a call or text away.
             </p>
 
             <h2 className="text-2xl font-black text-gray-900">What Makes Us Different</h2>
@@ -81,8 +82,8 @@ export default function AboutPage() {
               <Link href="/tires" className="rounded-lg bg-orange px-6 py-3 text-sm font-bold text-white hover:bg-orange-light transition-colors">
                 Browse Tires
               </Link>
-              <a href="tel:+19164767689" className="rounded-lg border border-gray-600 px-6 py-3 text-sm font-bold text-white hover:bg-navy-light transition-colors">
-                Call (916) 476-7689
+              <a href="tel:+12792388473" className="rounded-lg border border-gray-600 px-6 py-3 text-sm font-bold text-white hover:bg-navy-light transition-colors">
+                Call/Text (279) 238-8473 (TIRE)
               </a>
             </div>
           </div>

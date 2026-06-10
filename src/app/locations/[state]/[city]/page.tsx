@@ -36,6 +36,7 @@ export async function generateMetadata({
   return {
     title: `Tires Near Me in ${city.name}, ${state.abbreviation} — ${brands.length} Brands Shipped Free`,
     description: `Find tires near me in ${city.name}, ${state.abbreviation}. ${brands.length} brands shipped free to your door. Michelin, Goodyear, Bridgestone & more — 800+ sizes. Free shipping on every order. Shop tires near ${city.name} today.`,
+    alternates: { canonical: `https://ship.tires/locations/${stateSlug}/${citySlug}` },
   };
 }
 
@@ -70,7 +71,7 @@ export default async function CityLocationsPage({
             <span className="text-gray-300">{city.name}</span>
           </div>
           <h1 className="mt-4 text-3xl font-bold sm:text-4xl">
-            Tires Near Me in {city.name}, {state.abbreviation} — Shipped Free
+            Shop & Ship Car, Truck & SUV Tires to {city.name}, {state.abbreviation} — Free Delivery
           </h1>
           <p className="mt-3 text-lg text-gray-300">
             {brands.length} brands · 800+ sizes · Free shipping to{" "}
@@ -176,10 +177,10 @@ export default async function CityLocationsPage({
               Browse Tires
             </Link>
             <a
-              href="tel:+19164767689"
+              href="tel:+12792388473"
               className="rounded-lg border-2 border-white px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors"
             >
-              Call (916) 476-7689
+              Call/Text (279) 238-8473 (TIRE)
             </a>
           </div>
         </div>

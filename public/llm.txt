@@ -1,14 +1,14 @@
 # Ship.Tires
 
-> Nationwide online tire retailer — tires shipped free to 1,000 US cities. 21 brands, 80+ models, 800+ tire sizes. Free shipping on every order. Ship to your door or local installer near you.
+> Shop & Ship Car, Truck & SUV Tires — Free Delivery to 1,000+ US cities. 21 brands, 80+ models, 800+ sizes. Free delivery on every order. Ship to your door or local installer near you.
 
 ## About
 
-Ship.Tires is a US-based online tire retailer offering free shipping on all tire orders nationwide. We carry 21 premium tire brands, 80+ tire models, and 800+ tire sizes covering every passenger car, truck, SUV, and performance vehicle. Every tire is shipped free directly to the customer's home or to their chosen local tire installer. Find tires near me in any of our 1,000 served cities across all 50 states.
+Ship.Tires is a US-based online tire retailer where you can shop & ship car, truck & SUV tires with free delivery on every order nationwide. We carry 21 premium tire brands, 80+ tire models, and 800+ tire sizes covering every car, truck, SUV, and performance vehicle. Every tire is delivered free directly to the customer's home or to their chosen local tire installer. Find tires near me in any of our 1,000+ served cities across all 50 states.
 
 ## Contact
 
-- Phone: (916) 476-7689
+- Phone: (279) 238-8473
 - Email: info@ship.tires
 - Website: https://ship.tires
 
@@ -22,17 +22,17 @@ All-Season, Winter/Snow, Performance, All-Terrain, Mud-Terrain, Touring, Highway
 
 ## Key Services
 
-- Free shipping on every order — all 50 US states
+- Free delivery on every order — all 50 US states
 - Ship tires to home or any installer near you
 - Vehicle lookup by year/make/model
 - Search by tire size (e.g., 225/65R17)
 - Manufacturer warranty on all tires shipped
-- Expert help at (916) 476-7689
+- Expert help at (279) 238-8473
 - Tires shipped in 3-7 business days
 
 ## Coverage
 
-- 1,000 cities across all 50 US states
+- 1,000+ cities across all 50 US states
 - Location pages: https://ship.tires/locations/{state}/{city}/{brand}/{size}
 - Brand pages: https://ship.tires/tires/{brand}
 - Model pages: https://ship.tires/tires/{brand}/{model}

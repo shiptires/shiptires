@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getSupabase } from "@/lib/supabase";
+import { getSupabasePublic } from "@/lib/supabase";
 import SharedCartClient from "./SharedCartClient";
 import type { CartItem } from "@/lib/types";
 
@@ -10,7 +10,7 @@ export default async function SharedCheckoutPage({
 }) {
   const { session_id } = await params;
 
-  const { data, error } = await getSupabase()
+  const { data, error } = await getSupabasePublic()
     .from("cart_sessions")
     .select("*")
     .eq("id", session_id)
