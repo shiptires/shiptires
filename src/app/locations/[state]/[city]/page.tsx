@@ -1,16 +1,20 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { states } from "@/data/locations";
-import { brands } from "@/data/brands";
+import {
+  getAllBrands,
+  brandSummaryToBrand,
+  getStats,
+} from "@/lib/db";
 import {
   toLocationSlug,
   findState,
   findCity,
   getStateClimate,
-  getBrandUniqueSizes,
 } from "@/lib/location-seo";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
@@ -33,9 +37,11 @@ export async function generateMetadata({
   const city = state ? findCity(state, citySlug) : undefined;
   if (!state || !city) return {};
 
+  const stats = getStats();
+
   return {
-    title: `Tires Near Me in ${city.name}, ${state.abbreviation} — ${brands.length} Brands Shipped Free`,
-    description: `Find tires near me in ${city.name}, ${state.abbreviation}. ${brands.length} brands shipped free to your door. Michelin, Goodyear, Bridgestone & more — 800+ sizes. Free shipping on every order. Shop tires near ${city.name} today.`,
+    title: `Tires Near Me in ${city.name}, ${state.abbreviation} — ${stats.brandCount} Brands Shipped Free`,
+    description: `Find tires near me in ${city.name}, ${state.abbreviation}. ${stats.brandCount} brands, ${stats.modelCount}+ models shipped free to your door. Michelin, Goodyear, Bridgestone & more. Free shipping on every order.`,
     alternates: { canonical: `https://ship.tires/locations/${stateSlug}/${citySlug}` },
   };
 }
@@ -51,140 +57,204 @@ export default async function CityLocationsPage({
   if (!state || !city) notFound();
 
   const climate = getStateClimate(stateSlug);
+  const brandRows = getAllBrands();
+  const brands = brandRows.map(brandSummaryToBrand);
+  const stats = getStats();
+
+  // Top brands by tire count for the featured grid
+  const topBrands = [...brands]
+    .sort((a, b) => (b.tireCount ?? 0) - (a.tireCount ?? 0))
+    .slice(0, 30);
+
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: `Tires Near Me in ${city.name}, ${state.abbreviation}`,
+    description: `Shop ${stats.brandCount} tire brands with free shipping to ${city.name}, ${state.abbreviation}`,
+    url: `https://ship.tires/locations/${stateSlug}/${citySlug}`,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: brands.length,
+      itemListElement: topBrands.slice(0, 10).map((brand, idx) => ({
+        "@type": "ListItem",
+        position: idx + 1,
+        name: brand.name,
+        url: `https://ship.tires/tires/${brand.slug}`,
+      })),
+    },
+  };
 
   return (
-    <div className="bg-gray-50">
-      <div className="bg-navy py-12 text-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 text-sm text-gray-400">
-            <Link href="/locations" className="hover:text-white">
-              Locations
-            </Link>
-            <span>/</span>
-            <Link
-              href={`/locations/${stateSlug}`}
-              className="hover:text-white"
-            >
-              {state.name}
-            </Link>
-            <span>/</span>
-            <span className="text-gray-300">{city.name}</span>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
+
+      <div className="bg-gray-50">
+        <div className="bg-navy py-12 text-white">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <Link href="/locations" className="hover:text-white">
+                Locations
+              </Link>
+              <span>/</span>
+              <Link
+                href={`/locations/${stateSlug}`}
+                className="hover:text-white"
+              >
+                {state.name}
+              </Link>
+              <span>/</span>
+              <span className="text-gray-300">{city.name}</span>
+            </div>
+            <h1 className="mt-4 text-3xl font-bold sm:text-4xl">
+              Shop & Ship Car, Truck & SUV Tires to {city.name}, {state.abbreviation} — Free Delivery
+            </h1>
+            <p className="mt-3 text-lg text-gray-300">
+              {stats.brandCount} brands · {stats.modelCount}+ models · {stats.tireCount.toLocaleString()}+ tires · Free shipping to{" "}
+              {city.name}
+            </p>
           </div>
-          <h1 className="mt-4 text-3xl font-bold sm:text-4xl">
-            Shop & Ship Car, Truck & SUV Tires to {city.name}, {state.abbreviation} — Free Delivery
-          </h1>
-          <p className="mt-3 text-lg text-gray-300">
-            {brands.length} brands · 800+ sizes · Free shipping to{" "}
-            {city.name} · Ship to your door or installer
-          </p>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 space-y-12">
-        <div className="rounded-xl bg-white border border-gray-200 p-8 shadow-sm">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Buy Tires Near Me in {city.name}, {state.abbreviation} — Free Shipping
-          </h2>
-          <p className="mt-4 text-gray-600 leading-relaxed">
-            Looking for tires near me in {city.name}? Ship.Tires ships every major tire brand
-            directly to {city.name}, {state.name} — with free shipping on every order.
-            With {climate} to navigate, having the right tires is essential for {city.name} drivers.
-            Choose from {brands.length}+ brands including Michelin, Goodyear, Bridgestone,
-            Continental, and more. Every tire is shipped free to your {city.name} address
-            or to any local tire installer near you. No hidden fees — just tires shipped
-            directly to your door with free delivery.
-          </p>
         </div>
 
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Shop Tire Brands Near Me in {city.name}
-          </h2>
-          <p className="mt-2 text-gray-600">
-            Select a tire brand to see all available sizes shipped free to{" "}
-            {city.name}. Every brand ships with free shipping to your door.
-          </p>
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {brands.map((brand) => {
-              const uniqueSizes = getBrandUniqueSizes(brand);
-              const priceMin = Math.min(
-                ...brand.models.map((m) => m.priceRange[0])
-              );
-              return (
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 space-y-12">
+          <div className="rounded-xl bg-white border border-gray-200 p-8 shadow-sm">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Buy Tires Near Me in {city.name}, {state.abbreviation} — Free Shipping
+            </h2>
+            <p className="mt-4 text-gray-600 leading-relaxed">
+              Looking for tires near me in {city.name}? Ship.Tires ships every major tire brand
+              directly to {city.name}, {state.name} — with free shipping on every order.
+              With {climate} to navigate, having the right tires is essential for {city.name} drivers.
+              Choose from {stats.brandCount}+ brands including Michelin, Goodyear, Bridgestone,
+              Continental, and more. Every tire is shipped free to your {city.name} address
+              or to any local tire installer near you.
+            </p>
+          </div>
+
+          {/* Find Local Installers */}
+          <div className="rounded-xl bg-white border border-gray-200 p-8 shadow-sm">
+            <h2 className="text-2xl font-bold text-gray-900">
+              Find Tire Installers Near {city.name}
+            </h2>
+            <p className="mt-2 text-gray-600">
+              Ship your tires directly to a local installer in the {city.name} area.
+              Enter your zip code to find rated tire shops near you.
+            </p>
+            <div className="mt-4 flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/installers"
+                className="inline-flex items-center justify-center rounded-lg bg-blue px-6 py-3 text-sm font-bold text-white hover:bg-blue/90 transition-colors"
+              >
+                Find Installers by Zip Code
+              </Link>
+              <Link
+                href={`/tires`}
+                className="inline-flex items-center justify-center rounded-lg border border-gray-300 px-6 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Browse All {stats.brandCount} Brands
+              </Link>
+            </div>
+          </div>
+
+          {/* Popular Brands */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Popular Tire Brands in {city.name}
+            </h2>
+            <p className="mt-2 text-gray-600">
+              Select a tire brand to see all available models and sizes shipped free to{" "}
+              {city.name}.
+            </p>
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {topBrands.map((brand) => (
                 <Link
                   key={brand.slug}
-                  href={`/locations/${stateSlug}/${citySlug}/${brand.slug}`}
+                  href={`/tires/${brand.slug}`}
                   className="rounded-xl bg-white border border-gray-200 p-5 shadow-sm hover:shadow-md hover:border-blue transition-all group"
                 >
                   <div className="flex items-center justify-between">
                     <h3 className="font-bold text-gray-900 group-hover:text-blue transition-colors">
                       {brand.name}
                     </h3>
-                    <span className="text-xs text-gray-400">
-                      {brand.country}
-                    </span>
+                    {brand.logoUrl && (
+                      <img
+                        src={brand.logoUrl}
+                        alt={brand.name}
+                        className="h-6 w-auto object-contain"
+                        loading="lazy"
+                      />
+                    )}
                   </div>
-                  <p className="mt-2 text-sm text-gray-600 line-clamp-2">
-                    {brand.description.slice(0, 120)}...
-                  </p>
                   <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
-                    <span>{brand.models.length} models</span>
-                    <span>{uniqueSizes.length} sizes</span>
-                    <span className="font-bold text-gray-900">
-                      from ${priceMin}
-                    </span>
+                    <span>{brand.modelCount ?? 0} models</span>
+                    <span>{brand.tireCount ?? 0} tires</span>
+                    <span className="text-green-600 font-medium">Free Shipping</span>
                   </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Other cities in same state */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Also Serving in {state.name}
-          </h2>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {state.cities
-              .filter((c) => c.slug !== city.slug)
-              .sort((a, b) => b.population - a.population)
-              .slice(0, 20)
-              .map((c) => (
-                <Link
-                  key={c.slug}
-                  href={`/locations/${stateSlug}/${toLocationSlug(c.slug)}`}
-                  className="rounded-full bg-white border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-blue hover:text-white hover:border-blue transition-colors"
-                >
-                  {c.name}
                 </Link>
               ))}
-          </div>
-        </div>
+            </div>
 
-        <div className="rounded-xl bg-orange p-8 text-center text-white">
-          <h2 className="text-2xl font-bold">
-            Ready to Ship Tires to {city.name}?
-          </h2>
-          <p className="mt-2 text-white/90">
-            Free shipping on every order. Tires shipped fast to {city.name}. Expert help available.
-          </p>
-          <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/tires"
-              className="rounded-lg bg-white px-6 py-3 text-sm font-bold text-orange hover:bg-gray-50 transition-colors"
-            >
-              Browse Tires
-            </Link>
-            <a
-              href="tel:+12792388473"
-              className="rounded-lg border-2 border-white px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors"
-            >
-              Call/Text (279) 238-8473 (TIRE)
-            </a>
+            {/* Show all brands link if there are more */}
+            {brands.length > 30 && (
+              <div className="mt-6 text-center">
+                <Link
+                  href="/tires"
+                  className="text-blue hover:underline font-medium"
+                >
+                  View all {brands.length} brands →
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Other cities in same state */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Also Serving in {state.name}
+            </h2>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {state.cities
+                .filter((c) => c.slug !== city.slug)
+                .sort((a, b) => b.population - a.population)
+                .slice(0, 20)
+                .map((c) => (
+                  <Link
+                    key={c.slug}
+                    href={`/locations/${stateSlug}/${toLocationSlug(c.slug)}`}
+                    className="rounded-full bg-white border border-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-blue hover:text-white hover:border-blue transition-colors"
+                  >
+                    {c.name}
+                  </Link>
+                ))}
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-orange p-8 text-center text-white">
+            <h2 className="text-2xl font-bold">
+              Ready to Ship Tires to {city.name}?
+            </h2>
+            <p className="mt-2 text-white/90">
+              Free shipping on every order. Tires shipped fast to {city.name}. Expert help available.
+            </p>
+            <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              <Link
+                href="/tires"
+                className="rounded-lg bg-white px-6 py-3 text-sm font-bold text-orange hover:bg-gray-50 transition-colors"
+              >
+                Browse Tires
+              </Link>
+              <a
+                href="tel:+12792388473"
+                className="rounded-lg border-2 border-white px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition-colors"
+              >
+                Call/Text (279) 238-8473 (TIRE)
+              </a>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

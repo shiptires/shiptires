@@ -154,6 +154,42 @@ export function getTiresBySize(
     .all(width, aspectRatio, rimSize) as TireRow[];
 }
 
+export function getTiresByBrandAndSize(
+  brandSlug: string,
+  width: string,
+  aspectRatio: string,
+  rimSize: string
+): TireRow[] {
+  const db = getDb();
+  const brandName = slugToBrandName(db, brandSlug);
+  if (!brandName) return [];
+  return db
+    .prepare(
+      `SELECT * FROM tires
+      WHERE make_name = ? AND width = ? AND aspect_ratio = ? AND rim_size = ?
+      ORDER BY model_name`
+    )
+    .all(brandName, width, aspectRatio, rimSize) as TireRow[];
+}
+
+export function getDistinctSizesForBrand(
+  brandSlug: string
+): { width: string; aspect_ratio: string; rim_size: string; count: number }[] {
+  const db = getDb();
+  const brandName = slugToBrandName(db, brandSlug);
+  if (!brandName) return [];
+  return db
+    .prepare(
+      `SELECT width, aspect_ratio, rim_size, COUNT(*) as count
+      FROM tires
+      WHERE make_name = ? AND width IS NOT NULL AND aspect_ratio IS NOT NULL AND rim_size IS NOT NULL
+      GROUP BY width, aspect_ratio, rim_size
+      ORDER BY count DESC
+      LIMIT 100`
+    )
+    .all(brandName) as { width: string; aspect_ratio: string; rim_size: string; count: number }[];
+}
+
 export function getDistinctSizes(): { width: string; aspect_ratio: string; rim_size: string; count: number }[] {
   const db = getDb();
   return db
