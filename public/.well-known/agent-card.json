@@ -1,0 +1,104 @@
+{
+  "protocolVersion": "0.3.0",
+  "name": "Ship.Tires",
+  "description": "Shop & Ship Car, Truck & SUV Tires — Free Delivery. 21 brands, 80+ models, 800+ sizes delivered free to 1,000+ US cities. Search tires by size, vehicle, brand, or location. Create checkout carts and complete purchases.",
+  "url": "https://ship.tires/api",
+  "preferredTransport": "HTTP+JSON",
+  "version": "1.0.0",
+  "provider": {
+    "organization": "Ship.Tires",
+    "url": "https://ship.tires"
+  },
+  "iconUrl": "https://ship.tires/logo.png",
+  "documentationUrl": "https://ship.tires/openapi.json",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false,
+    "extensions": []
+  },
+  "defaultInputModes": ["application/json", "text/plain"],
+  "defaultOutputModes": ["application/json", "text/markdown"],
+  "skills": [
+    {
+      "id": "search-tires",
+      "name": "Search Tires",
+      "description": "Search car, truck & SUV tires by size, brand, category, or price range. Returns matching tires with pricing and free delivery info.",
+      "tags": ["tires", "search", "car", "truck", "suv", "shop", "ship", "free delivery"],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"],
+      "examples": [
+        "Find 225/65R17 tires",
+        "Search Michelin all-season tires",
+        "Show me truck tires under $200"
+      ]
+    },
+    {
+      "id": "vehicle-tire-lookup",
+      "name": "Vehicle Tire Lookup",
+      "description": "Find the right tire size for any car, truck, or SUV by year, make, and model. Returns compatible tire sizes and recommendations.",
+      "tags": ["vehicle", "car", "truck", "suv", "tire size", "lookup", "fitment"],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"],
+      "examples": [
+        "What tires fit a 2024 Toyota Camry?",
+        "Find tires for my 2023 Ford F-150",
+        "What size tires does a 2024 Honda CR-V need?"
+      ]
+    },
+    {
+      "id": "browse-brands",
+      "name": "Browse Tire Brands",
+      "description": "List all 21 tire brands with models, pricing, and available sizes. Brands include Michelin, Goodyear, Bridgestone, Continental, Pirelli, and 16 more.",
+      "tags": ["brands", "michelin", "goodyear", "bridgestone", "continental", "pirelli", "catalog"],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"]
+    },
+    {
+      "id": "find-delivery-location",
+      "name": "Find Delivery Location",
+      "description": "Search 1,000+ US cities for free tire delivery. Ship tires to your door or local installer in any of the 50 states.",
+      "tags": ["location", "delivery", "shipping", "city", "state", "free delivery", "installer"],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"],
+      "examples": [
+        "Ship tires to Dallas, TX",
+        "Find tire delivery in Los Angeles",
+        "Deliver tires to Miami, FL"
+      ]
+    },
+    {
+      "id": "create-checkout",
+      "name": "Create Checkout Cart",
+      "description": "Create a pre-built shopping cart with selected tires and generate a secure checkout link. Customer clicks the link to complete purchase with free delivery.",
+      "tags": ["checkout", "cart", "purchase", "buy", "order", "stripe"],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"],
+      "examples": [
+        "Order 4 Michelin Defender LTX M/S 2 in 225/65R17",
+        "Buy 2 Goodyear Wrangler tires in 265/70R17"
+      ]
+    },
+    {
+      "id": "get-page-content",
+      "name": "Get Page Content",
+      "description": "Retrieve any Ship.Tires page as AI-readable markdown. Covers tire brands, models, locations, blog posts, racing content, and more.",
+      "tags": ["content", "markdown", "pages", "information"],
+      "inputModes": ["application/json"],
+      "outputModes": ["text/markdown"]
+    },
+    {
+      "id": "submit-quote-request",
+      "name": "Submit Quote Request",
+      "description": "Submit a customer inquiry or free quote request for car, truck, or SUV tires. Includes name, email, phone, and tire details.",
+      "tags": ["quote", "contact", "inquiry", "help"],
+      "inputModes": ["application/json"],
+      "outputModes": ["application/json"]
+    }
+  ],
+  "additionalInterfaces": [
+    {
+      "url": "https://ship.tires/openapi.json",
+      "transport": "HTTP+JSON"
+    }
+  ]
+}
