@@ -6,7 +6,7 @@
  * the API's `make_name` field.
  */
 
-/** Map of UPPERCASED API brand name → local logo filename in /Brand Logos/ */
+/** Map of UPPERCASED API brand name → local logo filename in /brand-logos/ */
 export const CURATED_BRANDS: Map<string, string> = new Map([
   ["ADVANTA", "argusAdvanta.avif"],
   ["BFGOODRICH", "bfgoodrich.png"],
@@ -53,5 +53,5 @@ export function isCuratedBrand(name: string): boolean {
 export function getBrandLogo(name: string): string | null {
   const file = CURATED_BRANDS.get(name.toUpperCase());
   if (!file) return null;
-  return `/Brand Logos/${file}`;
+  return `/brand-logos/${file}`;
 }

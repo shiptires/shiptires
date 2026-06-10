@@ -452,7 +452,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2">Shop</div>
           <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight pb-4 border-b-2 border-rubber">
-            Shop Hundreds of Tire Brands. Ship Free.
+            Shop Top Tire Brands. Ship Free.
           </h2>
           <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4">
             {(() => {
@@ -490,7 +490,7 @@ export default async function HomePage() {
                         {brand.name}
                       </span>
                       <span className="font-mono text-[10px] tracking-wider text-ink-grey/50 mt-1">
-                        {brand.modelCount ?? 0} models
+                        {(brand.modelCount ?? 0) > 0 ? `${brand.modelCount} models` : "Shop Tires →"}
                       </span>
                     </Link>
                   );
