@@ -83,6 +83,7 @@ export default function SizeTable({
               <th className="py-3 pr-4">Load</th>
               <th className="py-3 pr-4">Speed</th>
               <th className="py-3 pr-4">Price</th>
+              <th className="py-3 pr-4">Set of 4</th>
               <th className="py-3"></th>
             </tr>
           </thead>
@@ -118,6 +119,9 @@ export default function SizeTable({
                 <td className="py-3 pr-4 text-gray-600">{size.speedRating || "—"}</td>
                 <td className="py-3 pr-4 font-bold text-gray-900">
                   {size.price > 0 ? `$${size.price}` : "—"}
+                </td>
+                <td className="py-3 pr-4 font-mono text-gray-600">
+                  {size.price > 0 ? `$${size.price * 4}` : "—"}
                 </td>
                 <td className="py-3">
                   {size.price > 0 ? (

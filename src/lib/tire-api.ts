@@ -11,6 +11,62 @@ import { isCuratedBrand, getBrandLogo } from "./curated-brands";
 
 const API_BASE = "https://app.tireweblibrary.com/api/v1";
 
+// ---------------------------------------------------------------------------
+// In-memory price cache — tire_size_id → MAP price, 1-hour TTL
+// ---------------------------------------------------------------------------
+const PRICE_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+const priceCache = new Map<number, { price: number; ts: number }>();
+
+function getCachedPrice(id: number): number | undefined {
+  const entry = priceCache.get(id);
+  if (!entry) return undefined;
+  if (Date.now() - entry.ts > PRICE_CACHE_TTL) {
+    priceCache.delete(id);
+    return undefined;
+  }
+  return entry.price;
+}
+
+function setCachedPrice(id: number, price: number): void {
+  priceCache.set(id, { price, ts: Date.now() });
+}
+
+/** Fetch a single tire's MAP price, using cache when available */
+async function fetchTirePrice(tireId: number): Promise<number> {
+  const cached = getCachedPrice(tireId);
+  if (cached !== undefined) return cached;
+
+  const tire = await apiFetch<ApiTire>(`/tires/${tireId}`, 8000);
+  const price = tire?.price ?? 0;
+  if (price > 0) setCachedPrice(tireId, price);
+  return price;
+}
+
+/** Batch-fetch prices for an array of tire IDs with concurrency limit */
+async function batchFetchPrices(
+  ids: number[],
+  concurrency = 5
+): Promise<Map<number, number>> {
+  const results = new Map<number, number>();
+
+  for (let i = 0; i < ids.length; i += concurrency) {
+    const batch = ids.slice(i, i + concurrency);
+    const prices = await Promise.allSettled(
+      batch.map(async (id) => {
+        const price = await fetchTirePrice(id);
+        return { id, price };
+      })
+    );
+    for (const r of prices) {
+      if (r.status === "fulfilled" && r.value.price > 0) {
+        results.set(r.value.id, r.value.price);
+      }
+    }
+  }
+
+  return results;
+}
+
 function getApiKey(): string {
   return process.env.TIRE_API_KEY || "";
 }
@@ -104,7 +160,36 @@ interface ApiTire {
   upc: string | null;
   ean: string | null;
   asin: string | null;
-  make_image_url: string | null;
+  make_image_url?: string | null;
+  make_image?: string | null;
+  price?: number | null;
+}
+
+/** Detail from /tire-patterns/{id} endpoint */
+interface ApiPatternDetail {
+  id: number;
+  name: string;
+  image_url: string | null;
+  description: string | null;
+  features: string | null;
+  benefits: string | null;
+  three_pmsf: boolean | null;
+  manufacturer_url: string | null;
+  tire_make: { id: number; name: string; image_url: string | null } | null;
+  tire_sizes: ApiPatternTireSize[];
+}
+
+interface ApiPatternTireSize {
+  id: number;
+  name: string;
+  item_number?: string;
+  three_pmsf?: boolean | null;
+  season?: string | null;
+  terrain?: string | null;
+  studdable?: boolean | null;
+  category?: string | null;
+  run_flat?: boolean | null;
+  mud_and_snow?: boolean | null;
 }
 
 interface ApiCatalogResponse {
@@ -172,11 +257,51 @@ export async function apiGetModelsByBrand(brandName: string): Promise<ModelSumma
   const { patterns } = unwrapPatterns(raw as ApiPatternsResponse);
   if (patterns.length === 0) return [];
 
+  // Fetch representative price per pattern:
+  // Get each pattern's first tire_size via /tire-patterns/{id}, then fetch its price
+  const patternIds = patterns.map((p) => p.id);
+  const patternPrices = new Map<number, number>();
+
+  // Batch fetch pattern details (5 concurrent) to get first tire_size_id
+  const BATCH = 5;
+  for (let i = 0; i < patternIds.length; i += BATCH) {
+    const batch = patternIds.slice(i, i + BATCH);
+    const details = await Promise.allSettled(
+      batch.map((pid) => apiFetch<ApiPatternDetail>(`/tire-patterns/${pid}`, 8000))
+    );
+
+    // Collect first tire_size_id from each pattern
+    const tireIdsToFetch: { patternId: number; tireId: number }[] = [];
+    for (let j = 0; j < details.length; j++) {
+      const result = details[j];
+      if (result.status === "fulfilled" && result.value?.tire_sizes?.length) {
+        tireIdsToFetch.push({
+          patternId: batch[j],
+          tireId: result.value.tire_sizes[0].id,
+        });
+      }
+    }
+
+    // Fetch prices for these tire IDs
+    const priceResults = await Promise.allSettled(
+      tireIdsToFetch.map(async ({ patternId, tireId }) => {
+        const price = await fetchTirePrice(tireId);
+        return { patternId, price };
+      })
+    );
+
+    for (const r of priceResults) {
+      if (r.status === "fulfilled" && r.value.price > 0) {
+        patternPrices.set(r.value.patternId, r.value.price);
+      }
+    }
+  }
+
   return patterns.map((p) => ({
     model_name: p.name,
     tire_count: p.size_count || 0,
-    min_price: null,
-    max_price: null,
+    min_price: patternPrices.get(p.id) ?? null,
+    max_price: patternPrices.get(p.id) ?? null,
     season: p.season ?? null,
     terrain: p.terrain ?? null,
     category: p.category ?? null,
@@ -199,42 +324,126 @@ export async function apiGetModelBySlug(
   brandName: string,
   modelSlug: string
 ): Promise<{ brand: string; model: string; tires: TireRow[] } | null> {
-  // Fetch tires for the brand, then filter by model slug match
   const encoded = encodeURIComponent(brandName);
-  let allTires: ApiTire[] = [];
-  let page = 1;
-  const maxPages = 30;
 
-  while (page <= maxPages) {
-    const raw = await apiFetch<ApiCatalogResponse>(
-      `/tires/catalog?make_name=${encoded}&per_page=100&page=${page}`
+  // Step 1: Find the pattern from the patterns endpoint
+  let matchedPattern: ApiPattern | null = null;
+  let page = 1;
+  const maxPages = 10;
+
+  while (page <= maxPages && !matchedPattern) {
+    const raw = await apiFetch<ApiPatternsResponse>(
+      `/tire-patterns/catalog?make_name=${encoded}&per_page=200&page=${page}`
     );
     if (!raw) break;
-    const { tires, lastPage } = unwrapCatalog(raw);
-    if (tires.length === 0) break;
-    allTires = allTires.concat(tires);
+    const { patterns, lastPage } = unwrapPatterns(raw);
+    if (patterns.length === 0) break;
+
+    for (const p of patterns) {
+      const pSlug = p.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+      if (pSlug === modelSlug) {
+        matchedPattern = p;
+        break;
+      }
+    }
 
     if (page >= lastPage) break;
     page++;
   }
 
-  if (allTires.length === 0) return null;
+  if (!matchedPattern) return null;
 
-  // Find tires matching this model slug
-  const matchingTires = allTires.filter((t) => {
-    const slug = t.model_name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-    return slug === modelSlug;
-  });
+  // Step 2: Get the pattern detail (includes tire_sizes list, image, description)
+  const detail = await apiFetch<ApiPatternDetail>(
+    `/tire-patterns/${matchedPattern.id}`,
+    20000
+  );
 
-  if (matchingTires.length === 0) return null;
+  if (!detail || !detail.tire_sizes || detail.tire_sizes.length === 0) {
+    return null;
+  }
 
-  const modelName = matchingTires[0].model_name;
-  const tireRows: TireRow[] = matchingTires.map(apiTireToRow);
+  // Step 3: Fetch individual tire details in parallel batches
+  const tireIds = detail.tire_sizes.map((ts) => ts.id);
+  const BATCH_SIZE = 20;
+  const allTireRows: TireRow[] = [];
+  const patternImageUrl = detail.image_url;
 
-  return { brand: brandName, model: modelName, tires: tireRows };
+  for (let i = 0; i < tireIds.length; i += BATCH_SIZE) {
+    const batch = tireIds.slice(i, i + BATCH_SIZE);
+    const results = await Promise.allSettled(
+      batch.map((id) => apiFetch<ApiTire>(`/tires/${id}`, 10000))
+    );
+
+    for (const result of results) {
+      if (result.status === "fulfilled" && result.value) {
+        const row = apiTireToRow(result.value);
+        // Cache the price for reuse across pages
+        if (row.price_map && row.price_map > 0) {
+          setCachedPrice(row.id, row.price_map);
+        }
+        // Use the pattern's high-quality image as thumbnail if tire has none
+        if (!row.thumbnail_url && patternImageUrl) {
+          row.thumbnail_url = patternImageUrl;
+        }
+        allTireRows.push(row);
+      }
+    }
+  }
+
+  // If individual fetches failed, fall back to creating rows from tire_sizes
+  if (allTireRows.length === 0) {
+    for (const ts of detail.tire_sizes) {
+      const parsed = parseTireName(ts.name);
+      allTireRows.push({
+        id: ts.id,
+        name: ts.name,
+        item_number: ts.item_number || "",
+        tire_model_id: detail.id,
+        tire_make_id: detail.tire_make?.id ?? null,
+        make_name: brandName,
+        make_image_url: detail.tire_make?.image_url ?? null,
+        model_name: detail.name,
+        width: parsed.width,
+        aspect_ratio: parsed.aspectRatio,
+        rim_size: parsed.rimSize,
+        section_width: null, diameter_overall: null,
+        load_rating: null, speed_rating: null,
+        ply_rating: null, load_range: null,
+        load_capacity_single: null, load_capacity_dual: null,
+        max_inflation_pressure: null, tread_depth: null,
+        weight: null, utqg: null,
+        season: ts.season ?? null, terrain: ts.terrain ?? null,
+        category: ts.category ?? null,
+        studdable: ts.studdable ? 1 : 0,
+        three_pmsf: ts.three_pmsf ? 1 : 0,
+        run_flat: ts.run_flat ? 1 : 0,
+        mud_and_snow: ts.mud_and_snow ? 1 : 0,
+        price_map: 0, warranty: null, gm_code: null,
+        upc: null, ean: null, asin: null,
+        image_0100_url: null, image_0200_url: null,
+        image_0301_url: null, image_0302_url: null,
+        thumbnail_url: patternImageUrl,
+        angle_image_url: null, front_image_url: null,
+        side_image_url: null, side2_image_url: null,
+        local_thumbnail: null, local_angle: null,
+        local_front: null, local_side: null, local_side2: null,
+        has_detail: 0, updated_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  return { brand: brandName, model: detail.name, tires: allTireRows };
+}
+
+/** Parse width/aspect_ratio/rim_size from tire name like "205/50R17 XL Crossclimate 2" */
+function parseTireName(name: string): { width: string | null; aspectRatio: string | null; rimSize: string | null } {
+  const m = name.match(/^(\d+)\/(\d+)R(\d+(?:\.\d+)?)/i);
+  if (m) return { width: m[1], aspectRatio: m[2], rimSize: m[3] };
+  return { width: null, aspectRatio: null, rimSize: null };
 }
 
 export async function apiGetStats(): Promise<{
@@ -300,10 +509,23 @@ export async function apiSearchTires(params: SearchParams): Promise<SearchResult
   }
 
   const { tires: apiTires, total, lastPage } = unwrapCatalog(raw);
-  const tires = apiTires.map(apiTireToRow);
+  // Filter to curated brands only
+  const curatedTires = apiTires.filter((t) => isCuratedBrand(t.make_name));
+  const tires = curatedTires.map(apiTireToRow);
   const totalPages = lastPage || Math.ceil(total / limit);
 
-  return { tires, total, page, limit, totalPages };
+  // Enrich with MAP prices for tires missing price
+  const needPrice = tires.filter((t) => !t.price_map || t.price_map === 0);
+  if (needPrice.length > 0) {
+    const idsToFetch = needPrice.map((t) => t.id);
+    const prices = await batchFetchPrices(idsToFetch, 5);
+    for (const tire of needPrice) {
+      const price = prices.get(tire.id);
+      if (price) tire.price_map = price;
+    }
+  }
+
+  return { tires, total: tires.length, page, limit, totalPages };
 }
 
 // ---------------------------------------------------------------------------
@@ -357,8 +579,8 @@ function apiTireToRow(t: ApiTire): TireRow {
     tire_model_id: null,
     tire_make_id: null,
     make_name: t.make_name,
-    make_image_url: t.make_image_url ?? null,
-    model_name: t.model_name,
+    make_image_url: t.make_image_url ?? t.make_image ?? null,
+    model_name: t.model_name ?? "",
     width: t.width,
     aspect_ratio: t.aspect_ratio,
     rim_size: t.rim_size,
@@ -381,7 +603,7 @@ function apiTireToRow(t: ApiTire): TireRow {
     three_pmsf: t.three_pmsf ? 1 : 0,
     run_flat: t.run_flat ? 1 : 0,
     mud_and_snow: t.mud_and_snow ? 1 : 0,
-    price_map: 0, // API doesn't provide prices
+    price_map: t.price ?? 0,
     warranty: t.warranty ?? null,
     gm_code: null,
     upc: t.upc ?? null,

@@ -120,14 +120,14 @@ export default async function ModelPage({
             </div>
             <div className="mt-4 flex items-start gap-6">
               {model.image && (
-                <div className="hidden sm:block flex-shrink-0 rounded-xl bg-white p-2">
+                <div className="hidden sm:block flex-shrink-0 rounded-xl bg-white p-3">
                   <TireImageLightbox src={model.image} alt={`${data.brand} ${model.name}`}>
                     <Image
                       src={model.image}
                       alt={`${data.brand} ${model.name}`}
-                      width={120}
-                      height={120}
-                      className="h-24 w-24 object-contain"
+                      width={200}
+                      height={200}
+                      className="h-40 w-40 object-contain"
                       unoptimized
                     />
                   </TireImageLightbox>

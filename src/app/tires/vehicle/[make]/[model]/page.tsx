@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { searchTires, toSlug } from "@/lib/db";
 import type { TireRow } from "@/lib/db";
+import { isCuratedBrand } from "@/lib/curated-brands";
 import { lookupTireSizes } from "@/data/tire-sizes";
 import { getMakeContent, getModelContent, getModelsForMake } from "@/data/vehicle-content";
 import type { Metadata } from "next";
@@ -72,9 +73,12 @@ export default async function VehicleTiresPage({
     }
   }
 
+  // Filter to curated brands only
+  const curatedTires = allTires.filter((t) => isCuratedBrand(t.make_name));
+
   // Group by brand + model
   const grouped = new Map<string, GroupedTire>();
-  for (const tire of allTires) {
+  for (const tire of curatedTires) {
     const key = `${tire.make_name}|||${tire.model_name}`;
     if (!grouped.has(key)) {
       grouped.set(key, {

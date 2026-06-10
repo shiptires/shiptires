@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { getMakeContent, getModelsForMake, vehicleMakes } from "@/data/vehicle-content";
 import { searchTires } from "@/lib/db";
 import type { TireRow } from "@/lib/db";
+import { isCuratedBrand } from "@/lib/curated-brands";
 
 export const revalidate = 300;
 
@@ -38,9 +39,9 @@ export default async function VehicleMakePage({
   const makeName = content?.name ?? make.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const models = getModelsForMake(make);
 
-  // Fetch a few sample tires for this make to show images
-  const sampleResult = await searchTires({ query: makeName, limit: 12, page: 1 });
-  const sampleTires = sampleResult.tires;
+  // Fetch a few sample tires for this make to show images — filter to curated brands
+  const sampleResult = await searchTires({ query: makeName, limit: 50, page: 1 });
+  const sampleTires = sampleResult.tires.filter((t) => isCuratedBrand(t.make_name)).slice(0, 12);
 
   // Group sample tires by model for image display
   const tiresByModel = new Map<string, TireRow[]>();

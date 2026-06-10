@@ -98,6 +98,9 @@ export default function TireCard({
                   ${model.priceRange[0]}
                 </span>
                 <span className="text-xs text-ink-grey"> /tire</span>
+                <div className="text-[10px] font-mono text-ink-grey mt-0.5">
+                  Set of 4: <span className="font-bold text-rubber">${model.priceRange[0] * 4}</span>
+                </div>
               </>
             ) : (
               <span className="text-sm font-bold text-safety-orange">

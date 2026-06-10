@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "new.tirelibrary.com",
       },
+      {
+        protocol: "https",
+        hostname: "tireweb.tirelibrary.com",
+      },
     ],
   },
 };
