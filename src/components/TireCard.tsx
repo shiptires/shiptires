@@ -1,8 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { TireModel } from "@/lib/types";
-import { getLogoUrl } from "@/lib/api-helpers";
-import { brands } from "@/data/brands";
 
 const typeLabels: Record<string, string> = {
   "all-season": "All-Season",
@@ -18,12 +16,15 @@ const typeLabels: Record<string, string> = {
 export default function TireCard({
   model,
   brandSlug,
+  brandName,
+  brandLogo,
 }: {
   model: TireModel;
   brandSlug: string;
+  brandName?: string;
+  brandLogo?: string | null;
 }) {
-  const brand = brands.find((b) => b.slug === brandSlug);
-  const logoUrl = brand ? getLogoUrl(brand.domain) : null;
+  const hasPrice = model.priceRange[0] > 0;
 
   return (
     <Link
@@ -32,11 +33,11 @@ export default function TireCard({
     >
       {/* Brand logo + type badge header */}
       <div className="relative flex items-center justify-between border-b border-ink-grey/10 bg-label-white px-4 py-3">
-        {logoUrl && (
+        {brandLogo && (
           <div className="flex h-8 w-8 items-center justify-center rounded bg-white p-0.5">
             <Image
-              src={logoUrl}
-              alt={brand?.name || brandSlug}
+              src={brandLogo}
+              alt={brandName || brandSlug}
               width={28}
               height={28}
               className="h-7 w-7 object-contain"
@@ -57,24 +58,34 @@ export default function TireCard({
           {model.description}
         </p>
 
-        <div className="mt-2.5 flex flex-wrap gap-1">
-          {model.features.slice(0, 2).map((feature) => (
-            <span
-              key={feature}
-              className="inline-flex items-center rounded bg-kraft/30 px-2 py-0.5 text-[10px] text-rubber/70"
-            >
-              {feature}
-            </span>
-          ))}
-        </div>
+        {model.features.length > 0 && (
+          <div className="mt-2.5 flex flex-wrap gap-1">
+            {model.features.slice(0, 2).map((feature) => (
+              <span
+                key={feature}
+                className="inline-flex items-center rounded bg-kraft/30 px-2 py-0.5 text-[10px] text-rubber/70"
+              >
+                {feature}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="mt-3 flex items-center justify-between border-t border-ink-grey/10 pt-3">
           <div>
-            <span className="text-xs text-ink-grey">From </span>
-            <span className="text-base font-mono font-bold text-rubber">
-              ${model.priceRange[0]}
-            </span>
-            <span className="text-xs text-ink-grey"> /tire</span>
+            {hasPrice ? (
+              <>
+                <span className="text-xs text-ink-grey">From </span>
+                <span className="text-base font-mono font-bold text-rubber">
+                  ${model.priceRange[0]}
+                </span>
+                <span className="text-xs text-ink-grey"> /tire</span>
+              </>
+            ) : (
+              <span className="text-sm font-bold text-safety-orange">
+                Request Quote
+              </span>
+            )}
           </div>
           <div className="text-[10px] font-mono text-ink-grey">
             {model.sizes.length} sizes

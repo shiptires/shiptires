@@ -1,10 +1,20 @@
 import Link from "next/link";
-import Image from "next/image";
-import { brands } from "@/data/brands";
 import { tireCategories } from "@/data/tire-categories";
-import { getLogoUrl } from "@/lib/api-helpers";
+import { getStats, getAllBrands, brandSummaryToBrand } from "@/lib/db";
 import SearchPanel from "@/components/SearchPanel";
 import type { Metadata } from "next";
+
+const countryCode: Record<string, string> = {
+  France: "FR",
+  "United States": "US",
+  Japan: "JP",
+  Germany: "DE",
+  Italy: "IT",
+  "South Korea": "KR",
+  "United Kingdom": "GB",
+  Taiwan: "TW",
+  Singapore: "SG",
+};
 
 export const metadata: Metadata = {
   title: "Tires Shipped Free. Near You.",
@@ -58,7 +68,17 @@ const typeIcons: Record<string, string> = {
   touring: "M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function HomePage() {
+  const stats = getStats();
+  const brandRows = getAllBrands();
+  const brands = brandRows.map(brandSummaryToBrand);
+
+  const brandCount = stats.brandCount.toLocaleString();
+  const modelCount = `${Math.floor(stats.modelCount / 100) * 100}+`;
+  const tireCount = `${Math.floor(stats.tireCount / 1000)}K+`;
+
   return (
     <>
       <script
@@ -66,59 +86,123 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
 
-      {/* SECTION 1: HERO — The Shipping Label */}
+      {/* SECTION 1: HERO — Two-Column Grid */}
       <section className="bg-label-white py-12 sm:py-16 lg:py-20">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="relative label-border rounded-lg p-6 sm:p-10 lg:p-14 bg-white">
-            {/* FREE SHIPPING stamp overlay */}
-            <div className="absolute top-6 right-6 sm:top-10 sm:right-10 stamp text-sm sm:text-lg pointer-events-none select-none z-10">
-              FREE SHIPPING
-            </div>
-
-            {/* FROM field */}
-            <div className="mb-6 sm:mb-8">
-              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-ink-grey mb-1">From:</div>
-              <div className="font-display text-lg sm:text-xl text-rubber">Ship.Tires Warehouse</div>
-              <div className="text-sm text-ink-grey">Sacramento, CA &mdash; United States</div>
-            </div>
-
-            {/* TO field */}
-            <div className="mb-8 sm:mb-10 pb-6 sm:pb-8 border-b border-dashed border-ink-grey/20">
-              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-ink-grey mb-1">To:</div>
-              <div className="font-display text-lg sm:text-xl text-rubber">Your Door or Installer</div>
-              <div className="text-sm text-ink-grey">Anywhere in the continental US</div>
-            </div>
-
-            {/* Main headline */}
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-rubber tracking-tight leading-[0.95] mb-6">
-              Tires Shipped Free.{" "}
-              <span className="text-safety-orange">Near You.</span>
-            </h1>
-
-            {/* CONTENTS field — SearchPanel */}
-            <div className="mb-8">
-              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-ink-grey mb-3">Contents:</div>
-              <SearchPanel />
-            </div>
-
-            {/* WEIGHT CLASS stats */}
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-mono">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-ink-grey mr-2">Weight Class:</div>
-              <span className="font-semibold text-rubber">21 brands</span>
-              <span className="text-ink-grey/40">&middot;</span>
-              <span className="font-semibold text-rubber">100+ models</span>
-              <span className="text-ink-grey/40">&middot;</span>
-              <span className="font-semibold text-rubber">800+ sizes</span>
-            </div>
-
-            {/* Tracking number ticker */}
-            <div className="mt-6 pt-4 border-t border-ink-grey/10 overflow-hidden">
-              <div className="flex whitespace-nowrap ticker-scroll">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <span key={i} className="text-[10px] font-mono text-ink-grey/30 tracking-[0.15em] mr-12">
-                    STR-2026-{String(7742 + i * 317).padStart(5, "0")} &bull; SHIP.TIRES FREIGHT MANIFEST &bull; FREE DELIVERY &bull; CONTINENTAL US &bull;{" "}
-                  </span>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-10 lg:gap-14 items-start">
+            {/* Left column — Headline & Stats */}
+            <div className="flex flex-col justify-center">
+              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-ink-grey mb-4">
+                Nationwide tire freight &middot; Est. Sacramento, CA
+              </div>
+              <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl text-rubber tracking-tight leading-[0.95] mb-5">
+                Tires shipped free.{" "}
+                <span className="text-safety-orange">Near you.</span>
+              </h1>
+              <p className="text-lg text-ink-grey leading-relaxed mb-8 max-w-lg">
+                Search by vehicle or tire size. We ship every order free to your door
+                or directly to your installer&mdash;anywhere in the continental US.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                {[
+                  { num: brandCount, label: "Brands" },
+                  { num: modelCount, label: "Models" },
+                  { num: tireCount, label: "Tires" },
+                  { num: "$0", label: "Shipping" },
+                ].map((s) => (
+                  <div key={s.label}>
+                    <div className="font-mono text-3xl sm:text-4xl font-bold text-rubber leading-none">
+                      {s.num}
+                    </div>
+                    <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-ink-grey mt-1">
+                      {s.label}
+                    </div>
+                  </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Right column — Shipping Label Card */}
+            <div className="relative border-2 border-rubber shadow-[8px_8px_0_#141414] bg-white overflow-hidden">
+              {/* FREE SHIPPING stamp overlay */}
+              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 stamp text-[10px] sm:text-sm pointer-events-none select-none z-10">
+                FREE SHIPPING
+              </div>
+
+              {/* Header row */}
+              <div className="flex items-center justify-between px-4 sm:px-5 py-3 border-b-2 border-rubber">
+                <span className="font-display text-sm tracking-wide text-rubber">Ship.Tires</span>
+                <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-ink-grey">
+                  Priority &middot; Ground
+                </span>
+              </div>
+
+              {/* FROM row */}
+              <div className="hidden sm:grid grid-cols-[88px_1fr] border-b border-dashed border-ink-grey/20">
+                <div className="px-4 py-3 border-r border-dashed border-ink-grey/20 text-[10px] font-mono uppercase tracking-[0.2em] text-ink-grey flex items-center">
+                  From
+                </div>
+                <div className="px-4 py-3">
+                  <div className="font-display text-xs uppercase tracking-wide text-rubber">
+                    Ship.Tires National Fulfillment Network
+                  </div>
+                </div>
+              </div>
+              <div className="sm:hidden px-4 py-3 border-b border-dashed border-ink-grey/20">
+                <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-ink-grey mb-1">From</div>
+                <div className="font-display text-xs uppercase tracking-wide text-rubber">
+                  Ship.Tires National Fulfillment
+                </div>
+              </div>
+
+              {/* TO row */}
+              <div className="hidden sm:grid grid-cols-[88px_1fr] border-b border-dashed border-ink-grey/20">
+                <div className="px-4 py-3 border-r border-dashed border-ink-grey/20 text-[10px] font-mono uppercase tracking-[0.2em] text-ink-grey flex items-center">
+                  To
+                </div>
+                <div className="px-4 py-3">
+                  <div className="font-display text-xs uppercase tracking-wide text-rubber">
+                    Your Door &mdash; or Your Local Installer
+                  </div>
+                </div>
+              </div>
+              <div className="sm:hidden px-4 py-3 border-b border-dashed border-ink-grey/20">
+                <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-ink-grey mb-1">To</div>
+                <div className="font-display text-xs uppercase tracking-wide text-rubber">
+                  Your Door or Installer
+                </div>
+              </div>
+
+              {/* CONTENTS row — SearchPanel */}
+              <div className="hidden sm:grid grid-cols-[88px_1fr] border-b border-dashed border-ink-grey/20">
+                <div className="px-4 py-3 border-r border-dashed border-ink-grey/20 text-[10px] font-mono uppercase tracking-[0.2em] text-ink-grey flex items-start pt-5">
+                  Contents
+                </div>
+                <div className="p-4">
+                  <SearchPanel />
+                </div>
+              </div>
+              <div className="sm:hidden px-3 py-3 border-b border-dashed border-ink-grey/20">
+                <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-ink-grey mb-2">Contents</div>
+                <SearchPanel />
+              </div>
+
+              {/* Find my tires CTA */}
+              <div className="px-5 py-4">
+                <Link
+                  href="/tires"
+                  className="block w-full text-center rounded bg-safety-orange px-6 py-3 text-sm font-bold uppercase tracking-wide text-white hover:bg-safety-orange/90 transition-colors"
+                >
+                  Find My Tires
+                </Link>
+              </div>
+
+              {/* Barcode */}
+              <div className="mx-5 barcode" aria-hidden="true" />
+
+              {/* Tracking number */}
+              <div className="text-center py-3 text-[10px] font-mono tracking-[0.2em] text-ink-grey/50">
+                SHP&middot;TIRE&middot;0279&middot;2388&middot;473
               </div>
             </div>
           </div>
@@ -129,13 +213,13 @@ export default function HomePage() {
       <section className="py-14 sm:py-16 bg-label-white border-t border-ink-grey/10">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2">Process</div>
-          <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight">
+          <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight pb-4 border-b-2 border-rubber">
             How It Works
           </h2>
           <div className="mt-8 space-y-0">
             {[
-              { line: "01", title: "Search", desc: "Look up tires by vehicle or size. Browse 21 brands and 100+ models." },
-              { line: "02", title: "Quote", desc: "Request a free quote online, or call/text (279) 238-8473 for pricing." },
+              { line: "01", title: "Search", desc: `Look up tires by vehicle or size. Browse ${brandCount} brands and ${modelCount} models.` },
+              { line: "02", title: "Add to Cart", desc: "Pick your tires and add them to your cart — or call/text (279) 238-8473 to order." },
               { line: "03", title: "Ship", desc: "Every order ships free. Deliver to your door or directly to your installer." },
               { line: "04", title: "Install", desc: "Drop them off at any local tire shop, or have them waiting when you arrive." },
             ].map((item, idx) => (
@@ -143,16 +227,51 @@ export default function HomePage() {
                 key={item.line}
                 className={`flex items-start gap-4 sm:gap-6 py-5 ${idx < 3 ? "border-b border-ink-grey/10" : ""}`}
               >
-                <div className="text-xl sm:text-2xl font-mono font-semibold text-ink-grey/30 w-10 flex-shrink-0 text-right">
-                  {item.line}
+                <div className="text-sm font-mono font-semibold text-safety-orange w-14 flex-shrink-0 text-right">
+                  LN {item.line}
                 </div>
                 <div>
-                  <h3 className="font-display text-lg text-rubber">{item.title}</h3>
+                  <h3 className="font-display text-lg uppercase text-rubber">{item.title}</h3>
                   <p className="mt-1 text-sm text-ink-grey leading-relaxed">{item.desc}</p>
                 </div>
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* TIRE SIZE SCROLLING STRIP */}
+      <section className="bg-rubber py-4 overflow-hidden" aria-hidden="true">
+        <div className="flex whitespace-nowrap ticker-scroll">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <span key={i} className="flex items-center gap-6 mr-6 text-sm font-mono text-label-white/60 tracking-wide">
+              <span>225/65R17</span>
+              <span className="text-label-white/20">&middot;</span>
+              <span>265/70R16</span>
+              <span className="text-label-white/20">&middot;</span>
+              <span>205/55R16</span>
+              <span className="text-label-white/20">&middot;</span>
+              <span className="font-bold text-safety-orange">235/45R18</span>
+              <span className="text-label-white/20">&middot;</span>
+              <span>275/55R20</span>
+              <span className="text-label-white/20">&middot;</span>
+              <span>195/65R15</span>
+              <span className="text-label-white/20">&middot;</span>
+              <span className="font-bold text-safety-orange">245/40R19</span>
+              <span className="text-label-white/20">&middot;</span>
+              <span>33X12.50R15</span>
+              <span className="text-label-white/20">&middot;</span>
+              <span>215/55R17</span>
+              <span className="text-label-white/20">&middot;</span>
+              <span>255/70R18</span>
+              <span className="text-label-white/20">&middot;</span>
+              <span className="font-bold text-safety-orange">285/45R22</span>
+              <span className="text-label-white/20">&middot;</span>
+              <span>245/65R17</span>
+              <span className="text-label-white/20">&middot;</span>
+              <span>275/60R20</span>
+            </span>
+          ))}
         </div>
       </section>
 
@@ -187,37 +306,33 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* SECTION 4: BRANDS — Carrier Wall */}
+      {/* SECTION 4: BRANDS — Table Grid */}
       <section className="py-14 sm:py-16 bg-label-white border-t border-ink-grey/10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2">Carriers</div>
-          <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight">
-            21 Brands. Shipped Free.
+          <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight pb-4 border-b-2 border-rubber">
+            {brandCount} Brands. Shipped Free.
           </h2>
-          <div className="mt-8 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7">
-            {brands.map((brand) => (
+          <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 border-l border-t border-ink-grey/15">
+            {brands.slice(0, 8).map((brand) => (
               <Link
                 key={brand.slug}
                 href={`/tires/${brand.slug}`}
-                className="group flex flex-col items-center gap-2 rounded-lg border border-ink-grey/10 bg-white p-4 transition-all hover:border-safety-orange/30 hover:shadow-sm"
+                className="group flex items-center justify-between px-4 py-3 border-r border-b border-ink-grey/15 hover:text-safety-orange transition-colors"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded bg-label-white p-1.5">
-                  <Image
-                    src={getLogoUrl(brand.domain)}
-                    alt={brand.name}
-                    width={40}
-                    height={40}
-                    className="h-9 w-9 object-contain grayscale group-hover:grayscale-0 transition-all duration-300"
-                    unoptimized
-                  />
-                </div>
-                <span className="text-xs font-medium text-ink-grey group-hover:text-rubber text-center transition-colors">
+                <span className="font-bold text-sm uppercase text-rubber group-hover:text-safety-orange transition-colors">
                   {brand.name}
+                </span>
+                <span className="font-mono text-[10px] tracking-wider text-ink-grey/50">
+                  {brand.tireCount} tires
                 </span>
               </Link>
             ))}
           </div>
-          <div className="mt-8 text-center">
+          <div className="mt-4 text-center font-mono text-xs text-ink-grey/60">
+            + {brands.length - 8} more brands available
+          </div>
+          <div className="mt-6 text-center">
             <Link
               href="/tires"
               className="inline-flex items-center gap-2 rounded-md border border-rubber px-6 py-3 text-sm font-bold text-rubber hover:bg-rubber hover:text-label-white transition-colors"

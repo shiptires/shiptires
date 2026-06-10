@@ -2,7 +2,15 @@ export interface TireSize {
   size: string; // e.g. "225/65R17"
   loadIndex: number;
   speedRating: string;
-  price: number; // MSRP estimate
+  price: number; // MSRP estimate — 0 means "call for price"
+  tireId?: number;
+  imageUrl?: string;
+  thumbnailUrl?: string;
+  weight?: number;
+  treadDepth?: string;
+  utqg?: string;
+  loadRange?: string;
+  plyRating?: string;
 }
 
 export interface TireModel {
@@ -26,6 +34,9 @@ export interface Brand {
   founded: number;
   description: string;
   models: TireModel[];
+  logoUrl?: string; // from DB make_image_url
+  tireCount?: number;
+  modelCount?: number;
 }
 
 export type TireType =

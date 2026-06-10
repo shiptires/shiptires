@@ -1,75 +1,67 @@
-import { brands } from "@/data/brands";
+import { searchTires, toSlug } from "@/lib/db";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
-  const size = searchParams.get("size");
-  const brand = searchParams.get("brand");
-  const category = searchParams.get("category");
-  const minPrice = searchParams.get("min_price");
-  const maxPrice = searchParams.get("max_price");
+  const size = searchParams.get("size") || undefined;
+  const brand = searchParams.get("brand") || undefined;
+  const category = searchParams.get("category") || undefined;
+  const season = searchParams.get("season") || undefined;
+  const terrain = searchParams.get("terrain") || undefined;
+  const minPrice = searchParams.get("min_price")
+    ? parseFloat(searchParams.get("min_price")!)
+    : undefined;
+  const maxPrice = searchParams.get("max_price")
+    ? parseFloat(searchParams.get("max_price")!)
+    : undefined;
+  const query = searchParams.get("q") || undefined;
   const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100);
+  const page = parseInt(searchParams.get("page") || "1") || 1;
 
-  const results: {
-    brand: string;
-    brand_slug: string;
-    model: string;
-    model_slug: string;
-    type: string;
-    size: string;
-    load_index: number;
-    speed_rating: string;
-    price: number;
-    warranty: string;
-    features: string[];
-    url: string;
-  }[] = [];
-
-  for (const b of brands) {
-    if (brand && b.slug !== brand && b.name.toLowerCase() !== brand.toLowerCase()) continue;
-
-    for (const model of b.models) {
-      if (category && model.type !== category) continue;
-
-      for (const s of model.sizes) {
-        if (size) {
-          const normalizedQuery = size.replace(/[^0-9rR]/g, "").toLowerCase();
-          const normalizedSize = s.size.replace(/[^0-9rR]/g, "").toLowerCase();
-          if (!normalizedSize.includes(normalizedQuery) && !s.size.toLowerCase().includes(size.toLowerCase())) continue;
-        }
-
-        if (minPrice && s.price < parseFloat(minPrice)) continue;
-        if (maxPrice && s.price > parseFloat(maxPrice)) continue;
-
-        results.push({
-          brand: b.name,
-          brand_slug: b.slug,
-          model: model.name,
-          model_slug: model.slug,
-          type: model.type,
-          size: s.size,
-          load_index: s.loadIndex,
-          speed_rating: s.speedRating,
-          price: s.price,
-          warranty: model.warranty,
-          features: model.features,
-          url: `https://ship.tires/tires/${b.slug}/${model.slug}`,
-        });
-      }
-    }
-  }
-
-  // Sort by price ascending
-  results.sort((a, b) => a.price - b.price);
-
-  return Response.json({
-    total: results.length,
-    results: results.slice(0, limit),
-    shipping: "Free shipping on all orders — all 50 US states",
-    contact: { phone: "(916) 476-7689", email: "info@ship.tires" },
-  }, {
-    headers: {
-      "Cache-Control": "public, max-age=86400, s-maxage=86400",
-      "Access-Control-Allow-Origin": "*",
-    },
+  const result = searchTires({
+    brand,
+    size,
+    season,
+    terrain,
+    category,
+    minPrice,
+    maxPrice,
+    query,
+    page,
+    limit,
   });
+
+  const results = result.tires.map((t) => ({
+    brand: t.make_name,
+    brand_slug: toSlug(t.make_name),
+    model: t.model_name,
+    model_slug: toSlug(t.model_name),
+    type: t.season || t.terrain || "",
+    size:
+      t.width && t.aspect_ratio && t.rim_size
+        ? `${t.width}/${t.aspect_ratio}R${t.rim_size}`
+        : t.name,
+    load_index: parseInt(t.load_rating ?? "0") || 0,
+    speed_rating: t.speed_rating ?? "",
+    price: t.price_map ?? 0,
+    warranty: t.warranty ?? "",
+    features: [] as string[],
+    url: `https://ship.tires/tires/${toSlug(t.make_name)}/${toSlug(t.model_name)}`,
+  }));
+
+  return Response.json(
+    {
+      total: result.total,
+      page: result.page,
+      total_pages: result.totalPages,
+      results,
+      shipping: "Free shipping on all orders — all 50 US states",
+      contact: { phone: "(279) 238-8473", email: "info@ship.tires" },
+    },
+    {
+      headers: {
+        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+        "Access-Control-Allow-Origin": "*",
+      },
+    }
+  );
 }

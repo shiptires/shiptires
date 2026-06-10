@@ -6,13 +6,16 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "indexnow": "node scripts/indexnow-ping.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
     "@stripe/stripe-js": "^9.7.0",
     "@supabase/supabase-js": "^2.108.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/uuid": "^10.0.0",
+    "better-sqlite3": "^12.10.0",
     "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -27,6 +30,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "google-auth-library": "^10.7.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
