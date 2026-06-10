@@ -46,6 +46,16 @@ export interface TireRow {
   image_url_7: string | null;
   image_url_8: string | null;
   image_url_9: string | null;
+  thumbnail_url: string | null;
+  angle_image_url: string | null;
+  front_image_url: string | null;
+  side_image_url: string | null;
+  side2_image_url: string | null;
+  local_thumbnail: string | null;
+  local_angle: string | null;
+  local_front: string | null;
+  local_side: string | null;
+  local_side2: string | null;
   has_detail: number;
   updated_at: string;
 }
@@ -63,6 +73,7 @@ export interface ManufacturerRow {
 export interface BrandSummaryRow {
   make_name: string;
   make_image_url: string | null;
+  local_logo: string | null;
   tire_count: number;
   model_count: number;
 }

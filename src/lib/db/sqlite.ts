@@ -33,14 +33,16 @@ export function getAllBrands(): BrandSummaryRow[] {
   return db
     .prepare(
       `SELECT
-        make_name,
-        MAX(make_image_url) as make_image_url,
+        t.make_name,
+        MAX(t.make_image_url) as make_image_url,
+        MAX(m.local_logo) as local_logo,
         COUNT(*) as tire_count,
-        COUNT(DISTINCT model_name) as model_count
-      FROM tires
-      WHERE make_name IS NOT NULL AND make_name != ''
-      GROUP BY make_name
-      ORDER BY make_name ASC`
+        COUNT(DISTINCT t.model_name) as model_count
+      FROM tires t
+      LEFT JOIN manufacturers m ON UPPER(m.name) = UPPER(t.make_name)
+      WHERE t.make_name IS NOT NULL AND t.make_name != ''
+      GROUP BY t.make_name
+      ORDER BY t.make_name ASC`
     )
     .all() as BrandSummaryRow[];
 }
@@ -54,13 +56,15 @@ export function getBrandBySlug(slug: string): BrandSummaryRow | null {
   const row = db
     .prepare(
       `SELECT
-        make_name,
-        MAX(make_image_url) as make_image_url,
+        t.make_name,
+        MAX(t.make_image_url) as make_image_url,
+        MAX(m.local_logo) as local_logo,
         COUNT(*) as tire_count,
-        COUNT(DISTINCT model_name) as model_count
-      FROM tires
-      WHERE make_name = ?
-      GROUP BY make_name`
+        COUNT(DISTINCT t.model_name) as model_count
+      FROM tires t
+      LEFT JOIN manufacturers m ON UPPER(m.name) = UPPER(t.make_name)
+      WHERE t.make_name = ?
+      GROUP BY t.make_name`
     )
     .get(brandName) as BrandSummaryRow | undefined;
 

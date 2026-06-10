@@ -58,14 +58,28 @@ export function tireRowToSize(row: TireRow): TireSize {
     speedRating: row.speed_rating ?? "",
     price: row.price_map ?? 0,
     tireId: row.id,
-    imageUrl: row.image_url_1 ?? undefined,
-    thumbnailUrl: row.image_url_2 ?? row.image_url_1 ?? undefined,
+    imageUrl: resolveImage(row.local_thumbnail, row.thumbnail_url, row.image_url_1),
+    thumbnailUrl: resolveImage(row.local_thumbnail, row.thumbnail_url, row.image_url_1),
     weight: row.weight ? parseFloat(row.weight) : undefined,
     treadDepth: row.tread_depth ?? undefined,
     utqg: row.utqg ?? undefined,
     loadRange: row.load_range ?? undefined,
     plyRating: row.ply_rating ?? undefined,
   };
+}
+
+/** Prefer local path → remote URL → undefined. Local paths become /images/... URLs. */
+function resolveImage(...sources: (string | null | undefined)[]): string | undefined {
+  for (const src of sources) {
+    if (!src) continue;
+    // Local path from sync (e.g. "images/tires/abc.webp") → serve via nginx
+    if (src.startsWith("images/") || src.startsWith("images\\")) {
+      return "/" + src.replace(/\\/g, "/");
+    }
+    // Already a full URL
+    if (src.startsWith("http")) return src;
+  }
+  return undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -99,7 +113,7 @@ export function tiresToModel(
   const typeLabel = typeLabels[type];
   if (typeLabel) features.push(`${typeLabel} Tire`);
 
-  const image = first.image_url_1 ?? undefined;
+  const image = resolveImage(first.local_thumbnail, first.thumbnail_url, first.image_url_1);
 
   // Auto-generate description from specs
   const description = generateDescription(modelName, first, type, sizes.length);
@@ -153,7 +167,7 @@ export function brandSummaryToBrand(row: BrandSummaryRow): Brand {
     founded: 0,
     description: "",
     models: [],
-    logoUrl: row.make_image_url ?? undefined,
+    logoUrl: resolveImage(row.local_logo, row.make_image_url),
     tireCount: row.tire_count,
     modelCount: row.model_count,
   };

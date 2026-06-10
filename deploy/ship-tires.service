@@ -1,0 +1,22 @@
+[Unit]
+Description=Ship.Tires Next.js Application
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/ship-tires
+ExecStart=/usr/bin/node node_modules/.bin/next start -p 3200
+Restart=always
+RestartSec=5
+EnvironmentFile=/opt/ship-tires/.env
+Environment=NODE_ENV=production
+Environment=PORT=3200
+
+# Security
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/ship-tires
+
+[Install]
+WantedBy=multi-user.target
