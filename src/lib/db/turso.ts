@@ -15,6 +15,7 @@ import {
   apiSearchTires,
   apiGetDistinctSizesForBrand,
 } from "../tire-api";
+import { isCuratedBrand, CURATED_BRANDS } from "../curated-brands";
 
 let _client: Client | null = null;
 
@@ -70,15 +71,7 @@ export async function getAllBrands(): Promise<BrandSummaryRow[]> {
 }
 
 async function _fetchAllBrands(): Promise<BrandSummaryRow[]> {
-  // API-primary: use TireWebLibrary API until extraction script completes
-  // Switch to DB-primary after script finishes and data is pushed to Turso
-  const apiRows = await apiGetAllBrands();
-  if (apiRows.length > 0) {
-    _allBrandsCache = { data: apiRows, ts: Date.now() };
-    return apiRows;
-  }
-
-  // API failed — try Turso as fallback
+  // DB-primary: try Turso first, filter to curated brands
   const result = await safeExecute(
     `SELECT
       t.make_name,
@@ -92,9 +85,18 @@ async function _fetchAllBrands(): Promise<BrandSummaryRow[]> {
     GROUP BY t.make_name
     ORDER BY t.make_name ASC`
   );
-  const rows = result.rows as unknown as BrandSummaryRow[];
-  _allBrandsCache = { data: rows.length > 0 ? rows : apiRows, ts: Date.now() };
-  return rows.length > 0 ? rows : apiRows;
+  const dbRows = (result.rows as unknown as BrandSummaryRow[]).filter(
+    (r) => isCuratedBrand(r.make_name)
+  );
+  if (dbRows.length > 0) {
+    _allBrandsCache = { data: dbRows, ts: Date.now() };
+    return dbRows;
+  }
+
+  // DB empty/failed — fall back to API
+  const apiRows = await apiGetAllBrands();
+  _allBrandsCache = { data: apiRows, ts: Date.now() };
+  return apiRows;
 }
 
 export async function getBrandBySlug(slug: string): Promise<BrandSummaryRow | null> {
@@ -129,11 +131,7 @@ export async function getModelsByBrand(slug: string): Promise<ModelSummaryRow[]>
     else return [];
   }
 
-  // API-primary until extraction script completes
-  const apiModels = await apiGetModelsByBrand(brandName);
-  if (apiModels.length > 0) return apiModels;
-
-  // API failed — try Turso
+  // DB-primary: try Turso first
   const result = await safeExecute({
     sql: `SELECT
       model_name,
@@ -152,7 +150,10 @@ export async function getModelsByBrand(slug: string): Promise<ModelSummaryRow[]>
     args: [brandName],
   });
   const rows = result.rows as unknown as ModelSummaryRow[];
-  return rows.length > 0 ? rows : apiModels;
+  if (rows.length > 0) return rows;
+
+  // DB empty — fall back to API
+  return apiGetModelsByBrand(brandName);
 }
 
 export async function getModelBySlug(
@@ -170,28 +171,24 @@ export async function getModelBySlug(
   }
   if (!brandName) return null;
 
-  // API-primary until extraction script completes
-  const apiResult = await apiGetModelBySlug(brandName, modelSlug);
-  if (apiResult && apiResult.tires.length > 0) return apiResult;
-
-  // API failed — try Turso
+  // DB-primary: try Turso first
   const modelName = await slugToModelName(brandName, modelSlug);
-  if (!modelName) return apiResult;
+  if (modelName) {
+    const result = await safeExecute({
+      sql: `SELECT * FROM tires
+      WHERE make_name = ? AND model_name = ?
+      ORDER BY
+        CAST(width AS INTEGER),
+        CAST(aspect_ratio AS INTEGER),
+        CAST(rim_size AS INTEGER)`,
+      args: [brandName, modelName],
+    });
+    const tires = result.rows as unknown as TireRow[];
+    if (tires.length > 0) return { brand: brandName, model: modelName, tires };
+  }
 
-  const result = await safeExecute({
-    sql: `SELECT * FROM tires
-    WHERE make_name = ? AND model_name = ?
-    ORDER BY
-      CAST(width AS INTEGER),
-      CAST(aspect_ratio AS INTEGER),
-      CAST(rim_size AS INTEGER)`,
-    args: [brandName, modelName],
-  });
-
-  const tires = result.rows as unknown as TireRow[];
-  return tires.length > 0
-    ? { brand: brandName, model: modelName, tires }
-    : apiResult;
+  // DB empty — fall back to API
+  return apiGetModelBySlug(brandName, modelSlug);
 }
 
 // ---------------------------------------------------------------------------
@@ -237,11 +234,7 @@ export async function getDistinctSizesForBrand(
   const brandName = await slugToBrandName(brandSlug);
   if (!brandName) return [];
 
-  // API-primary until extraction script completes
-  const apiSizes = await apiGetDistinctSizesForBrand(brandName);
-  if (apiSizes.length > 0) return apiSizes;
-
-  // API failed — try Turso
+  // DB-primary: try Turso first
   const result = await safeExecute({
     sql: `SELECT width, aspect_ratio, rim_size, COUNT(*) as count
     FROM tires
@@ -251,7 +244,11 @@ export async function getDistinctSizesForBrand(
     LIMIT 100`,
     args: [brandName],
   });
-  return result.rows as unknown as { width: string; aspect_ratio: string; rim_size: string; count: number }[];
+  const rows = result.rows as unknown as { width: string; aspect_ratio: string; rim_size: string; count: number }[];
+  if (rows.length > 0) return rows;
+
+  // DB empty — fall back to API
+  return apiGetDistinctSizesForBrand(brandName);
 }
 
 export async function getDistinctSizes(): Promise<{ width: string; aspect_ratio: string; rim_size: string; count: number }[]> {
@@ -272,11 +269,7 @@ export async function getDistinctSizes(): Promise<{ width: string; aspect_ratio:
 // ---------------------------------------------------------------------------
 
 export async function searchTires(params: SearchParams): Promise<SearchResult> {
-  // API-primary for search until extraction script completes
-  const apiResult = await apiSearchTires(params);
-  if (apiResult.tires.length > 0) return apiResult;
-
-  // API returned nothing — try Turso as fallback
+  // DB-primary: try Turso first
   const page = params.page ?? 1;
   const limit = Math.min(params.limit ?? 24, 100);
   const offset = (page - 1) * limit;
@@ -290,6 +283,11 @@ export async function searchTires(params: SearchParams): Promise<SearchResult> {
       conditions.push("make_name = ?");
       values.push(brandName);
     }
+  } else {
+    // No specific brand — filter to curated brands only
+    const brands = Array.from(CURATED_BRANDS.keys());
+    conditions.push(`make_name IN (${brands.map(() => "?").join(", ")})`);
+    values.push(...brands);
   }
 
   if (params.width) { conditions.push("width = ?"); values.push(params.width); }
@@ -321,25 +319,25 @@ export async function searchTires(params: SearchParams): Promise<SearchResult> {
   const countResult = await safeExecute({ sql: `SELECT COUNT(*) as total FROM tires ${where}`, args: values });
   const total = Number((countResult.rows[0] as unknown as { total: number })?.total ?? 0);
 
-  if (total === 0 && countResult.rows.length === 0) {
-    // DB likely timed out — return empty results gracefully instead of crashing
-    return { tires: [], total: 0, page, limit, totalPages: 0 };
+  if (total > 0) {
+    const tiresResult = await safeExecute({
+      sql: `SELECT * FROM tires ${where}
+      ORDER BY make_name, model_name, CAST(width AS INTEGER)
+      LIMIT ? OFFSET ?`,
+      args: [...values, limit, offset],
+    });
+
+    return {
+      tires: tiresResult.rows as unknown as TireRow[],
+      total,
+      page,
+      limit,
+      totalPages: Math.min(Math.ceil(total / limit), 50),
+    };
   }
 
-  const tiresResult = await safeExecute({
-    sql: `SELECT * FROM tires ${where}
-    ORDER BY make_name, model_name, CAST(width AS INTEGER)
-    LIMIT ? OFFSET ?`,
-    args: [...values, limit, offset],
-  });
-
-  return {
-    tires: tiresResult.rows as unknown as TireRow[],
-    total,
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit),
-  };
+  // DB returned nothing — fall back to API
+  return apiSearchTires(params);
 }
 
 // ---------------------------------------------------------------------------
@@ -405,29 +403,67 @@ async function _fetchStats(): Promise<{
   modelCount: number;
   tireCount: number;
 }> {
-  // API-primary until extraction script completes
-  const apiStats = await apiGetStats();
-  if (apiStats.brandCount > 0) {
-    _statsCache = { data: apiStats, ts: Date.now() };
-    return apiStats;
-  }
-
-  // API failed — try Turso
-  const result = await safeExecute(
-    `SELECT
+  // DB-primary: try Turso first, filtered to curated brands
+  const brands = Array.from(CURATED_BRANDS.keys());
+  const placeholders = brands.map(() => "?").join(", ");
+  const result = await safeExecute({
+    sql: `SELECT
       COUNT(DISTINCT make_name) as brandCount,
       COUNT(DISTINCT model_name) as modelCount,
       COUNT(*) as tireCount
-    FROM tires`
-  );
+    FROM tires
+    WHERE make_name IN (${placeholders})`,
+    args: brands,
+  });
   const row = result.rows[0] as unknown as { brandCount: number; modelCount: number; tireCount: number } | undefined;
   const stats = {
     brandCount: Number(row?.brandCount ?? 0),
     modelCount: Number(row?.modelCount ?? 0),
     tireCount: Number(row?.tireCount ?? 0),
   };
-  _statsCache = { data: stats.brandCount > 0 ? stats : apiStats, ts: Date.now() };
-  return stats.brandCount > 0 ? stats : apiStats;
+
+  if (stats.brandCount > 0) {
+    _statsCache = { data: stats, ts: Date.now() };
+    return stats;
+  }
+
+  // DB empty — fall back to API
+  const apiStats = await apiGetStats();
+  _statsCache = { data: apiStats, ts: Date.now() };
+  return apiStats;
+}
+
+// ---------------------------------------------------------------------------
+// Feed export — large-batch query for Google Merchant Center / product feeds
+// ---------------------------------------------------------------------------
+
+export async function getTiresForFeed(
+  offset: number,
+  limit: number
+): Promise<{ tires: TireRow[]; total: number }> {
+  const brands = Array.from(CURATED_BRANDS.keys());
+  const placeholders = brands.map(() => "?").join(", ");
+
+  const countResult = await safeExecute({
+    sql: `SELECT COUNT(*) as total FROM tires WHERE make_name IN (${placeholders}) AND price_map > 0`,
+    args: brands,
+  });
+  const total = Number(
+    (countResult.rows[0] as unknown as { total: number })?.total ?? 0
+  );
+
+  const result = await safeExecute(
+    {
+      sql: `SELECT * FROM tires
+      WHERE make_name IN (${placeholders}) AND price_map > 0
+      ORDER BY make_name, model_name, CAST(width AS INTEGER)
+      LIMIT ? OFFSET ?`,
+      args: [...brands, limit, offset],
+    },
+    60000
+  );
+
+  return { tires: result.rows as unknown as TireRow[], total };
 }
 
 // ---------------------------------------------------------------------------

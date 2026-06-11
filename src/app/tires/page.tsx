@@ -10,7 +10,7 @@ export const revalidate = 300;
 export const metadata: Metadata = {
   title: "Shop All Tire Brands A-Z — Ship Free Nationwide",
   description:
-    "Shop 665+ tire brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Hankook, Yokohama, Cooper & more. Find tires for Honda, Toyota, Ford, Chevrolet, BMW & all vehicles. Free shipping to Los Angeles, New York, Houston, Chicago & nationwide.",
+    "Shop 34 tire brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Hankook, Yokohama, Cooper & more. Find tires for Honda, Toyota, Ford, Chevrolet, BMW & all vehicles. Free shipping to Los Angeles, New York, Houston, Chicago & nationwide.",
   alternates: { canonical: "https://ship.tires/tires" },
 };
 
@@ -112,7 +112,7 @@ export default async function TiresPage() {
                       width={64}
                       height={64}
                       className="h-12 w-12 object-contain"
-                      unoptimized
+
                     />
                   </div>
                   <h3 className="text-sm font-bold text-gray-900 group-hover:text-blue transition-colors">

@@ -46,7 +46,6 @@ export default function Footer() {
                 width={400}
                 height={200}
                 className="h-24 w-auto lg:h-28 brightness-150"
-                unoptimized
               />
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-white/60">

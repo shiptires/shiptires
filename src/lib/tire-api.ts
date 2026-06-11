@@ -257,28 +257,37 @@ export async function apiGetModelsByBrand(brandName: string): Promise<ModelSumma
   const { patterns } = unwrapPatterns(raw as ApiPatternsResponse);
   if (patterns.length === 0) return [];
 
-  // Fetch representative price per pattern:
-  // Get each pattern's first tire_size via /tire-patterns/{id}, then fetch its price
-  const patternIds = patterns.map((p) => p.id);
+  // Fetch pattern details for top 15 patterns (by size_count) to get:
+  // 1. Representative price (first tire_size → /tires/{id})
+  // 2. Image URL (pattern detail has higher-quality images)
+  // Capped at 15 to stay well under API rate limits (30 calls max: 15 details + 15 prices)
+  const sortedPatterns = [...patterns].sort((a, b) => (b.size_count || 0) - (a.size_count || 0));
+  const topPatterns = sortedPatterns.slice(0, 15);
   const patternPrices = new Map<number, number>();
+  const patternImages = new Map<number, string>();
 
-  // Batch fetch pattern details (5 concurrent) to get first tire_size_id
   const BATCH = 5;
-  for (let i = 0; i < patternIds.length; i += BATCH) {
-    const batch = patternIds.slice(i, i + BATCH);
+  for (let i = 0; i < topPatterns.length; i += BATCH) {
+    const batch = topPatterns.slice(i, i + BATCH);
     const details = await Promise.allSettled(
-      batch.map((pid) => apiFetch<ApiPatternDetail>(`/tire-patterns/${pid}`, 8000))
+      batch.map((p) => apiFetch<ApiPatternDetail>(`/tire-patterns/${p.id}`, 8000))
     );
 
-    // Collect first tire_size_id from each pattern
     const tireIdsToFetch: { patternId: number; tireId: number }[] = [];
     for (let j = 0; j < details.length; j++) {
       const result = details[j];
-      if (result.status === "fulfilled" && result.value?.tire_sizes?.length) {
-        tireIdsToFetch.push({
-          patternId: batch[j],
-          tireId: result.value.tire_sizes[0].id,
-        });
+      if (result.status === "fulfilled" && result.value) {
+        const detail = result.value;
+        // Grab image from detail if catalog didn't have one
+        if (detail.image_url) {
+          patternImages.set(batch[j].id, detail.image_url);
+        }
+        if (detail.tire_sizes?.length) {
+          tireIdsToFetch.push({
+            patternId: batch[j].id,
+            tireId: detail.tire_sizes[0].id,
+          });
+        }
       }
     }
 
@@ -305,7 +314,7 @@ export async function apiGetModelsByBrand(brandName: string): Promise<ModelSumma
     season: p.season ?? null,
     terrain: p.terrain ?? null,
     category: p.category ?? null,
-    thumbnail_url: p.image_url ?? null,
+    thumbnail_url: patternImages.get(p.id) ?? p.image_url ?? null,
   }));
 }
 
@@ -484,6 +493,20 @@ export async function apiSearchTires(params: SearchParams): Promise<SearchResult
     const match = brands.find((b) => b.make_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === params.brand);
     if (match) qp.set("make_name", match.make_name);
   }
+
+  // If query matches a curated brand name, convert to make_name filter instead of text search
+  if (params.query && !qp.has("make_name")) {
+    const queryUpper = params.query.trim().toUpperCase();
+    if (isCuratedBrand(queryUpper)) {
+      qp.set("make_name", queryUpper);
+    } else {
+      qp.set("search", params.query);
+    }
+  } else if (params.query && qp.has("make_name")) {
+    // Both brand and query set — use query as text search
+    qp.set("search", params.query);
+  }
+
   if (params.season) qp.set("season", params.season);
   if (params.terrain) qp.set("terrain", params.terrain);
   if (params.size) {
@@ -497,7 +520,6 @@ export async function apiSearchTires(params: SearchParams): Promise<SearchResult
   if (params.width) qp.set("width", params.width);
   if (params.aspectRatio) qp.set("aspect_ratio", params.aspectRatio);
   if (params.rimSize) qp.set("rim_size", params.rimSize);
-  if (params.query) qp.set("search", params.query);
 
   const raw = await apiFetch<ApiCatalogResponse>(
     `/tires/catalog?${qp.toString()}`,
@@ -512,16 +534,37 @@ export async function apiSearchTires(params: SearchParams): Promise<SearchResult
   // Filter to curated brands only
   const curatedTires = apiTires.filter((t) => isCuratedBrand(t.make_name));
   const tires = curatedTires.map(apiTireToRow);
-  const totalPages = lastPage || Math.ceil(total / limit);
+  // If we have a make_name filter (brand-specific search), use API pagination as-is.
+  // Otherwise the API total includes non-curated brands, so cap pages conservatively.
+  const hasBrandFilter = qp.has("make_name");
+  const totalPages = hasBrandFilter
+    ? (lastPage || Math.ceil(total / limit))
+    : Math.min(lastPage || Math.ceil(total / limit), 20);
 
-  // Enrich with MAP prices for tires missing price
+  // Enrich with MAP prices — only for a small representative sample per model
+  // to avoid overwhelming the API (vehicle pages can trigger 300+ tire fetches)
   const needPrice = tires.filter((t) => !t.price_map || t.price_map === 0);
   if (needPrice.length > 0) {
-    const idsToFetch = needPrice.map((t) => t.id);
-    const prices = await batchFetchPrices(idsToFetch, 5);
+    // Only fetch price for 1 tire per unique model (representative pricing)
+    const seenModels = new Set<string>();
+    const representativeTires: typeof needPrice = [];
+    for (const t of needPrice) {
+      const key = `${t.make_name}|${t.model_name}`;
+      if (!seenModels.has(key)) {
+        seenModels.add(key);
+        representativeTires.push(t);
+      }
+    }
+    // Cap at 10 representative fetches max
+    const toFetch = representativeTires.slice(0, 10);
+    const prices = await batchFetchPrices(toFetch.map((t) => t.id), 5);
+    // Apply representative price to all tires of the same model
     for (const tire of needPrice) {
-      const price = prices.get(tire.id);
-      if (price) tire.price_map = price;
+      const rep = toFetch.find((t) => t.make_name === tire.make_name && t.model_name === tire.model_name);
+      if (rep) {
+        const price = prices.get(rep.id);
+        if (price) tire.price_map = price;
+      }
     }
   }
 

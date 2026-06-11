@@ -102,7 +102,6 @@ export default function SizeTable({
                         width={36}
                         height={36}
                         className="h-9 w-9 object-contain rounded"
-                        unoptimized
                       />
                     </TireImageLightbox>
                   ) : (

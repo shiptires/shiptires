@@ -11,6 +11,7 @@ import {
   toSlug,
 } from "@/lib/db";
 import { getLogoUrl } from "@/lib/api-helpers";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import CartSidebar from "@/components/CartSidebar";
 import TireCard from "@/components/TireCard";
 import AddToCartButton from "@/components/AddToCartButton";
@@ -76,6 +77,13 @@ export default async function ModelPage({
 
   const hasPrice = model.priceRange[0] > 0;
 
+  const breadcrumb = buildBreadcrumbSchema([
+    { name: "Home", url: "https://ship.tires" },
+    { name: "All Brands", url: "https://ship.tires/tires" },
+    { name: data.brand, url: `https://ship.tires/tires/${brandSlug}` },
+    { name: model.name, url: `https://ship.tires/tires/${brandSlug}/${modelSlug}` },
+  ]);
+
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -106,6 +114,10 @@ export default async function ModelPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
+      />
 
       <div className="bg-gray-50">
         {/* Breadcrumb & Header */}
@@ -128,7 +140,7 @@ export default async function ModelPage({
                       width={200}
                       height={200}
                       className="h-40 w-40 object-contain"
-                      unoptimized
+                      priority
                     />
                   </TireImageLightbox>
                 </div>

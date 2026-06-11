@@ -7,7 +7,7 @@ import { toLocationSlug } from "@/lib/location-seo";
 export const metadata: Metadata = {
   title: "Shop Tires by Location — Ship Free to 1,000+ Cities Nationwide",
   description:
-    "Shop tires online and ship free to 1,000+ cities across all 50 states. 665+ brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli. Tires for Honda, Toyota, Ford, BMW & all vehicles. Ship to your door or local installer.",
+    "Shop tires online and ship free to 1,000+ cities across all 50 states. 34 brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli. Tires for Honda, Toyota, Ford, BMW & all vehicles. Ship to your door or local installer.",
   alternates: { canonical: "https://ship.tires/locations" },
 };
 

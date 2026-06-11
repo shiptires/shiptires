@@ -210,7 +210,6 @@ export default async function CityBrandPage({
                           width={160}
                           height={160}
                           className="h-36 w-36 object-contain group-hover:scale-105 transition-transform"
-                          unoptimized
                         />
                       ) : (
                         <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gray-100">

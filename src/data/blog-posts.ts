@@ -121,4 +121,82 @@ What about returns and warranties? At Ship.Tires, we offer a straightforward ret
       "https://images.unsplash.com/photo-1645420526410-66448b1ee37c?w=800&q=80",
     readTime: "5 min read",
   },
+  {
+    title: "How Tire Shipping Works: The Complete Guide",
+    slug: "how-tire-shipping-works-complete-guide",
+    excerpt:
+      "Ever wondered how tires actually get from a warehouse to your doorstep? We break down packaging, carriers, transit times, and everything else involved in shipping tires across the country.",
+    content: `Shipping tires is a fundamentally different challenge than shipping most consumer goods. Each passenger tire weighs between 20 and 35 pounds, and truck or SUV tires can tip the scales at 50 pounds or more. Multiply that by four and you're looking at a shipment that can easily weigh 100 to 200 pounds total. That weight, combined with the bulky circular shape of tires, means they require specialized packaging and handling that most e-commerce products never need. Understanding how this process works will help you set the right expectations and ensure your tires arrive safely and on time.
+
+Packaging is the first critical step. Depending on the retailer and the order size, tires are shipped in one of three ways. Individual tires are typically placed inside heavy-duty corrugated boxes or wrapped in thick poly bags to protect them from scuffing and moisture during transit. Sets of four are often stacked face-to-face, banded together with heavy-duty strapping, and placed on a pallet for freight shipping. Some fulfillment centers use a hybrid approach, boxing pairs of tires and shipping two boxes per order. At Ship.Tires, we select the packaging method that provides the best protection for your specific tire size and order quantity, ensuring they arrive in showroom condition.
+
+Carrier selection depends on the size and weight of the shipment. Standard sets of passenger tires are shipped via parcel carriers like FedEx and UPS, which handle packages up to 150 pounds. For larger or heavier shipments — such as oversized truck tires, wheel-and-tire packages, or commercial orders — freight carriers step in with LTL (less-than-truckload) service that uses palletized shipping on semis. Freight deliveries may require a liftgate if you don't have a loading dock, which is something to keep in mind if you're shipping to a residential address. Ship.Tires automatically selects the most cost-effective carrier for your order and includes all shipping costs at checkout — because we offer free shipping on every order.
+
+Typical transit times for ground shipping range from three to seven business days depending on your location relative to our distribution centers. Orders shipping to major metro areas often arrive in three to four days, while rural or remote locations may take the full seven. Expedited shipping options are available if you need tires faster, with two-day and next-day air options for most passenger sizes. Once your order ships, you'll receive a tracking number via email so you can monitor the shipment in real time. For freight orders, the carrier will contact you to schedule a delivery window.
+
+Insurance and damage protection are built into every Ship.Tires shipment. All orders are insured against loss and damage during transit at no extra cost to you. If a tire arrives with visible damage — such as sidewall cuts, bead damage, or punctures from mishandling — take photos immediately and contact our support team. We'll arrange a replacement shipment right away, typically within 24 hours. For added peace of mind, we recommend inspecting your tires as soon as they arrive, even before your installation appointment. Delivery signatures are required for orders above a certain value, so make sure someone is available to receive the shipment or arrange for the carrier to hold it at a nearby facility for pickup.`,
+    date: "2025-08-15",
+    author: "Ship.Tires Team",
+    image:
+      "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
+    readTime: "8 min read",
+  },
+  {
+    title: "Shipping Tires to Your Installer: Step-by-Step",
+    slug: "shipping-tires-to-your-installer",
+    excerpt:
+      "Skip the hassle of hauling heavy tires yourself. Learn how the ship-to-installer workflow works, what to expect at the shop, and tips for a seamless experience.",
+    content: `One of the most convenient innovations in online tire buying is the ability to ship your tires directly to a professional installer. Instead of receiving 100-plus pounds of tires at your front door and then wrestling them into your trunk for a trip to the shop, you simply choose an installer at checkout and let the tires meet you there. At Ship.Tires, our ship-to-installer program is designed to make the entire process effortless from start to finish.
+
+Here's how it works step by step. First, shop for your tires on Ship.Tires and add them to your cart. During checkout, you'll see the option to ship to an installer instead of your home address. Click that option and you'll be able to search our network of certified installation partners by zip code. Browse the results to compare shops based on distance, customer reviews, services offered, and pricing. Once you've selected your preferred installer, their address automatically populates as the shipping destination. You'll also see the installation cost clearly displayed — typically between $15 and $30 per tire for standard mounting and balancing — so there are no surprises when you arrive at the shop.
+
+When your tires arrive at the installer, the shop will log the shipment and notify you that they're ready for your appointment. Some shops handle this through an automated text or email, while others will call you directly. At this point, you schedule a time to bring your vehicle in for installation. The typical appointment takes 45 minutes to an hour for a full set of four tires. The service includes removing your old tires, mounting the new ones on your wheels, balancing each wheel to eliminate vibration, installing new valve stems, and performing a TPMS (Tire Pressure Monitoring System) sensor reset so your dashboard warning light doesn't come on.
+
+A few tips will help ensure a smooth experience. First, provide your phone number and email at checkout so the installer can reach you once the tires arrive. Second, confirm your appointment a day in advance, especially during peak seasons like early winter and spring when shops tend to be busiest. Third, ask the installer whether they include valve stem replacement and TPMS reset in their base price, or if those are additional charges — most shops in our network include them, but it's always good to confirm. Finally, don't forget to ask what they do with your old tires. Most shops charge a small disposal fee of $3 to $5 per tire, which covers environmentally responsible recycling.
+
+The ship-to-installer model saves you time, physical effort, and the logistical headache of storing tires at home. It's particularly popular with customers who drive sedans or smaller vehicles where fitting four tires in the trunk or back seat would be impractical. Whether you're a first-time online tire buyer or a repeat customer, shipping directly to an installer is the smoothest path from purchase to pavement.`,
+    date: "2025-09-01",
+    author: "Ship.Tires Team",
+    image:
+      "https://images.unsplash.com/photo-1625047509248-ec889cbff17f?w=800&q=80",
+    readTime: "6 min read",
+  },
+  {
+    title: "Free Tire Shipping: How Ship.Tires Does It",
+    slug: "free-tire-shipping-how-ship-tires-does-it",
+    excerpt:
+      "Tires are heavy, bulky, and expensive to ship — so how does Ship.Tires offer free shipping on every order? Here's the logistics behind the promise.",
+    content: `Shipping a single passenger tire costs anywhere from $15 to $30 through standard parcel carriers, and a full set of four can run $60 to $120 in shipping fees alone. For larger truck or off-road tires shipped via freight, costs can climb even higher. These charges can erase much of the savings you'd expect from buying tires online. That's exactly why Ship.Tires has made free shipping a core part of our business model — because shipping costs should never be the reason you overpay for tires at a local store.
+
+So how do we make it work? It starts with our fulfillment network. Ship.Tires operates through strategically located distribution centers across the United States, which means your tires almost always ship from a facility that's relatively close to your delivery address. Shorter shipping distances mean lower carrier costs for us. On top of that, we've negotiated volume-based discounts with major carriers including FedEx, UPS, and several regional freight companies. Because we ship thousands of tires every week, we qualify for rates that are significantly lower than what an individual consumer or small retailer would pay. We pass those savings directly to you in the form of free standard shipping on every order, to all 50 states, with no minimum purchase required.
+
+Our free shipping covers delivery to your home or directly to any installer in our network across more than 1,000 cities nationwide. Whether you're in downtown Chicago or a small town in Montana, your tires ship for free. For most addresses, standard ground delivery arrives within three to seven business days. And because we don't pad our tire prices to hide shipping costs — a common tactic among competitors who advertise "free shipping" — you're getting genuinely lower total costs. Compare our all-in price on any tire to what you'd pay at a local big-box store or tire chain, and you'll typically find savings of 10 to 25 percent.
+
+Free shipping matters more for tires than almost any other consumer product because of the sheer weight involved. Paying $25 to ship a three-pound pair of shoes is annoying. Paying $100 to ship 120 pounds of tires is a dealbreaker for many shoppers. By removing that barrier entirely, Ship.Tires makes online tire buying accessible to everyone — not just bargain hunters willing to do the math on whether the online price minus shipping still beats the local shop. Just find your tires, check out, and they show up at your door or your installer, freight-free. It's that simple, and it's how we believe tire shopping should work.`,
+    date: "2025-09-20",
+    author: "Ship.Tires Team",
+    image:
+      "https://images.unsplash.com/photo-1566576912321-d58ddd7a6088?w=800&q=80",
+    readTime: "5 min read",
+  },
+  {
+    title: "How to Find the Best Tire Installer Near You",
+    slug: "how-to-find-best-tire-installer-near-you",
+    excerpt:
+      "Not all tire shops are created equal. Here's what to look for in an installer, the right questions to ask, and how to get the best value for your mounting and balancing service.",
+    content: `Finding a trustworthy tire installer is just as important as choosing the right tires. A skilled installer ensures your tires are mounted correctly, balanced precisely, and that your TPMS system is properly reset — all of which directly affect ride quality, tire longevity, and your safety on the road. Whether you're using the Ship.Tires installer finder or searching on your own, knowing what to look for will help you make a confident choice.
+
+Start with credentials and equipment. The gold standard for automotive technicians is ASE (Automotive Service Excellence) certification, which requires passing rigorous exams and demonstrating real-world experience. A shop staffed with ASE-certified technicians is far more likely to handle your tires correctly than one without any formal credentials. Beyond certifications, look at the equipment. Modern tire installation requires a computerized wheel balancer, a tire changer that can handle low-profile and run-flat tires without damaging the wheel, and TPMS programming tools. If you walk into a shop and the equipment looks like it hasn't been updated since the 1990s, that's a red flag — especially if you're mounting tires on expensive alloy wheels.
+
+Online reviews are your best friend when evaluating installers. Check Google, Yelp, and any automotive-specific review platforms for consistent patterns. A few negative reviews among hundreds of positive ones are normal for any business, but watch for recurring complaints about wheel damage, long wait times, hidden fees, or pushy upselling. Pay particular attention to reviews that mention the specific service you need — tire mounting and balancing — rather than general auto repair feedback. Also look for pricing transparency: a good installer will quote you a clear per-tire price that includes mounting, balancing, valve stems, and TPMS reset. Typical costs range from $15 to $30 per tire for standard passenger sizes, with prices at the higher end for low-profile, run-flat, or oversized truck tires.
+
+When you've narrowed your options to two or three shops, call ahead and ask a few key questions. What is the total per-tire cost for mounting and balancing, including valve stems and TPMS? Do they charge a disposal fee for old tires, and if so, how much? How long does a four-tire installation typically take? Do they accept tires shipped directly from online retailers? That last question is important — while most shops are happy to install tires purchased elsewhere, a few still refuse or charge a premium. Every installer in the Ship.Tires network has been vetted to accept direct shipments and provide transparent, competitive pricing.
+
+The choice between national chains and independent shops comes down to convenience versus personal service. Chains like Discount Tire, Tire Rack affiliated installers, Costco, and Walmart offer consistent pricing and standardized processes, but wait times can be long during peak seasons. Independent shops often provide faster turnaround and more personalized attention, and many are willing to negotiate on price for repeat customers. If you're a first-timer and feeling unsure, the Ship.Tires installer finder takes the guesswork out of the equation. Just enter your zip code during checkout, browse verified shops with real customer ratings and upfront pricing, and select the one that fits your schedule and budget. Your tires ship directly there, and all you have to do is show up for your appointment.`,
+    date: "2025-10-05",
+    author: "Ship.Tires Team",
+    image:
+      "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800&q=80",
+    readTime: "7 min read",
+  },
 ];

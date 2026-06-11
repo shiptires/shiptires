@@ -25,6 +25,7 @@ export {
   searchTires,
   getStats,
   getTopBrandsForType,
+  getTiresForFeed,
   toSlug,
   getBrandSlugMap,
 } from "./turso";

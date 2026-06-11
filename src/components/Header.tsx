@@ -57,7 +57,6 @@ export default function Header({ brandCount, modelCount, tireCount }: { brandCou
                   height={200}
                   className="h-24 w-auto lg:h-28 brightness-150"
                   priority
-                  unoptimized
                 />
               </Link>
             </div>

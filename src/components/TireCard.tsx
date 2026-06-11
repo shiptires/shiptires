@@ -40,7 +40,6 @@ export default function TireCard({
             width={200}
             height={200}
             className="h-40 w-40 object-contain group-hover:scale-105 transition-transform"
-            unoptimized
           />
         ) : (
           <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gray-100">
@@ -62,8 +61,7 @@ export default function TireCard({
               width={32}
               height={32}
               className="h-8 w-8 object-contain"
-              unoptimized
-            />
+              />
           </div>
         )}
       </div>

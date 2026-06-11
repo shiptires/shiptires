@@ -126,7 +126,6 @@ export default function BrandFilter({ brands }: { brands: BrandItem[] }) {
                         width={40}
                         height={40}
                         className="h-8 w-8 object-contain"
-                        unoptimized
                       />
                     ) : (
                       <span className="text-sm font-black text-gray-400">

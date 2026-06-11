@@ -36,11 +36,11 @@ export const metadata: Metadata = {
     template: "%s | Ship.Tires",
   },
   description:
-    "Shop tires online from 665+ brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Cooper, Hankook, Yokohama & more. Ship free to your door or installer in Los Angeles, New York, Houston, Chicago, Phoenix & nationwide. Find tires for Honda, Toyota, Ford, Chevrolet, BMW & all vehicles. Call (279) 238-8473.",
+    "Shop tires online from 34 brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Cooper, Hankook, Yokohama & more. Ship free to your door or installer in Los Angeles, New York, Houston, Chicago, Phoenix & nationwide. Find tires for Honda, Toyota, Ford, Chevrolet, BMW & all vehicles. Call (279) 238-8473.",
   openGraph: {
     title: "Shop Tires Online — Ship Free Nationwide",
     description:
-      "Shop 665+ tire brands and ship free. Michelin, Goodyear, Bridgestone, Continental, Pirelli & more. Tires for Honda, Toyota, Ford, Chevy, BMW. Free shipping to any US address.",
+      "Shop 34 tire brands and ship free. Michelin, Goodyear, Bridgestone, Continental, Pirelli & more. Tires for Honda, Toyota, Ford, Chevy, BMW. Free shipping to any US address.",
     url: "https://ship.tires",
     siteName: "Ship.Tires",
     type: "website",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Shop Tires Online — Ship Free Nationwide",
     description:
-      "Shop 665+ tire brands. Michelin, Goodyear, Bridgestone & more. Tires for Honda, Toyota, Ford. Free shipping nationwide.",
+      "Shop 34 tire brands. Michelin, Goodyear, Bridgestone & more. Tires for Honda, Toyota, Ford. Free shipping nationwide.",
     images: ["https://ship.tires/logo.png"],
   },
   icons: {
@@ -67,6 +67,9 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+  },
+  other: {
+    "theme-color": "#141414",
   },
   alternates: {},
   metadataBase: new URL("https://ship.tires"),
@@ -82,7 +85,7 @@ const jsonLd = {
   email: "info@ship.tires",
   logo: "https://ship.tires/logo.png",
   description:
-    "Shop tires online from 665+ brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Hankook, Yokohama, Cooper, Toyo, Falken, Firestone, Kumho, Nexen, Nitto, Dunlop, Nokian, General, Kelly, Maxxis, and more. Ship free to your door or installer anywhere in the US. Find tires for Honda, Toyota, Ford, Chevrolet, BMW, Mercedes-Benz, Nissan, Hyundai, Kia, Jeep, Ram, GMC, Subaru, Volkswagen, Audi, Lexus, Mazda, Tesla & all vehicles.",
+    "Shop tires online from 34 brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Hankook, Yokohama, Cooper, Toyo, Falken, Firestone, Kumho, Nexen, Nitto, Dunlop, Nokian, General, Kelly, Maxxis, and more. Ship free to your door or installer anywhere in the US. Find tires for Honda, Toyota, Ford, Chevrolet, BMW, Mercedes-Benz, Nissan, Hyundai, Kia, Jeep, Ram, GMC, Subaru, Volkswagen, Audi, Lexus, Mazda, Tesla & all vehicles.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Sacramento",
@@ -143,7 +146,7 @@ const serviceSchema = {
     url: "https://ship.tires",
   },
   description:
-    "Shop tires online from 665+ brands and ship free to your door or local installer. Find tires by vehicle (Honda, Toyota, Ford, Chevrolet, BMW, Nissan, Jeep, Tesla & more) or by tire size. Browse Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Cooper, Hankook, Yokohama and more. Free shipping to Los Angeles, New York, Chicago, Houston, Phoenix, Philadelphia, San Antonio, Dallas, San Diego, San Jose & everywhere in the continental US.",
+    "Shop tires online from 34 brands and ship free to your door or local installer. Find tires by vehicle (Honda, Toyota, Ford, Chevrolet, BMW, Nissan, Jeep, Tesla & more) or by tire size. Browse Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Cooper, Hankook, Yokohama and more. Free shipping to Los Angeles, New York, Chicago, Houston, Phoenix, Philadelphia, San Antonio, Dallas, San Diego, San Jose & everywhere in the continental US.",
   serviceType: [
     "Online Tire Sales",
     "Free Tire Shipping",
@@ -197,7 +200,7 @@ const serviceSchema = {
           "@type": "Service",
           name: "Shop Tires by Size",
           description:
-            "Search our catalog of 307,000+ tires by size from 665+ brands including Michelin, Goodyear, Bridgestone, Continental, and Pirelli.",
+            "Search our catalog of 307,000+ tires by size from 34 brands including Michelin, Goodyear, Bridgestone, Continental, and Pirelli.",
         },
       },
       {

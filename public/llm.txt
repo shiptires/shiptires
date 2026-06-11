@@ -1,10 +1,10 @@
 # Ship.Tires
 
-> Shop & Ship Car, Truck & SUV Tires — Free Delivery to 1,000+ US cities. 21 brands, 80+ models, 800+ sizes. Free delivery on every order. Ship to your door or local installer near you.
+> Shop & Ship Car, Truck & SUV Tires — Free Delivery to 1,000+ US cities. 34 curated brands, 800+ models, 307,000+ tires. Free delivery on every order. Ship to your door or local installer near you.
 
 ## About
 
-Ship.Tires is a US-based online tire retailer where you can shop & ship car, truck & SUV tires with free delivery on every order nationwide. We carry 21 premium tire brands, 80+ tire models, and 800+ tire sizes covering every car, truck, SUV, and performance vehicle. Every tire is delivered free directly to the customer's home or to their chosen local tire installer. Find tires near me in any of our 1,000+ served cities across all 50 states.
+Ship.Tires is a US-based online tire retailer where you can shop & ship car, truck & SUV tires with free delivery on every order nationwide. We carry 34 curated tire brands, 800+ tire models, and 307,000+ tires covering every car, truck, SUV, and performance vehicle. Every tire is delivered free directly to the customer's home or to their chosen local tire installer. Find tires near me in any of our 1,000+ served cities across all 50 states.
 
 ## Contact
 
@@ -12,9 +12,9 @@ Ship.Tires is a US-based online tire retailer where you can shop & ship car, tru
 - Email: info@ship.tires
 - Website: https://ship.tires
 
-## Brands (21)
+## Brands (34)
 
-Michelin, Goodyear, Bridgestone, Continental, Pirelli, Hankook, Cooper, Firestone, BFGoodrich, Yokohama, Toyo, Falken, General Tire, Kumho, Nexen, Nitto, Dunlop, Maxxis, Ironman, Sumitomo
+Michelin, Goodyear, Bridgestone, Continental, Pirelli, Hankook, Cooper, Firestone, BFGoodrich, Yokohama, Toyo, Falken, General Tire, Kumho, Nexen, Nitto, Dunlop, Nokian, Maxxis, Radar, Ironman, Sumitomo, Uniroyal, Kelly, Mastercraft, Federal, Kenda, Laufenn, Milestar, Sailun, Westlake, Mickey Thompson, Achilles, Fuzion
 
 ## Tire Categories
 
@@ -29,14 +29,23 @@ All-Season, Winter/Snow, Performance, All-Terrain, Mud-Terrain, Touring, Highway
 - Manufacturer warranty on all tires shipped
 - Expert help at (279) 238-8473
 - Tires shipped in 3-7 business days
+- 30-day return policy on unmounted tires
 
 ## Coverage
 
 - 1,000+ cities across all 50 US states
-- Location pages: https://ship.tires/locations/{state}/{city}/{brand}/{size}
 - Brand pages: https://ship.tires/tires/{brand}
 - Model pages: https://ship.tires/tires/{brand}/{model}
-- Find tires near me: https://ship.tires/locations/{state}/{city}
+- Brand+Size pages: https://ship.tires/tires/{brand}/size/{size}
+- Size pages: https://ship.tires/tires/size/{size}
+- Location pages: https://ship.tires/locations/{state}/{city}
+- City+Size pages: https://ship.tires/locations/{state}/{city}/size/{size}
+- City+Brand pages: https://ship.tires/locations/{state}/{city}/{brand}
+- City+Brand+Size pages: https://ship.tires/locations/{state}/{city}/{brand}/{size}
+- Vehicle pages: https://ship.tires/tires/vehicle/{make}
+- Vehicle model pages: https://ship.tires/tires/vehicle/{make}/{model}
+- Installer finder: https://ship.tires/installers/{zip}
+- Returns policy: https://ship.tires/returns
 
 ## Markdown Endpoints
 

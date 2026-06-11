@@ -4,6 +4,7 @@ import Image from "next/image";
 import { searchTires, toSlug } from "@/lib/db";
 import type { TireRow } from "@/lib/db";
 import { isCuratedBrand } from "@/lib/curated-brands";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { lookupTireSizes } from "@/data/tire-sizes";
 import { getMakeContent, getModelContent, getModelsForMake } from "@/data/vehicle-content";
 import type { Metadata } from "next";
@@ -126,6 +127,13 @@ export default async function VehicleTiresPage({
   const modelContent = getModelContent(make, model);
   const otherModels = getModelsForMake(make).filter((m) => m.modelSlug !== model);
 
+  const breadcrumb = buildBreadcrumbSchema([
+    { name: "Home", url: "https://ship.tires" },
+    { name: "Shop by Vehicle", url: "https://ship.tires/vehicle-lookup" },
+    { name: makeName, url: `https://ship.tires/tires/vehicle/${make}` },
+    { name: modelName, url: `https://ship.tires/tires/vehicle/${make}/${model}` },
+  ]);
+
   const vehicleSchema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -144,6 +152,10 @@ export default async function VehicleTiresPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(vehicleSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
       />
 
       <div className="bg-gray-50 min-h-screen">
@@ -249,7 +261,6 @@ export default async function VehicleTiresPage({
                                 width={80}
                                 height={80}
                                 className="object-contain"
-                                unoptimized
                               />
                             ) : (
                               <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
   const aiReadablePages = ["/", "/llm.txt", "/llms.txt", "/llm-full.txt"];
+  const aiLiveSearchPages = ["/", "/llm.txt", "/llms.txt", "/llm-full.txt", "/tires", "/tires/", "/locations", "/locations/", "/search", "/faq", "/shipping", "/returns", "/blog", "/rankings", "/installers"];
 
   return {
     rules: [
@@ -59,27 +60,27 @@ export default function robots(): MetadataRoute.Robots {
       // --- AI live-search agents ---
       {
         userAgent: "OAI-SearchBot",
-        allow: aiReadablePages,
+        allow: aiLiveSearchPages,
         disallow: ["/api/"],
       },
       {
         userAgent: "ChatGPT-User",
-        allow: aiReadablePages,
+        allow: aiLiveSearchPages,
         disallow: ["/api/"],
       },
       {
         userAgent: "Claude-User",
-        allow: aiReadablePages,
+        allow: aiLiveSearchPages,
         disallow: ["/api/"],
       },
       {
         userAgent: "Claude-SearchBot",
-        allow: aiReadablePages,
+        allow: aiLiveSearchPages,
         disallow: ["/api/"],
       },
       {
         userAgent: "Perplexity-User",
-        allow: aiReadablePages,
+        allow: aiLiveSearchPages,
         disallow: ["/api/"],
       },
     ],

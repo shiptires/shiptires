@@ -10,8 +10,11 @@ import {
   modelSummaryToModel,
 } from "@/lib/db";
 import { getLogoUrl } from "@/lib/api-helpers";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { getActiveRebates, getRebatesForBrand } from "@/lib/rebates";
-import TireCard from "@/components/TireCard";
+import { getBrandAuthority } from "@/data/brand-authority";
+import BrandModelGrid from "@/components/BrandModelGrid";
+import BrandModelPicker from "@/components/BrandModelPicker";
 import BrandSizeLookup from "@/components/BrandSizeLookup";
 import VehicleLookup from "@/components/VehicleLookup";
 import type { Metadata } from "next";
@@ -57,9 +60,22 @@ export default async function BrandPage({
   const brandRebates = getRebatesForBrand(allRebates, brandRow.make_name);
 
   const logoUrl = brand.logoUrl || getLogoUrl(brand.domain);
+  const authority = getBrandAuthority(brandSlug);
+
+  const breadcrumb = buildBreadcrumbSchema([
+    { name: "Home", url: "https://ship.tires" },
+    { name: "All Brands", url: "https://ship.tires/tires" },
+    { name: brand.name, url: `https://ship.tires/tires/${brandSlug}` },
+  ]);
 
   return (
-    <div className="bg-gray-50">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
+      />
+
+      <div className="bg-gray-50">
       {/* Brand Header */}
       <div className="bg-navy py-12 text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -78,7 +94,7 @@ export default async function BrandPage({
                 width={160}
                 height={160}
                 className="h-20 w-20 sm:h-24 sm:w-24 object-contain"
-                unoptimized
+                priority
               />
             </div>
             <div>
@@ -86,8 +102,7 @@ export default async function BrandPage({
                 Shop {brand.name} Tires — Ship Free
               </h1>
               <p className="mt-1 text-gray-400">
-                {models.length} models &middot;{" "}
-                {(brand.tireCount ?? 0).toLocaleString()} tires &middot; Ship free
+                {models.length} models{brand.tireCount ? <> &middot; {brand.tireCount.toLocaleString()} tires</> : ""} &middot; Ship free
                 to your door or installer
               </p>
             </div>
@@ -96,11 +111,32 @@ export default async function BrandPage({
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 space-y-12">
-        {/* Find Your Size + Vehicle Lookup */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Find Your Size + Model + Vehicle Lookup */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
             <h2 className="text-lg font-bold text-gray-900">
-              Find {brand.name} Tires by Size
+              Find by Model
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Browse {brand.name} tire lineups
+            </p>
+            <div className="mt-4">
+              <BrandModelPicker
+                brandSlug={brand.slug}
+                brandName={brand.name}
+                models={models.map((m) => ({
+                  name: m.name,
+                  slug: m.slug,
+                  type: m.type,
+                  sizeCount: m.sizeCount ?? 0,
+                }))}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-gray-900">
+              Find by Size
             </h2>
             <p className="mt-1 text-sm text-gray-500">
               Enter your tire size from your sidewall or door jamb sticker
@@ -112,7 +148,7 @@ export default async function BrandPage({
 
           <div className="rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
             <h2 className="text-lg font-bold text-gray-900">
-              Find {brand.name} Tires by Vehicle
+              Find by Vehicle
             </h2>
             <p className="mt-1 text-sm text-gray-500">
               Select your year, make, and model to find compatible sizes
@@ -138,7 +174,6 @@ export default async function BrandPage({
                       alt={rebate.name}
                       fill
                       className="object-contain"
-                      unoptimized
                     />
                   </div>
                 )}
@@ -172,6 +207,35 @@ export default async function BrandPage({
           </div>
         )}
 
+        {/* Brand Overview */}
+        {authority && (
+          <div className="rounded-xl bg-white border border-gray-200 p-6 sm:p-8 shadow-sm">
+            <h2 className="text-2xl font-bold text-gray-900">
+              About {brand.name} Tires
+            </h2>
+            <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-500">
+              {authority.headquarters && <span>HQ: {authority.headquarters}</span>}
+              {authority.founded && <span>Est. {authority.founded}</span>}
+              {authority.market && <span className="capitalize">{authority.market} segment</span>}
+            </div>
+            {authority.overview.split("\n\n").map((p, i) => (
+              <p key={i} className="mt-3 text-gray-600 leading-relaxed">{p}</p>
+            ))}
+            {authority.technologies.length > 0 && (
+              <div className="mt-4">
+                <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Key Technologies</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {authority.technologies.map((tech) => (
+                    <span key={tech} className="inline-flex items-center rounded-full bg-blue/5 border border-blue/20 px-3 py-1 text-xs font-medium text-blue">
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Popular Sizes */}
         {popularSizes.length > 0 && (
           <div>
@@ -184,11 +248,10 @@ export default async function BrandPage({
             <div className="mt-4 flex flex-wrap gap-2">
               {popularSizes.map((s) => {
                 const display = `${s.width}/${s.aspect_ratio}R${s.rim_size}`;
-                const slug = `${s.width}-${s.aspect_ratio}r${s.rim_size}`.toLowerCase();
                 return (
                   <Link
-                    key={slug}
-                    href={`/tires/size/${slug}`}
+                    key={display}
+                    href={`/tires/${brand.slug}/size/${s.width}-${s.aspect_ratio}r${s.rim_size}`.toLowerCase()}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-mono font-medium text-gray-900 shadow-sm hover:shadow-md hover:border-blue transition-all"
                   >
                     {display}
@@ -204,22 +267,12 @@ export default async function BrandPage({
 
         {/* Models Grid */}
         {models.length > 0 ? (
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Shop All {brand.name} Models ({models.length}) — Ship Free
-            </h2>
-            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {models.map((model) => (
-                <TireCard
-                  key={model.slug}
-                  model={model}
-                  brandSlug={brand.slug}
-                  brandName={brand.name}
-                  brandLogo={logoUrl}
-                />
-              ))}
-            </div>
-          </div>
+          <BrandModelGrid
+            models={models}
+            brandSlug={brand.slug}
+            brandName={brand.name}
+            brandLogo={logoUrl}
+          />
         ) : (
           <div className="rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
             <div className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
@@ -269,5 +322,6 @@ export default async function BrandPage({
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 {
   "protocolVersion": "0.3.0",
   "name": "Ship.Tires",
-  "description": "Shop & Ship Car, Truck & SUV Tires — Free Delivery. 21 brands, 80+ models, 800+ sizes delivered free to 1,000+ US cities. Search tires by size, vehicle, brand, or location. Create checkout carts and complete purchases.",
+  "description": "Shop & Ship Car, Truck & SUV Tires — Free Delivery. 34 curated brands, 800+ models, 307,000+ tires delivered free to 1,000+ US cities. Search tires by size, vehicle, brand, or location. Create checkout carts and complete purchases.",
   "url": "https://ship.tires/api",
   "preferredTransport": "HTTP+JSON",
   "version": "1.0.0",
@@ -48,7 +48,7 @@
     {
       "id": "browse-brands",
       "name": "Browse Tire Brands",
-      "description": "List all 21 tire brands with models, pricing, and available sizes. Brands include Michelin, Goodyear, Bridgestone, Continental, Pirelli, and 16 more.",
+      "description": "List all 34 tire brands with models, pricing, and available sizes. Brands include Michelin, Goodyear, Bridgestone, Continental, Pirelli, and 29 more.",
       "tags": ["brands", "michelin", "goodyear", "bridgestone", "continental", "pirelli", "catalog"],
       "inputModes": ["application/json"],
       "outputModes": ["application/json"]

@@ -46,6 +46,9 @@ export default async function SearchPage({
   const sp = await searchParams;
   const brand = sp.brand || "";
   const size = sp.size || "";
+  const width = sp.width || "";
+  const aspectRatio = sp.aspectRatio || "";
+  const rimSize = sp.rimSize || "";
   const season = sp.season || "";
   const terrain = sp.terrain || "";
   const category = sp.category || "";
@@ -55,6 +58,9 @@ export default async function SearchPage({
   const result = await searchTires({
     brand: brand || undefined,
     size: size || undefined,
+    width: width || undefined,
+    aspectRatio: aspectRatio || undefined,
+    rimSize: rimSize || undefined,
     season: season || undefined,
     terrain: terrain || undefined,
     category: category || undefined,
@@ -124,6 +130,9 @@ export default async function SearchPage({
   const queryParts: string[] = [];
   if (brand) queryParts.push(`brand=${encodeURIComponent(brand)}`);
   if (size) queryParts.push(`size=${encodeURIComponent(size)}`);
+  if (width) queryParts.push(`width=${encodeURIComponent(width)}`);
+  if (aspectRatio) queryParts.push(`aspectRatio=${encodeURIComponent(aspectRatio)}`);
+  if (rimSize) queryParts.push(`rimSize=${encodeURIComponent(rimSize)}`);
   if (season) queryParts.push(`season=${encodeURIComponent(season)}`);
   if (terrain) queryParts.push(`terrain=${encodeURIComponent(terrain)}`);
   if (category) queryParts.push(`category=${encodeURIComponent(category)}`);
@@ -139,6 +148,8 @@ export default async function SearchPage({
           <h1 className="text-2xl font-black sm:text-3xl">Search Tires</h1>
           <p className="mt-1 text-gray-400">
             {result.total.toLocaleString()} tires found
+            {brand && ` for ${brand.toUpperCase()}`}
+            {width && aspectRatio && rimSize && ` in ${width}/${aspectRatio}R${rimSize}`}
             {result.totalPages > 1 && ` — Page ${result.page} of ${result.totalPages}`}
           </p>
         </div>

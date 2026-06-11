@@ -143,7 +143,6 @@ export default async function StatePage({
                     width={80}
                     height={60}
                     className="h-10 w-auto object-contain mb-2"
-                    unoptimized
                   />
                 ) : (
                   <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center mb-2">

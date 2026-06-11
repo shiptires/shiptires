@@ -24,7 +24,7 @@ const countryCode: Record<string, string> = {
 export const metadata: Metadata = {
   title: "Shop Tires Online — Ship Free to Your Door | Ship.Tires",
   description:
-    "Shop tires from Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Cooper, Hankook, Yokohama & 665+ brands. Find tires for Honda, Toyota, Ford, Chevrolet, BMW, Nissan, Jeep & all vehicles. Ship free to Los Angeles, New York, Houston, Chicago, Phoenix & nationwide.",
+    "Shop tires from Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Cooper, Hankook, Yokohama & 34 top brands. Find tires for Honda, Toyota, Ford, Chevrolet, BMW, Nissan, Jeep & all vehicles. Ship free to Los Angeles, New York, Houston, Chicago, Phoenix & nationwide.",
   alternates: { canonical: "https://ship.tires" },
 };
 
@@ -43,7 +43,7 @@ const faqItems = [
   },
   {
     q: "What tire brands do you carry?",
-    a: "We carry 665+ tire brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Hankook, Yokohama, Cooper, Toyo, Falken, Firestone, Kumho, Nexen, Nitto, Dunlop, Nokian, General, Maxxis, and hundreds more. Shop any brand and ship free.",
+    a: "We carry 34 curated tire brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Hankook, Yokohama, Cooper, Toyo, Falken, Firestone, Kumho, Nexen, Nitto, Dunlop, Nokian, General, Maxxis, Radar, Ironman, Sumitomo, Uniroyal, Kelly, Mastercraft, Federal, Kenda, Laufenn, Milestar, Sailun, Westlake, Mickey Thompson, Achilles, and Fuzion. Shop any brand and ship free.",
   },
   {
     q: "Can I shop tires by my vehicle?",
@@ -89,7 +89,7 @@ export default async function HomePage() {
   const dbTimeout = <T,>(p: Promise<T>, fallback: T, ms = 15000): Promise<T> =>
     Promise.race([p, new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
 
-  const stats = await dbTimeout(getStats(), { brandCount: 665, modelCount: 7800, tireCount: 120000 });
+  const stats = await dbTimeout(getStats(), { brandCount: 34, modelCount: 800, tireCount: 307000 });
   const brandRows = await dbTimeout(getAllBrands(), []);
   const brands = brandRows.map(brandSummaryToBrand);
   const rebates = await dbTimeout(getActiveRebates(), []);
@@ -108,8 +108,20 @@ export default async function HomePage() {
     const brand = brands.find((b) => b.slug === slug);
     if (!brand) continue;
     const modelRows = await dbTimeout(getModelsByBrand(slug), []);
-    // Sort by tire_count descending so popular models come first (not alphabetical)
-    const sorted = [...modelRows].sort((a, b) => (b.tire_count ?? 0) - (a.tire_count ?? 0));
+    // Filter out commercial/retread/specialty models, prefer models with prices and images
+    const consumerModels = modelRows.filter((m) => {
+      const name = m.model_name.toLowerCase();
+      return !name.includes("retread") && !name.includes("pre-mold")
+        && !name.includes("skid steer") && !name.includes("miner")
+        && !name.includes("precure") && !name.includes("recap");
+    });
+    // Prefer models with prices, then by tire_count
+    const sorted = [...consumerModels].sort((a, b) => {
+      const aHasPrice = (a.min_price ?? 0) > 0 ? 1 : 0;
+      const bHasPrice = (b.min_price ?? 0) > 0 ? 1 : 0;
+      if (bHasPrice !== aHasPrice) return bHasPrice - aHasPrice;
+      return (b.tire_count ?? 0) - (a.tire_count ?? 0);
+    });
     const models = sorted.slice(0, 2).map(modelSummaryToModel);
     if (models.length > 0) {
       featuredTires.push({ brand, models });
@@ -287,31 +299,31 @@ export default async function HomePage() {
         <div className="flex whitespace-nowrap ticker-scroll">
           {Array.from({ length: 2 }).map((_, i) => (
             <span key={i} className="flex items-center gap-6 mr-6 text-sm font-mono text-label-white/60 tracking-wide">
-              <span>225/65R17</span>
+              <Link href="/tires/size/225-65r17" className="hover:text-safety-orange transition-colors">225/65R17</Link>
               <span className="text-label-white/20">&middot;</span>
-              <span>265/70R16</span>
+              <Link href="/tires/size/265-70r16" className="hover:text-safety-orange transition-colors">265/70R16</Link>
               <span className="text-label-white/20">&middot;</span>
-              <span>205/55R16</span>
+              <Link href="/tires/size/205-55r16" className="hover:text-safety-orange transition-colors">205/55R16</Link>
               <span className="text-label-white/20">&middot;</span>
-              <span className="font-bold text-safety-orange">235/45R18</span>
+              <Link href="/tires/size/235-45r18" className="font-bold text-safety-orange hover:text-safety-orange/80 transition-colors">235/45R18</Link>
               <span className="text-label-white/20">&middot;</span>
-              <span>275/55R20</span>
+              <Link href="/tires/size/275-55r20" className="hover:text-safety-orange transition-colors">275/55R20</Link>
               <span className="text-label-white/20">&middot;</span>
-              <span>195/65R15</span>
+              <Link href="/tires/size/195-65r15" className="hover:text-safety-orange transition-colors">195/65R15</Link>
               <span className="text-label-white/20">&middot;</span>
-              <span className="font-bold text-safety-orange">245/40R19</span>
+              <Link href="/tires/size/245-40r19" className="font-bold text-safety-orange hover:text-safety-orange/80 transition-colors">245/40R19</Link>
               <span className="text-label-white/20">&middot;</span>
-              <span>33X12.50R15</span>
+              <Link href="/tires/size/33x1250r15" className="hover:text-safety-orange transition-colors">33X12.50R15</Link>
               <span className="text-label-white/20">&middot;</span>
-              <span>215/55R17</span>
+              <Link href="/tires/size/215-55r17" className="hover:text-safety-orange transition-colors">215/55R17</Link>
               <span className="text-label-white/20">&middot;</span>
-              <span>255/70R18</span>
+              <Link href="/tires/size/255-70r18" className="hover:text-safety-orange transition-colors">255/70R18</Link>
               <span className="text-label-white/20">&middot;</span>
-              <span className="font-bold text-safety-orange">285/45R22</span>
+              <Link href="/tires/size/285-45r22" className="font-bold text-safety-orange hover:text-safety-orange/80 transition-colors">285/45R22</Link>
               <span className="text-label-white/20">&middot;</span>
-              <span>245/65R17</span>
+              <Link href="/tires/size/245-65r17" className="hover:text-safety-orange transition-colors">245/65R17</Link>
               <span className="text-label-white/20">&middot;</span>
-              <span>275/60R20</span>
+              <Link href="/tires/size/275-60r20" className="hover:text-safety-orange transition-colors">275/60R20</Link>
             </span>
           ))}
         </div>
@@ -396,7 +408,7 @@ export default async function HomePage() {
                       alt={cat.name}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      unoptimized
+                      priority
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                     <div className="absolute bottom-3 left-4 right-4">
@@ -426,7 +438,6 @@ export default async function HomePage() {
                                 width={14}
                                 height={14}
                                 className="h-3.5 w-3.5 object-contain"
-                                unoptimized
                               />
                             )}
                             {b.name}
@@ -461,7 +472,7 @@ export default async function HomePage() {
               const priorityOrder = [
                 "MICHELIN", "GOODYEAR", "BRIDGESTONE", "CONTINENTAL", "PIRELLI",
                 "COOPER", "HANKOOK", "YOKOHAMA", "TOYO", "FIRESTONE",
-                "BFGOODRICH", "FALKEN",
+                "BFGOODRICH", "FALKEN", "RADAR", "NITTO", "KUMHO", "NEXEN",
               ];
               const priorityRank = new Map(priorityOrder.map((n, i) => [n, i + 1]));
               return [...brands]
@@ -471,7 +482,7 @@ export default async function HomePage() {
                   if (aR !== bR) return aR - bR;
                   return (b.tireCount ?? 0) - (a.tireCount ?? 0);
                 })
-                .slice(0, 12)
+                .slice(0, 16)
                 .map((brand) => {
                   const logo = brand.logoUrl || getLogoUrl(brand.domain);
                   return (
@@ -486,7 +497,6 @@ export default async function HomePage() {
                         width={120}
                         height={80}
                         className="h-12 sm:h-16 w-auto object-contain mb-3"
-                        unoptimized
                       />
                       <span className="font-display text-xs sm:text-sm uppercase text-rubber group-hover:text-safety-orange transition-colors text-center">
                         {brand.name}
@@ -569,7 +579,6 @@ export default async function HomePage() {
                         alt={rebate.name}
                         fill
                         className="object-contain p-2"
-                        unoptimized
                       />
                     </div>
                   )}

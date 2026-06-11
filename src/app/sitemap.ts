@@ -25,6 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/about`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${baseUrl}/contact`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/shipping`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
+    { url: `${baseUrl}/returns`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.5 },
     { url: `${baseUrl}/faq`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.6 },
     { url: `${baseUrl}/blog`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.6 },
     { url: `${baseUrl}/racing`, lastModified: new Date(), changeFrequency: "weekly", priority: 0.6 },
@@ -152,6 +153,41 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ];
 
+  // Brand + Size pages — top combinations for discovery
+  const topSizeSlugs = [
+    "225-65r17","265-70r16","205-55r16","235-45r18","275-55r20",
+    "195-65r15","245-40r19","215-55r17","255-70r18","285-45r22",
+    "245-65r17","275-60r20","215-55r16","235-55r18","225-50r17",
+    "245-45r18","225-45r17","235-70r16","265-60r18","255-55r20",
+  ];
+  const brandSizePages: MetadataRoute.Sitemap = topBrandSlugs.flatMap((brandSlug) =>
+    topSizeSlugs.map((sizeSlug) => ({
+      url: `${baseUrl}/tires/${brandSlug}/size/${sizeSlug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    }))
+  );
+
+  // Top tire size pages
+  const topSizePages: MetadataRoute.Sitemap = [
+    "225-65r17","265-70r16","205-55r16","235-45r18","275-55r20",
+    "195-65r15","245-40r19","215-55r17","255-70r18","285-45r22",
+    "245-65r17","275-60r20","215-55r16","235-55r18","225-50r17",
+    "245-45r18","225-45r17","235-70r16","265-60r18","255-55r20",
+    "225-55r18","225-55r17","235-65r17","245-50r20","265-65r17",
+    "265-70r17","275-60r20","285-70r17","305-30r20","225-40r18",
+    "235-40r18","245-35r20","255-35r19","275-35r19","225-60r18",
+    "215-60r17","235-50r18","245-55r19","255-45r20","275-45r21",
+    "205-65r16","215-45r17","225-65r16","235-75r15","265-75r16",
+    "275-65r18","285-65r18","315-70r17","235-85r16","33x1250r15",
+  ].map((s) => ({
+    url: `${baseUrl}/tires/size/${s}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
   return [
     ...staticPages,
     ...brandPages,
@@ -164,5 +200,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...cityPages,
     ...cityBrandPages,
     ...installerPages,
+    ...brandSizePages,
+    ...topSizePages,
   ];
 }

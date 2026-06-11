@@ -68,7 +68,6 @@ export default function TireImageLightbox({ src, alt, children }: TireImageLight
               width={800}
               height={800}
               className="max-h-[85vh] w-auto object-contain rounded-lg"
-              unoptimized
               priority
             />
             <div className="mt-3 text-center text-sm text-white/70">{alt}</div>

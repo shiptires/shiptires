@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getTiresBySize, toSlug } from "@/lib/db";
+import { getTiresBySize, toSlug, getAllBrands, brandSummaryToBrand } from "@/lib/db";
+import { states } from "@/data/locations";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import type { TireRow } from "@/lib/db";
 import type { Metadata } from "next";
 
@@ -60,6 +62,10 @@ export default async function SizePage({
 
   const tires = await getTiresBySize(parsed.width, parsed.aspect, parsed.rim);
 
+  const allBrandRows = await getAllBrands();
+  const allBrands = allBrandRows.map(brandSummaryToBrand);
+  const topCities = states.flatMap((s) => s.cities.map((c) => ({ ...c, state: s }))).sort((a, b) => b.population - a.population).slice(0, 20);
+
   // Group by brand+model
   const grouped = new Map<string, GroupedModel>();
   for (const tire of tires) {
@@ -94,6 +100,12 @@ export default async function SizePage({
     return a.price - b.price;
   });
 
+  const breadcrumb = buildBreadcrumbSchema([
+    { name: "Home", url: "https://ship.tires" },
+    { name: "Tires", url: "https://ship.tires/tires" },
+    { name: `${parsed.display} Tires`, url: `https://ship.tires/tires/size/${size}` },
+  ]);
+
   const sizeSchema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -107,6 +119,10 @@ export default async function SizePage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(sizeSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
       />
 
       <div className="bg-gray-50 min-h-screen">
@@ -209,6 +225,34 @@ export default async function SizePage({
             >
               Vehicle Lookup Tool
             </Link>
+          </div>
+
+          {/* Shop by Brand */}
+          {allBrands.length > 0 && (
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold text-gray-900">Shop {parsed.display} by Brand</h2>
+              <p className="mt-1 text-sm text-gray-500">Compare {parsed.display} tires from top brands — all ship free</p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {allBrands.slice(0, 20).map((b) => (
+                  <Link key={b.slug} href={`/tires/${b.slug}/size/${size}`} className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-700 hover:border-blue hover:text-blue transition-colors">
+                    {b.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Ship to Your City */}
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-gray-900">Ship {parsed.display} Tires to Your City</h2>
+            <p className="mt-1 text-sm text-gray-500">Free shipping to every city in the continental US</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {topCities.map((c) => (
+                <Link key={`${c.state.slug}-${c.slug}`} href={`/locations/${c.state.slug}/${c.slug}/size/${size}`} className="rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 hover:border-blue hover:text-blue transition-colors">
+                  {c.name}, {c.state.abbreviation}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,9 @@
 import { TireCategory } from "@/lib/types";
 
+// Generic tire SVG fallback used when no product image is available
+export const TIRE_FALLBACK_SVG =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='100' r='90' fill='%23222' stroke='%23444' stroke-width='4'/%3E%3Ccircle cx='100' cy='100' r='60' fill='%23333' stroke='%23555' stroke-width='2'/%3E%3Ccircle cx='100' cy='100' r='25' fill='%23555' stroke='%23777' stroke-width='2'/%3E%3Ccircle cx='100' cy='100' r='10' fill='%23888'/%3E%3C/svg%3E";
+
 export const tireCategories: TireCategory[] = [
   {
     name: "All-Season Tires",
@@ -8,7 +12,7 @@ export const tireCategories: TireCategory[] = [
     description:
       "All-season tires from Michelin, Goodyear, Bridgestone, Continental, and Cooper deliver year-round traction in dry, wet, and light snow. Shop the Michelin Defender, Goodyear Assurance, and Bridgestone Turanza — the most popular all-season tires for Honda, Toyota, Ford, and all vehicles. Ship free.",
     image:
-      "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80",
+      "https://new.tirelibrary.com/tireModelImage/1b3f7bb4-bb28-42a3-b041-3d165de55698",
     features: [
       "Year-round traction in dry, wet, and light snow",
       "Extended tread life with durable compound technology",
@@ -24,7 +28,7 @@ export const tireCategories: TireCategory[] = [
     description:
       "Winter tires from Michelin, Bridgestone, Nokian, Continental, and Pirelli are purpose-built for cold weather, ice, and heavy snow. Shop the Michelin X-Ice, Bridgestone Blizzak, and Nokian Hakkapeliitta — trusted by drivers in the coldest climates. Ship free to your door.",
     image:
-      "https://images.unsplash.com/photo-1580655653885-65763b2597d0?w=800&q=80",
+      "https://new.tirelibrary.com/tireModelImage/7c0e9e4d-2f1e-4b57-ab3e-1dfcc1e13e88",
     features: [
       "Soft rubber compound stays pliable in freezing temperatures",
       "Deep sipes and biting edges grip ice and packed snow",
@@ -40,7 +44,7 @@ export const tireCategories: TireCategory[] = [
     description:
       "Summer tires from Michelin, Pirelli, Continental, Bridgestone, and Yokohama deliver maximum grip in warm and wet conditions. Shop the Michelin Pilot Sport, Pirelli P Zero, and Continental ExtremeContact — engineered for BMW, Mercedes, Porsche, and sport-tuned vehicles. Ship free.",
     image:
-      "https://images.unsplash.com/photo-1525609004556-c46c5d6cf66c?w=800&q=80",
+      "https://new.tirelibrary.com/tireModelImage/a2e7b831-47d3-4d8f-8d3b-3e89f6a2c714",
     features: [
       "Maximum dry grip with large, continuous tread blocks",
       "Hydroplaning resistance through optimized groove channels",
@@ -55,7 +59,7 @@ export const tireCategories: TireCategory[] = [
     description:
       "Performance tires from Michelin, Pirelli, Continental, Falken, and Nitto are built for speed and precision. Shop the Michelin Pilot Sport 4S, Pirelli P Zero, and Nitto NT555 — ultra-high-performance tires for Mustang, Camaro, BMW M, and every sports car. Ship free.",
     image:
-      "https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&q=80",
+      "https://new.tirelibrary.com/tireModelImage/d5f1c934-8a92-4b6e-bf43-7c2da91e5f06",
     features: [
       "Ultra-high-grip compound for maximum traction at speed",
       "Reinforced sidewalls for sharp turn-in and stability",
@@ -71,7 +75,7 @@ export const tireCategories: TireCategory[] = [
     description:
       "All-terrain tires from BFGoodrich, Falken, Toyo, Cooper, and Nitto handle gravel, dirt, and trails while keeping a smooth highway ride. Shop the BFGoodrich KO2, Falken Wildpeak, and Toyo Open Country — top-rated for F-150, Tacoma, Jeep Wrangler, and every truck and SUV. Ship free.",
     image:
-      "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80",
+      "https://new.tirelibrary.com/tireModelImage/e8b24fa7-3916-4c0d-a5d2-9f71c8b35d12",
     features: [
       "Aggressive tread pattern grips dirt, gravel, and light mud",
       "Reinforced construction resists punctures and sidewall damage",
@@ -87,7 +91,7 @@ export const tireCategories: TireCategory[] = [
     description:
       "Mud-terrain tires from BFGoodrich, Nitto, Toyo, Mickey Thompson, and Cooper are built for extreme off-road. Shop the BFGoodrich KM3, Nitto Trail Grappler, and Toyo Open Country M/T — massive tread lugs that claw through mud, rocks, and sand. Ship free to your door.",
     image:
-      "https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=800&q=80",
+      "https://new.tirelibrary.com/tireModelImage/f4c65d18-9a73-42eb-b1f7-6e8a0d329c75",
     features: [
       "Massive tread lugs for maximum grip in deep mud and sand",
       "Wide channel voids self-clean debris and prevent packing",
@@ -103,7 +107,7 @@ export const tireCategories: TireCategory[] = [
     description:
       "Highway tires from Michelin, Cooper, Firestone, Hankook, and General are optimized for trucks, SUVs, and vans on paved roads. Shop the Michelin Defender LTX, Cooper Discoverer HTP, and Firestone Destination — smooth ride, long tread life, and free shipping on every order.",
     image:
-      "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=80",
+      "https://new.tirelibrary.com/tireModelImage/b6d98e23-5c4f-4a19-8e67-2a4fb7c80d91",
     features: [
       "Smooth, quiet ride optimized for paved road surfaces",
       "Low rolling resistance for better fuel economy",
@@ -118,7 +122,7 @@ export const tireCategories: TireCategory[] = [
     description:
       "Touring tires from Michelin, Continental, Bridgestone, Pirelli, and Hankook deliver premium comfort for sedans, crossovers, and luxury vehicles. Shop the Michelin Primacy, Continental PureContact, and Bridgestone Ecopia — up to 80,000-mile warranties and free shipping.",
     image:
-      "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800&q=80",
+      "https://new.tirelibrary.com/tireModelImage/c3a47f09-6d82-4e53-9b74-1f5ec8d62a30",
     features: [
       "Premium ride comfort with vibration-dampening construction",
       "All-season traction for confident year-round driving",

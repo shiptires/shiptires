@@ -1,6 +1,6 @@
 # Ship.Tires — Complete Business, Product & Inventory Information
 
-> Shop & Ship Car, Truck & SUV Tires — Free Delivery to 1,000+ US cities. 21 brands, 80+ models, 800+ sizes. Delivered free to your door or local installer.
+> Shop & Ship Car, Truck & SUV Tires — Free Delivery to 1,000+ US cities. 34 curated brands, 800+ models, 307,000+ tires. Delivered free to your door or local installer.
 
 ---
 
@@ -21,9 +21,9 @@ Ship.Tires is an online tire retailer where you can shop & ship car, truck & SUV
 ## Core Value Proposition
 
 - **Free delivery** on every order, no minimums
-- **21 premium tire brands** in stock
-- **80+ tire models** covering every driving need
-- **800+ tire sizes** for every vehicle type
+- **34 curated tire brands** in stock
+- **800+ tire models** covering every driving need
+- **307,000+ tires** for every vehicle type
 - **Ship to home or installer** — customer's choice
 - **3-7 business day delivery** on most orders
 - **Manufacturer warranties** included on all tires

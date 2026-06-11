@@ -12,6 +12,7 @@ import {
   findCity,
   getStateClimate,
 } from "@/lib/location-seo";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -69,6 +70,13 @@ export default async function CityLocationsPage({
     })
     .slice(0, 30);
 
+  const breadcrumb = buildBreadcrumbSchema([
+    { name: "Home", url: "https://ship.tires" },
+    { name: "Locations", url: "https://ship.tires/locations" },
+    { name: state.name, url: `https://ship.tires/locations/${stateSlug}` },
+    { name: city.name, url: `https://ship.tires/locations/${stateSlug}/${citySlug}` },
+  ]);
+
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -92,6 +100,10 @@ export default async function CityLocationsPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
       />
 
       <div className="bg-gray-50">
@@ -231,6 +243,24 @@ export default async function CityLocationsPage({
                     {c.name}
                   </Link>
                 ))}
+            </div>
+          </div>
+
+          {/* Popular Tire Sizes */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Popular Tire Sizes in {city.name}
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">Shop these popular sizes and ship free to {city.name}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {["225-65r17","265-70r16","205-55r16","235-45r18","275-55r20","195-65r15","245-40r19","215-55r17","255-70r18","285-45r22","245-65r17","275-60r20","215-55r16","235-55r18","225-50r17","245-45r18"].map((s) => {
+                const d = s.replace(/^(\d+)-(\d+)r(.+)$/i, "$1/$2R$3");
+                return (
+                  <Link key={s} href={`/locations/${stateSlug}/${citySlug}/size/${s}`} className="rounded-full bg-white border border-gray-200 px-4 py-2 text-sm font-mono text-gray-700 hover:bg-blue hover:text-white hover:border-blue transition-colors">
+                    {d}
+                  </Link>
+                );
+              })}
             </div>
           </div>
 

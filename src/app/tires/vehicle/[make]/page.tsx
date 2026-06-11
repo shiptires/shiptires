@@ -5,6 +5,7 @@ import { getMakeContent, getModelsForMake, vehicleMakes } from "@/data/vehicle-c
 import { searchTires } from "@/lib/db";
 import type { TireRow } from "@/lib/db";
 import { isCuratedBrand } from "@/lib/curated-brands";
+import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 
 export const revalidate = 300;
 
@@ -51,6 +52,12 @@ export default async function VehicleMakePage({
     tiresByModel.get(key)!.push(tire);
   }
 
+  const breadcrumb = buildBreadcrumbSchema([
+    { name: "Home", url: "https://ship.tires" },
+    { name: "Shop by Vehicle", url: "https://ship.tires/vehicle-lookup" },
+    { name: makeName, url: `https://ship.tires/tires/vehicle/${make}` },
+  ]);
+
   const schema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -64,6 +71,10 @@ export default async function VehicleMakePage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
       />
 
       <div className="bg-gray-50 min-h-screen">
@@ -87,6 +98,20 @@ export default async function VehicleMakePage({
         </div>
 
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          {/* Brand Overview */}
+          {content?.overview && (
+            <div className="mb-12 rounded-xl bg-white border border-gray-200 p-6 sm:p-8 shadow-sm">
+              <h2 className="text-2xl font-bold text-gray-900">
+                About {makeName} Vehicles
+              </h2>
+              {content.overview.split("\n\n").map((paragraph, i) => (
+                <p key={i} className="mt-3 text-gray-600 leading-relaxed">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          )}
+
           {/* Tire Selection Guide */}
           {content?.tireGuide && (
             <div className="mb-12 rounded-xl bg-white border border-gray-200 p-6 sm:p-8 shadow-sm">
@@ -148,7 +173,6 @@ export default async function VehicleMakePage({
                           width={64}
                           height={64}
                           className="object-contain"
-                          unoptimized
                         />
                       ) : (
                         <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -223,8 +247,7 @@ export default async function VehicleMakePage({
                             width={160}
                             height={160}
                             className="object-contain max-h-full"
-                            unoptimized
-                          />
+                            />
                         ) : (
                           <svg className="w-12 h-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <circle cx="12" cy="12" r="10" strokeWidth="1.5" />

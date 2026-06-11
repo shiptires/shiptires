@@ -1,11 +1,11 @@
 # Ship.Tires
 
-Ship.Tires is a US-based online tire retailer offering free delivery on every order to all 50 states. The store carries 21 tire brands, 80+ models, and 800+ sizes for cars, trucks, and SUVs. Tires ship to your door or directly to a local installer in 3-7 business days. Call or text (279) 238-8473 to order.
+Ship.Tires is a US-based online tire retailer offering free delivery on every order to all 50 states. The store carries 34 curated tire brands, 800+ models, and 307,000+ tires for cars, trucks, and SUVs. Tires ship to your door or directly to a local installer in 3-7 business days. Call or text (279) 238-8473 to order.
 
 ## Key Pages
 
 - [Homepage](https://ship.tires): Main landing page with tire search by size, vehicle, or brand
-- [All Tires](https://ship.tires/tires): Browse all 21 brands and their tire models
+- [All Tires](https://ship.tires/tires): Browse all 34 brands and their tire models
 - [Locations](https://ship.tires/locations): Free tire delivery to 1,000+ US cities across all 50 states
 - [Vehicle Lookup](https://ship.tires/vehicle-lookup): Find compatible tires by year, make, and model
 - [Rankings](https://ship.tires/rankings): Tire brand and model rankings
@@ -13,14 +13,16 @@ Ship.Tires is a US-based online tire retailer offering free delivery on every or
 - [Contact](https://ship.tires/contact): Request a quote or get in touch
 - [FAQ](https://ship.tires/faq): Frequently asked questions about ordering and shipping
 - [Shipping](https://ship.tires/shipping): Shipping policy and delivery details
+- [Returns](https://ship.tires/returns): 30-day return policy and refund information
 - [About](https://ship.tires/about): About Ship.Tires
 - [Blog](https://ship.tires/blog): Tire guides, tips, and industry news
 - [Racing](https://ship.tires/racing): Motorsport coverage (F1, NASCAR, Le Mans, IndyCar)
 - [Racing Tech](https://ship.tires/racing-tech): Technical articles on racing tire technology
+- [Installers](https://ship.tires/installers): Find tire installers near you by zip code
 
-## Tire Brands
+## Tire Brands (34)
 
-Michelin, Goodyear, Bridgestone, Continental, Pirelli, Hankook, Cooper, Firestone, BFGoodrich, Yokohama, Toyo, Falken, General Tire, Kumho, Nexen, Nitto, Dunlop, Maxxis, Ironman, Sumitomo
+Michelin, Goodyear, Bridgestone, Continental, Pirelli, Hankook, Cooper, Firestone, BFGoodrich, Yokohama, Toyo, Falken, General Tire, Kumho, Nexen, Nitto, Dunlop, Nokian, Maxxis, Radar, Ironman, Sumitomo, Uniroyal, Kelly, Mastercraft, Federal, Kenda, Laufenn, Milestar, Sailun, Westlake, Mickey Thompson, Achilles, Fuzion
 
 ## Tire Categories
 
@@ -33,16 +35,24 @@ All-Season, Winter/Snow, Performance, All-Terrain, Touring, Truck & SUV, Highway
 3. Tires ship free to your door or your local installer
 4. Get installed at any tire shop near you
 
-## Location Pages
+## URL Patterns
 
-Pattern: https://ship.tires/locations/{state}/{city}
-Example: https://ship.tires/locations/california/los-angeles
-Every brand delivered free to every city served.
+- Brand pages: https://ship.tires/tires/{brand} (e.g., /tires/michelin)
+- Model pages: https://ship.tires/tires/{brand}/{model} (e.g., /tires/michelin/pilot-sport-4s)
+- Brand+Size pages: https://ship.tires/tires/{brand}/size/{size} (e.g., /tires/michelin/size/225-65r17)
+- Size pages: https://ship.tires/tires/size/{size} (e.g., /tires/size/225-65r17)
+- Location pages: https://ship.tires/locations/{state}/{city} (e.g., /locations/california/los-angeles)
+- City+Size pages: https://ship.tires/locations/{state}/{city}/size/{size}
+- City+Brand pages: https://ship.tires/locations/{state}/{city}/{brand}
+- City+Brand+Size pages: https://ship.tires/locations/{state}/{city}/{brand}/{size}
+- Vehicle pages: https://ship.tires/tires/vehicle/{make} (e.g., /tires/vehicle/honda)
+- Vehicle model pages: https://ship.tires/tires/vehicle/{make}/{model}
+- Installer pages: https://ship.tires/installers/{zip}
 
 ## API Endpoints
 
 - GET /api/tires/search?size=225/65R17&brand=michelin -- Search tires by size, brand, category, price
-- GET /api/tires/brands -- List all 21 brands with models and pricing
+- GET /api/tires/brands -- List all 34 brands with models and pricing
 - GET /api/locations/search?q=los+angeles -- Find cities with free tire shipping
 - GET /api/vehicle/tires?make=Toyota&model=Camry&year=2024 -- Look up tires by vehicle
 - GET /api/markdown?path=/tires/michelin -- Get any page as AI-friendly markdown

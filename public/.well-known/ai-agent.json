@@ -1,6 +1,6 @@
 {
   "name": "Ship.Tires",
-  "description": "Shop & Ship Car, Truck & SUV Tires — Free Delivery. 21 brands, 80+ models, 800+ sizes shipped free to 1,000+ US cities. Find tires near me — shipped free to your door or local installer.",
+  "description": "Shop & Ship Car, Truck & SUV Tires — Free Delivery. 34 curated brands, 800+ models, 307,000+ tires shipped free to 1,000+ US cities. Find tires near me — shipped free to your door or local installer.",
   "url": "https://ship.tires",
   "provider": {
     "name": "Ship.Tires",
@@ -10,9 +10,9 @@
   },
   "capabilities": {
     "products": "tires",
-    "brands": 21,
-    "models": "80+",
-    "sizes": "800+",
+    "brands": 34,
+    "models": "800+",
+    "sizes": "307,000+",
     "categories": [
       "All-Season",
       "Winter/Snow",
@@ -41,9 +41,23 @@
       "Nexen",
       "Nitto",
       "Dunlop",
+      "Nokian",
       "Maxxis",
+      "Radar",
       "Ironman",
-      "Sumitomo"
+      "Sumitomo",
+      "Uniroyal",
+      "Kelly",
+      "Mastercraft",
+      "Federal",
+      "Kenda",
+      "Laufenn",
+      "Milestar",
+      "Sailun",
+      "Westlake",
+      "Mickey Thompson",
+      "Achilles",
+      "Fuzion"
     ],
     "search_by": ["tire_size", "vehicle_year_make_model", "brand", "category", "price_range", "city"],
     "checkout": {
@@ -96,9 +110,15 @@
   "url_patterns": {
     "brand_page": "https://ship.tires/tires/{brand_slug}",
     "model_page": "https://ship.tires/tires/{brand_slug}/{model_slug}",
+    "brand_size_page": "https://ship.tires/tires/{brand_slug}/size/{size_slug}",
+    "size_page": "https://ship.tires/tires/size/{size_slug}",
     "state_page": "https://ship.tires/locations/{state_slug}",
     "city_page": "https://ship.tires/locations/{state_slug}/{city_slug}",
+    "city_size_page": "https://ship.tires/locations/{state_slug}/{city_slug}/size/{size_slug}",
     "city_brand_page": "https://ship.tires/locations/{state_slug}/{city_slug}/{brand_slug}",
-    "city_brand_size_page": "https://ship.tires/locations/{state_slug}/{city_slug}/{brand_slug}/{size_slug}"
+    "city_brand_size_page": "https://ship.tires/locations/{state_slug}/{city_slug}/{brand_slug}/{size_slug}",
+    "vehicle_make_page": "https://ship.tires/tires/vehicle/{make_slug}",
+    "vehicle_model_page": "https://ship.tires/tires/vehicle/{make_slug}/{model_slug}",
+    "installer_page": "https://ship.tires/installers/{zip}"
   }
 }

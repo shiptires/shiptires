@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Ship.Tires API",
-    "description": "Shop & Ship Car, Truck & SUV Tires — Free Delivery. Ship.Tires is a US-based online tire retailer. Search 21 brands, 80+ models, 800+ sizes shipped free to 1,000+ US cities. Use this API to search tires by size, brand, or category, look up tires by vehicle, find delivery locations, and get page content in markdown.",
+    "description": "Shop & Ship Car, Truck & SUV Tires — Free Delivery. Ship.Tires is a US-based online tire retailer. Search 34 brands, 800+ models, 307,000+ tires shipped free to 1,000+ US cities. Use this API to search tires by size, brand, or category, look up tires by vehicle, find delivery locations, and get page content in markdown.",
     "version": "1.0.0",
     "contact": {
       "name": "Ship.Tires",
