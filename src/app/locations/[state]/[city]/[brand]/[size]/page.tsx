@@ -115,7 +115,7 @@ export default async function SizePage({
     modelMap.get(key)!.push(t);
   }
   const modelEntries = Array.from(modelMap.entries()).map(([name, rows]) => ({
-    model: tiresToModel(name, rows),
+    model: tiresToModel(name, rows, brand.name),
     tire: rows[0],
     sizeInfo: tireRowToSize(rows[0]),
   }));

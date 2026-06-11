@@ -89,7 +89,8 @@ function resolveImage(...sources: (string | null | undefined)[]): string | undef
 
 export function tiresToModel(
   modelName: string,
-  tires: TireRow[]
+  tires: TireRow[],
+  brandName?: string
 ): TireModel {
   const sizes = tires.map(tireRowToSize);
   const pricesWithValue = sizes.map((s) => s.price).filter((p) => p > 0);
@@ -117,7 +118,7 @@ export function tiresToModel(
   const image = resolveImage(first.local_thumbnail, first.thumbnail_url, first.image_0100_url);
 
   // Auto-generate description from specs
-  const description = generateDescription(modelName, first, type, sizes.length);
+  const description = generateDescription(modelName, first, type, sizes.length, brandName);
 
   return {
     name: modelName,
@@ -137,12 +138,14 @@ function generateDescription(
   modelName: string,
   tire: TireRow,
   type: TireType,
-  sizeCount: number
+  sizeCount: number,
+  explicitBrand?: string
 ): string {
   const typeLabel = typeLabels[type];
-  const brand = tire.make_name;
+  const brand = explicitBrand || tire.make_name || "";
+  const article = /^[aeiou]/i.test(typeLabel) ? "an" : "a";
   const parts: string[] = [
-    `The ${brand} ${modelName} is a ${typeLabel.toLowerCase()} tire available in ${sizeCount} size${sizeCount !== 1 ? "s" : ""}.`,
+    `The ${brand} ${modelName} is ${article} ${typeLabel.toLowerCase()} tire available in ${sizeCount} size${sizeCount !== 1 ? "s" : ""}.`,
   ];
 
   if (tire.warranty) {

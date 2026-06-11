@@ -41,7 +41,7 @@ export async function generateMetadata({
   const data = await getModelBySlug(brandSlug, modelSlug);
   if (!data) return {};
 
-  const model = tiresToModel(data.model, data.tires);
+  const model = tiresToModel(data.model, data.tires, data.brand);
   const hasPrice = model.priceRange[0] > 0;
 
   return {
@@ -63,7 +63,7 @@ export default async function ModelPage({
 
   if (!data) notFound();
 
-  const model = tiresToModel(data.model, data.tires);
+  const model = tiresToModel(data.model, data.tires, data.brand);
   const brandRow = await getBrandBySlug(brandSlug);
   const brand = brandRow ? brandSummaryToBrand(brandRow) : null;
   const logoUrl = brand?.logoUrl || getLogoUrl(brand?.domain || "");
