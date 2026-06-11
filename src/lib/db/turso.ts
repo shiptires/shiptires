@@ -439,9 +439,13 @@ async function _fetchStats(): Promise<{
 
 export async function getTiresForFeed(
   offset: number,
-  limit: number
+  limit: number,
+  filterBrands?: string[]
 ): Promise<{ tires: TireRow[]; total: number }> {
-  const brands = Array.from(CURATED_BRANDS.keys());
+  // Use specific brands if provided, otherwise all curated brands
+  const brands = filterBrands && filterBrands.length > 0
+    ? filterBrands.map((b) => b.toUpperCase())
+    : Array.from(CURATED_BRANDS.keys());
   const placeholders = brands.map(() => "?").join(", ");
 
   const countResult = await safeExecute({

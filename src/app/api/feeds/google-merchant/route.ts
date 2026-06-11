@@ -8,12 +8,12 @@ export const maxDuration = 60;
  * Google Merchant Center Product Feed — RSS 2.0 with g: namespace.
  *
  * Usage:
- *   GET /api/feeds/google-merchant           — first 10,000 items
- *   GET /api/feeds/google-merchant?page=2    — items 10,001–20,000
- *   GET /api/feeds/google-merchant?limit=500 — custom batch size (max 50,000)
+ *   GET /api/feeds/google-merchant                              — all brands, first 10,000
+ *   GET /api/feeds/google-merchant?brands=goodyear,dunlop       — specific brands only
+ *   GET /api/feeds/google-merchant?page=2                       — next page
+ *   GET /api/feeds/google-merchant?limit=50000                  — larger batch (max 50,000)
  *
- * Register each page URL as a separate primary feed in Merchant Center,
- * or use a single URL with a large limit for smaller catalogs.
+ * Register the URL as a scheduled fetch in Google Merchant Center.
  */
 
 const GOOGLE_CATEGORY =
@@ -143,7 +143,13 @@ export async function GET(req: Request) {
   );
   const offset = (page - 1) * limit;
 
-  const { tires, total } = await getTiresForFeed(offset, limit);
+  // Optional brand filter: ?brands=goodyear,dunlop,radar,falken
+  const brandsParam = searchParams.get("brands");
+  const filterBrands = brandsParam
+    ? brandsParam.split(",").map((b) => b.trim()).filter(Boolean)
+    : undefined;
+
+  const { tires, total } = await getTiresForFeed(offset, limit, filterBrands);
   const totalPages = Math.ceil(total / limit);
 
   const items = tires
