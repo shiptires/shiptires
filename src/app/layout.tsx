@@ -8,6 +8,7 @@ import { getStats } from "@/lib/db";
 import ChatBot from "@/components/ChatBot";
 import CookieConsent from "@/components/CookieConsent";
 import ClientProviders from "@/components/ClientProviders";
+import NewVisitorTracker from "@/components/NewVisitorTracker";
 
 const archivoBlack = Archivo_Black({
   weight: "400",
@@ -249,6 +250,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full flex flex-col font-body">
         <ClientProviders>
+          <NewVisitorTracker />
           <Header brandCount={stats.brandCount} modelCount={stats.modelCount} tireCount={stats.tireCount} />
           <main className="flex-1">{children}</main>
           <Footer />
