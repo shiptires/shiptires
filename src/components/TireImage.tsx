@@ -10,10 +10,11 @@ interface TireImageProps {
   height: number;
   className?: string;
   priority?: boolean;
+  loading?: "lazy" | "eager";
 }
 
 /** Image wrapper that shows a tire placeholder when the source URL fails to load. */
-export default function TireImage({ src, alt, width, height, className, priority }: TireImageProps) {
+export default function TireImage({ src, alt, width, height, className, priority, loading }: TireImageProps) {
   const [failed, setFailed] = useState(false);
 
   if (failed) {
@@ -41,6 +42,7 @@ export default function TireImage({ src, alt, width, height, className, priority
       height={height}
       className={className}
       priority={priority}
+      loading={priority ? undefined : (loading ?? "lazy")}
       onError={() => setFailed(true)}
     />
   );

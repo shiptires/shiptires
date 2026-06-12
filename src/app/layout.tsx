@@ -135,6 +135,31 @@ const jsonLd = {
   },
 };
 
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Ship.Tires",
+  url: "https://ship.tires",
+  potentialAction: [
+    {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: "https://ship.tires/search?q={search_term_string}",
+      },
+      "query-input": "required name=search_term_string",
+    },
+    {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: "https://ship.tires/tires/size/{tire_size}",
+      },
+      "query-input": "required name=tire_size",
+    },
+  ],
+};
+
 const serviceSchema = {
   "@context": "https://schema.org",
   "@type": "Service",
@@ -227,9 +252,18 @@ export default async function RootLayout({
       className={`${archivoBlack.variable} ${sourceSans.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
       <head>
+        <link rel="preconnect" href="https://storage.googleapis.com" />
+        <link rel="preconnect" href="https://new.tirelibrary.com" />
+        <link rel="preconnect" href="https://img.logo.dev" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://tireweb.tirelibrary.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
         <script
           type="application/ld+json"
