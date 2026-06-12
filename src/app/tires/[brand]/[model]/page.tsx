@@ -12,11 +12,13 @@ import {
 } from "@/lib/db";
 import { getLogoUrl } from "@/lib/api-helpers";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
+import { parseUTQG, treadwearLabel } from "@/lib/utqg";
+import { getRankingsForModel } from "@/lib/ranking-helpers";
 import CartSidebar from "@/components/CartSidebar";
 import TireCard from "@/components/TireCard";
 import AddToCartButton from "@/components/AddToCartButton";
 import SizeTable from "@/components/SizeTable";
-import TireImageLightbox from "@/components/TireImageLightbox";
+import TireGallery from "@/components/TireGallery";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -49,7 +51,10 @@ export async function generateMetadata({
     description: hasPrice
       ? `Shop ${data.brand} ${model.name} tires from $${model.priceRange[0]}. ${model.sizes.length} sizes available. Ship free to your door or installer.${model.warranty ? ` ${model.warranty} warranty.` : ""} Fits Honda, Toyota, Ford, BMW & more.`
       : `Shop ${data.brand} ${model.name} tires — ${model.sizes.length} sizes available. Ship free. Request a quote for pricing. Fits Honda, Toyota, Ford, BMW & more.`,
-    alternates: { canonical: `https://ship.tires/tires/${brandSlug}/${modelSlug}` },
+    alternates: {
+      canonical: `https://ship.tires/tires/${brandSlug}/${modelSlug}`,
+      types: { "text/plain": `https://ship.tires/tires/${brandSlug}/${modelSlug}/llm.txt` },
+    },
   };
 }
 
@@ -84,6 +89,28 @@ export default async function ModelPage({
     { name: model.name, url: `https://ship.tires/tires/${brandSlug}/${modelSlug}` },
   ]);
 
+  const canonicalUrl = `https://ship.tires/tires/${brandSlug}/${modelSlug}`;
+
+  // UTQG: find representative data from first size that has it
+  const representativeUtqg = (() => {
+    for (const s of model.sizes) {
+      const parsed = parseUTQG(s.utqg);
+      if (parsed) return parsed;
+    }
+    return null;
+  })();
+
+  // Ranking appearances
+  const rankings = getRankingsForModel(brandSlug, modelSlug);
+
+  const utqgSchemaProps = representativeUtqg
+    ? [
+        { "@type": "PropertyValue", name: "UTQG Treadwear", value: String(representativeUtqg.treadwear) },
+        { "@type": "PropertyValue", name: "UTQG Traction", value: representativeUtqg.traction },
+        { "@type": "PropertyValue", name: "UTQG Temperature", value: representativeUtqg.temperature },
+      ]
+    : [];
+
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -91,7 +118,9 @@ export default async function ModelPage({
     description: model.description,
     image: model.image || logoUrl,
     brand: { "@type": "Brand", name: data.brand },
-    category: `${typeLabels[model.type] || model.type} Tires`,
+    category: "Tires",
+    url: canonicalUrl,
+    ...(utqgSchemaProps.length > 0 && { additionalProperty: utqgSchemaProps }),
     ...(hasPrice && {
       offers: {
         "@type": "AggregateOffer",
@@ -108,6 +137,15 @@ export default async function ModelPage({
     }),
   };
 
+  // Gallery images
+  const gallery = model.images && model.images.length > 0 ? model.images : model.image ? [model.image] : [];
+
+  // Popular sizes: first 6 sorted by load index (common sizes tend to be in mid-range)
+  const popularSizes = [...model.sizes]
+    .filter((s) => s.price > 0)
+    .sort((a, b) => (b.loadIndex || 0) - (a.loadIndex || 0))
+    .slice(0, 6);
+
   return (
     <>
       <script
@@ -119,124 +157,236 @@ export default async function ModelPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
       />
 
-      <div className="bg-gray-50">
-        {/* Breadcrumb & Header */}
-        <div className="bg-navy py-10 text-white">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <Link href="/tires" className="hover:text-white">All Brands</Link>
-              <span>/</span>
-              <Link href={`/tires/${brandSlug}`} className="hover:text-white">{data.brand}</Link>
-              <span>/</span>
-              <span className="text-gray-300">{model.name}</span>
+      <div className="bg-gray-50 min-h-screen">
+        {/* Breadcrumb */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Link href="/tires" className="hover:text-gray-900">All Brands</Link>
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+              <Link href={`/tires/${brandSlug}`} className="hover:text-gray-900">{data.brand}</Link>
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+              <span className="text-gray-900 font-medium">{model.name}</span>
             </div>
-            <div className="mt-4 flex items-start gap-6">
-              {model.image && (
-                <div className="hidden sm:block flex-shrink-0 rounded-xl bg-white p-3">
-                  <TireImageLightbox src={model.image} alt={`${data.brand} ${model.name}`}>
-                    <Image
-                      src={model.image}
-                      alt={`${data.brand} ${model.name}`}
-                      width={200}
-                      height={200}
-                      className="h-40 w-40 object-contain"
-                      priority
-                    />
-                  </TireImageLightbox>
-                </div>
-              )}
+          </div>
+        </div>
+
+        {/* Hero Section — Large Image + Key Info */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+
+              {/* Left: Large Image Gallery */}
               <div>
-                <h1 className="text-3xl font-bold sm:text-4xl">
-                  Shop & Ship {data.brand} {model.name} — Free Delivery
+                <TireGallery images={gallery} alt={`${data.brand} ${model.name}`} />
+              </div>
+
+              {/* Right: Product Info */}
+              <div className="flex flex-col">
+                {/* Brand logo + name */}
+                <div className="flex items-center gap-3 mb-3">
+                  <Image
+                    src={logoUrl}
+                    alt={data.brand}
+                    width={40}
+                    height={40}
+                    className="h-9 w-9 object-contain"
+                  />
+                  <Link href={`/tires/${brandSlug}`} className="text-sm font-semibold text-gray-500 hover:text-safety-orange uppercase tracking-wider">
+                    {data.brand}
+                  </Link>
+                </div>
+
+                {/* Model name */}
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight">
+                  {model.name}
                 </h1>
-                <div className="mt-2 flex flex-wrap items-center gap-3">
-                  <span className="inline-flex items-center rounded-full bg-blue/20 px-3 py-1 text-sm font-medium text-blue-light">
+
+                {/* Ranking badges */}
+                {rankings.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {rankings.map((r) => (
+                      <Link
+                        key={r.categorySlug}
+                        href={`/rankings#${r.categorySlug}`}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-sm font-bold text-amber-700 hover:bg-amber-100 transition-colors"
+                      >
+                        <svg className="h-4 w-4 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-4.52 0" />
+                        </svg>
+                        #{r.rank} {r.category} — {r.score}/10
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
+                {/* Type + Stock */}
+                <div className="mt-4 flex items-center gap-3">
+                  <span className="inline-flex items-center rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-sm font-medium text-blue-700">
                     {typeLabels[model.type] || model.type}
                   </span>
+                  <span className="inline-flex items-center gap-1 text-sm font-medium text-green-600">
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
+                    </svg>
+                    In Stock
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-sm font-medium text-green-600">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                    </svg>
+                    Free Shipping
+                  </span>
+                </div>
+
+                {/* Price */}
+                <div className="mt-5 rounded-xl bg-gray-50 border border-gray-200 p-5">
                   {hasPrice ? (
-                    <span className="text-gray-400">
-                      From <span className="text-xl font-bold text-white">${model.priceRange[0]}</span> — <span className="text-white">${model.priceRange[1]}</span> /tire
-                    </span>
+                    <div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-sm text-gray-500">Starting at</span>
+                        <span className="text-4xl font-bold text-gray-900">${model.priceRange[0]}</span>
+                        <span className="text-lg text-gray-500">/tire</span>
+                      </div>
+                      {model.priceRange[1] > model.priceRange[0] && (
+                        <p className="mt-1 text-sm text-gray-500">Up to ${model.priceRange[1]} depending on size</p>
+                      )}
+                      <p className="mt-1 text-sm font-medium text-green-600">
+                        Set of 4 from ${model.priceRange[0] * 4} — Free shipping included
+                      </p>
+                    </div>
                   ) : (
-                    <span className="text-safety-orange font-bold">Call for Pricing</span>
+                    <div>
+                      <span className="text-2xl font-bold text-safety-orange">Call for Pricing</span>
+                      <p className="mt-1 text-sm text-gray-500">Contact us for the best price on this tire</p>
+                    </div>
                   )}
-                  <span className="text-gray-400">|</span>
-                  <span className="text-gray-400">{model.sizes.length} sizes available</span>
+                </div>
+
+                {/* Quick specs */}
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <div className="rounded-lg bg-white border border-gray-200 p-3.5">
+                    <div className="text-xs text-gray-500 uppercase font-medium">Sizes</div>
+                    <div className="mt-0.5 text-lg font-bold text-gray-900">{model.sizes.length} available</div>
+                  </div>
+                  {model.warranty && (
+                    <div className="rounded-lg bg-white border border-gray-200 p-3.5">
+                      <div className="text-xs text-gray-500 uppercase font-medium">Warranty</div>
+                      <div className="mt-0.5 text-lg font-bold text-gray-900">{model.warranty}</div>
+                    </div>
+                  )}
+                  {representativeUtqg && representativeUtqg.treadwear && (
+                    <div className="rounded-lg bg-white border border-gray-200 p-3.5">
+                      <div className="text-xs text-gray-500 uppercase font-medium">Treadwear</div>
+                      <div className="mt-0.5 text-lg font-bold text-gray-900">
+                        {representativeUtqg.treadwear}
+                        <span className="text-sm font-normal text-gray-500 ml-1">({treadwearLabel(representativeUtqg.treadwear)})</span>
+                      </div>
+                    </div>
+                  )}
+                  {model.speedRatings.length > 0 && (
+                    <div className="rounded-lg bg-white border border-gray-200 p-3.5">
+                      <div className="text-xs text-gray-500 uppercase font-medium">Speed Rating</div>
+                      <div className="mt-0.5 text-lg font-bold text-gray-900">{model.speedRatings.join(", ")}</div>
+                    </div>
+                  )}
+                  {representativeUtqg && representativeUtqg.traction && (
+                    <div className="rounded-lg bg-white border border-gray-200 p-3.5">
+                      <div className="text-xs text-gray-500 uppercase font-medium">Traction</div>
+                      <div className="mt-0.5 text-lg font-bold text-gray-900">Grade {representativeUtqg.traction}</div>
+                    </div>
+                  )}
+                  {representativeUtqg && representativeUtqg.temperature && (
+                    <div className="rounded-lg bg-white border border-gray-200 p-3.5">
+                      <div className="text-xs text-gray-500 uppercase font-medium">Temperature</div>
+                      <div className="mt-0.5 text-lg font-bold text-gray-900">Grade {representativeUtqg.temperature}</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Features */}
+                {model.features.length > 0 && (
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {model.features.map((feature) => (
+                      <span key={feature} className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">
+                        <svg className="h-3.5 w-3.5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                          <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
+                        </svg>
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* CTA buttons */}
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  <a
+                    href="#sizes"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-safety-orange px-6 py-3.5 text-base font-bold text-white hover:bg-safety-orange/90 transition-colors"
+                  >
+                    Select Your Size
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                  </a>
+                  <a
+                    href="tel:+12792388473"
+                    className="flex items-center justify-center gap-2 rounded-xl border-2 border-gray-300 px-6 py-3.5 text-base font-bold text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                  >
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+                    </svg>
+                    Call (279) 238-TIRE
+                  </a>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
-            {/* Main Content */}
+        {/* Popular Sizes Quick-Pick */}
+        {popularSizes.length > 0 && (
+          <div className="bg-white border-b border-gray-200">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">Popular Sizes</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {popularSizes.map((size) => (
+                  <div key={`${size.size}-${size.tireId}`} className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-center hover:border-safety-orange/40 transition-colors">
+                    <div className="font-mono text-sm font-bold text-gray-900">{size.size}</div>
+                    <div className="mt-1 text-lg font-bold text-gray-900">${size.price}</div>
+                    <div className="text-xs text-gray-500">/tire</div>
+                    <div className="mt-2">
+                      <AddToCartButton
+                        brand={data.brand}
+                        brandSlug={brandSlug}
+                        model={model.name}
+                        modelSlug={model.slug}
+                        size={size.size}
+                        price={size.price}
+                        loadIndex={size.loadIndex}
+                        speedRating={size.speedRating}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content */}
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
+            {/* Left: Sizes + Related */}
             <div className="lg:col-span-2 space-y-10">
-              {/* Description */}
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">About This Tire</h2>
-                <p className="mt-3 text-gray-600 leading-relaxed">{model.description}</p>
-              </div>
-
-              {/* Features */}
-              {model.features.length > 0 && (
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Key Features</h2>
-                  <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {model.features.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2">
-                        <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="text-sm text-gray-700">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Specs */}
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Specifications</h2>
-                <dl className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
-                  <div className="rounded-lg bg-white border border-gray-200 p-4">
-                    <dt className="text-xs font-medium text-gray-500 uppercase">Type</dt>
-                    <dd className="mt-1 text-sm font-bold text-gray-900">{typeLabels[model.type]}</dd>
-                  </div>
-                  {model.warranty && (
-                    <div className="rounded-lg bg-white border border-gray-200 p-4">
-                      <dt className="text-xs font-medium text-gray-500 uppercase">Warranty</dt>
-                      <dd className="mt-1 text-sm font-bold text-gray-900">{model.warranty}</dd>
-                    </div>
-                  )}
-                  {model.speedRatings.length > 0 && (
-                    <div className="rounded-lg bg-white border border-gray-200 p-4">
-                      <dt className="text-xs font-medium text-gray-500 uppercase">Speed Ratings</dt>
-                      <dd className="mt-1 text-sm font-bold text-gray-900">{model.speedRatings.join(", ")}</dd>
-                    </div>
-                  )}
-                  <div className="rounded-lg bg-white border border-gray-200 p-4">
-                    <dt className="text-xs font-medium text-gray-500 uppercase">Available Sizes</dt>
-                    <dd className="mt-1 text-sm font-bold text-gray-900">{model.sizes.length}</dd>
-                  </div>
-                  {hasPrice && (
-                    <div className="rounded-lg bg-white border border-gray-200 p-4">
-                      <dt className="text-xs font-medium text-gray-500 uppercase">Price Range</dt>
-                      <dd className="mt-1 text-sm font-bold text-gray-900">${model.priceRange[0]} – ${model.priceRange[1]}</dd>
-                    </div>
-                  )}
-                  <div className="rounded-lg bg-white border border-gray-200 p-4">
-                    <dt className="text-xs font-medium text-gray-500 uppercase">Brand</dt>
-                    <dd className="mt-1 text-sm font-bold text-gray-900">{data.brand}</dd>
-                  </div>
-                </dl>
-              </div>
-
-              {/* Available Sizes — Grouped by Wheel Size */}
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  Available Sizes ({model.sizes.length})
+              {/* All Sizes */}
+              <div id="sizes">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  All Sizes ({model.sizes.length})
                 </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Select your size below. Every tire ships free.
+                </p>
                 <div className="mt-4">
                   <SizeTable
                     sizes={model.sizes}
@@ -249,13 +399,21 @@ export default async function ModelPage({
                 </div>
               </div>
 
+              {/* About */}
+              {model.description && (
+                <div className="rounded-xl bg-white border border-gray-200 p-6">
+                  <h2 className="text-lg font-bold text-gray-900">About the {data.brand} {model.name}</h2>
+                  <p className="mt-2 text-gray-600 leading-relaxed">{model.description}</p>
+                </div>
+              )}
+
               {/* Related from same brand */}
               {relatedModels.length > 0 && (
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">
-                    More from {data.brand}
+                    More {data.brand} Tires
                   </h2>
-                  <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div className="mt-4 space-y-3">
                     {relatedModels.map((rm) => (
                       <TireCard
                         key={rm.slug}
@@ -270,7 +428,7 @@ export default async function ModelPage({
               )}
             </div>
 
-            {/* Sidebar — Live Cart */}
+            {/* Sidebar — Cart */}
             <div className="lg:col-span-1">
               <CartSidebar brand={data.brand} model={model.name} />
             </div>

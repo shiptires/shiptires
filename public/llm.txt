@@ -14,11 +14,19 @@ Ship.Tires is a US-based online tire retailer where you can shop & ship car, tru
 
 ## Brands (34)
 
-Michelin, Goodyear, Bridgestone, Continental, Pirelli, Hankook, Cooper, Firestone, BFGoodrich, Yokohama, Toyo, Falken, General Tire, Kumho, Nexen, Nitto, Dunlop, Nokian, Maxxis, Radar, Ironman, Sumitomo, Uniroyal, Kelly, Mastercraft, Federal, Kenda, Laufenn, Milestar, Sailun, Westlake, Mickey Thompson, Achilles, Fuzion
+Advanta, BFGoodrich, Bridgestone, Continental, Cooper, Dunlop, Falken, Firestone, General Tire, Goodyear, Hankook, Hoosier, Kenda, Kumho, Laufenn, Maxxis, Michelin, Mickey Thompson, Nankang, Nexen, Nitto, Nokian, Pirelli, Power King, Radar, Range Finder, Riken, Sumitomo, Toyo, Uniroyal, Vitour, Vogue, Vredestein, Yokohama
 
 ## Tire Categories
 
 All-Season, Winter/Snow, Performance, All-Terrain, Mud-Terrain, Touring, Highway, Truck & SUV
+
+## Content & Resources
+
+- Blog: https://ship.tires/blog — Tire guides, tips, and how-to articles
+- Racing: https://ship.tires/racing — Motorsport coverage (F1, NASCAR, Le Mans, IndyCar)
+- Racing Tech: https://ship.tires/racing-tech — Technical articles on racing tire technology
+- Rankings: https://ship.tires/rankings — Tire brand and model performance rankings
+- Installers: https://ship.tires/installers — Find tire installers by state, city, and zip code
 
 ## Key Services
 
@@ -44,8 +52,22 @@ All-Season, Winter/Snow, Performance, All-Terrain, Mud-Terrain, Touring, Highway
 - City+Brand+Size pages: https://ship.tires/locations/{state}/{city}/{brand}/{size}
 - Vehicle pages: https://ship.tires/tires/vehicle/{make}
 - Vehicle model pages: https://ship.tires/tires/vehicle/{make}/{model}
-- Installer finder: https://ship.tires/installers/{zip}
+- Vehicle year pages: https://ship.tires/tires/vehicle/{make}/{model}/{year}
+- City+Vehicle pages: https://ship.tires/locations/{state}/{city}/vehicle/{make}/{model}
+- Installer finder: https://ship.tires/installers/{state}/{city}/{zip}
+- Installer state page: https://ship.tires/installers/{state}
+- Installer city page: https://ship.tires/installers/{state}/{city}
 - Returns policy: https://ship.tires/returns
+
+## Per-Entity LLM Files
+
+- Brand: https://ship.tires/tires/{brand}/llm.txt
+- Model: https://ship.tires/tires/{brand}/{model}/llm.txt
+- Size: https://ship.tires/tires/size/{size}/llm.txt
+- Vehicle make: https://ship.tires/tires/vehicle/{make}/llm.txt
+- Vehicle model: https://ship.tires/tires/vehicle/{make}/{model}/llm.txt
+- Location: https://ship.tires/locations/{state}/{city}/llm.txt
+- Installer: https://ship.tires/installers/{state_abbr}/{city}/{zip}/llm.txt
 
 ## Markdown Endpoints
 
@@ -64,4 +86,4 @@ Append .md to any page URL for AI-friendly markdown content.
 
 ## Full details
 
-See https://ship.tires/llm-full.txt for complete inventory with all brands, models, sizes, and pricing.
+See https://ship.tires/llms-full.txt for complete inventory with all brands, models, sizes, and pricing.

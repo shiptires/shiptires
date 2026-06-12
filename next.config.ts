@@ -2,13 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["better-sqlite3", "zipcodes"],
-  staticPageGenerationTimeout: 180,
+  staticPageGenerationTimeout: 600,
   async redirects() {
     return [
       { source: "/llm", destination: "/llm.txt", permanent: true },
       { source: "/llms", destination: "/llms.txt", permanent: true },
       { source: "/llm-full", destination: "/llm-full.txt", permanent: true },
-      { source: "/llms-full", destination: "/llm-full.txt", permanent: true },
+      { source: "/llms-full", destination: "/llms-full.txt", permanent: true },
     ];
   },
   async headers() {
@@ -25,6 +25,27 @@ const nextConfig: NextConfig = {
         source: "/brand-logos/:path*",
         headers: [
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
+        source: "/:path*.txt",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=3600, stale-while-revalidate=86400" },
+          { key: "Content-Type", value: "text/plain; charset=utf-8" },
+        ],
+      },
+      {
+        source: "/.well-known/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=3600, stale-while-revalidate=86400" },
+          { key: "Access-Control-Allow-Origin", value: "*" },
+        ],
+      },
+      {
+        source: "/openapi.json",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=3600, stale-while-revalidate=86400" },
+          { key: "Access-Control-Allow-Origin", value: "*" },
         ],
       },
     ];
@@ -50,6 +71,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "tireweb.tirelibrary.com",
+      },
+      {
+        protocol: "https",
+        hostname: "www.r2cthemes.com",
       },
     ],
   },

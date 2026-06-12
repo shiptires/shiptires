@@ -22,6 +22,7 @@ const topBrands = [
 const companyLinks = [
   { name: "About Us", href: "/about" },
   { name: "Shipping Info", href: "/shipping" },
+  { name: "Returns & Refunds", href: "/returns" },
   { name: "Find Installers", href: "/installers" },
   { name: "Vehicle Lookup", href: "/vehicle-lookup" },
   { name: "Blog", href: "/blog" },
@@ -49,7 +50,7 @@ export default function Footer() {
               />
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-white/60">
-              Tires shipped free nationwide. 120+ brands delivered
+              Tires shipped free nationwide. 34 curated brands delivered
               to your door or local installer.
             </p>
             <div className="mt-4 flex items-center gap-2 text-sm font-mono text-kraft">

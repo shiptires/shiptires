@@ -26,7 +26,17 @@ export async function generateMetadata({
   return {
     title: `Shop ${makeName} Tires — Find Tires for Your ${makeName} | Ship Free`,
     description: `Find the right tires for your ${makeName}. Browse all ${makeName} models, compare tire sizes and brands. Free shipping on every order. Shop ${makeName} tires and ship free at Ship.Tires.`,
-    alternates: { canonical: `https://ship.tires/tires/vehicle/${make}` },
+    alternates: {
+      canonical: `https://ship.tires/tires/vehicle/${make}`,
+      types: { "text/plain": `https://ship.tires/tires/vehicle/${make}/llm.txt` },
+    },
+    openGraph: {
+      title: `Shop ${makeName} Tires — Ship Free | Ship.Tires`,
+      description: `Find tires for all ${makeName} models. Compare sizes, brands, and prices. Free shipping on every order.`,
+      url: `https://ship.tires/tires/vehicle/${make}`,
+      type: "website",
+      siteName: "Ship.Tires",
+    },
   };
 }
 
@@ -66,6 +76,19 @@ export default async function VehicleMakePage({
     url: `https://ship.tires/tires/vehicle/${make}`,
   };
 
+  const faqSchema = content?.faqs && content.faqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: content.faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.a,
+      },
+    })),
+  } : null;
+
   return (
     <>
       <script
@@ -76,6 +99,12 @@ export default async function VehicleMakePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
       />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
 
       <div className="bg-gray-50 min-h-screen">
         {/* Hero */}
@@ -222,59 +251,81 @@ export default async function VehicleMakePage({
             </div>
           )}
 
-          {/* Featured Tires for this make */}
-          {sampleTires.length > 0 && (
-            <div className="mt-12">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Popular {makeName} Tires
-              </h2>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                {sampleTires.slice(0, 8).map((tire) => {
-                  const brandSlug = tire.make_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-                  const modelSlug = tire.model_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-                  const imgSrc = tire.thumbnail_url ?? tire.image_0100_url;
-                  return (
-                    <Link
-                      key={tire.id}
-                      href={`/tires/${brandSlug}/${modelSlug}`}
-                      className="group rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md hover:border-safety-orange transition-all"
-                    >
-                      <div className="aspect-square bg-gray-50 rounded-lg flex items-center justify-center overflow-hidden mb-3">
-                        {imgSrc ? (
-                          <Image
-                            src={imgSrc}
-                            alt={tire.name}
-                            width={160}
-                            height={160}
-                            className="object-contain max-h-full"
+          {/* Featured Tires for this make — grouped by brand+model, deduped */}
+          {(() => {
+            // Group sample tires by brand+model and pick the best representative
+            const modelMap = new Map<string, typeof sampleTires[0]>();
+            const priorityBrands = ["MICHELIN", "GOODYEAR", "BRIDGESTONE", "CONTINENTAL", "PIRELLI", "COOPER", "HANKOOK", "YOKOHAMA", "FALKEN", "FIRESTONE"];
+            for (const tire of sampleTires) {
+              const key = `${tire.make_name}|${tire.model_name}`;
+              if (!modelMap.has(key)) {
+                // Skip commercial/specialty tires
+                const name = tire.model_name.toLowerCase();
+                if (name.includes("retread") || name.includes("pre-mold") || name.includes("vintage") || name.includes("skid steer")) continue;
+                modelMap.set(key, tire);
+              }
+            }
+            // Sort by brand priority
+            const uniqueModels = [...modelMap.values()].sort((a, b) => {
+              const aIdx = priorityBrands.indexOf(a.make_name.toUpperCase());
+              const bIdx = priorityBrands.indexOf(b.make_name.toUpperCase());
+              return (aIdx === -1 ? 999 : aIdx) - (bIdx === -1 ? 999 : bIdx);
+            });
+
+            return uniqueModels.length > 0 ? (
+              <div className="mt-12">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  Popular {makeName} Tires
+                </h2>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                  {uniqueModels.slice(0, 8).map((tire) => {
+                    const brandSlug = tire.make_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+                    const modelSlug = tire.model_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+                    const imgSrc = tire.thumbnail_url ?? tire.image_0100_url;
+                    return (
+                      <Link
+                        key={`${brandSlug}-${modelSlug}`}
+                        href={`/tires/${brandSlug}/${modelSlug}`}
+                        className="group rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md hover:border-safety-orange transition-all"
+                      >
+                        <div className="aspect-square bg-gray-50 rounded-lg flex items-center justify-center overflow-hidden mb-3">
+                          {imgSrc ? (
+                            <Image
+                              src={imgSrc}
+                              alt={`${tire.make_name} ${tire.model_name}`}
+                              width={160}
+                              height={160}
+                              className="object-contain max-h-full group-hover:scale-105 transition-transform"
                             />
-                        ) : (
-                          <svg className="w-12 h-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <circle cx="12" cy="12" r="10" strokeWidth="1.5" />
-                            <circle cx="12" cy="12" r="3" strokeWidth="1.5" />
-                          </svg>
+                          ) : (
+                            <svg className="w-12 h-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <circle cx="12" cy="12" r="10" strokeWidth="1.5" />
+                              <circle cx="12" cy="12" r="3" strokeWidth="1.5" />
+                            </svg>
+                          )}
+                        </div>
+                        <p className="text-xs font-bold uppercase text-gray-500">{tire.make_name}</p>
+                        <h3 className="text-sm font-bold text-gray-900 group-hover:text-safety-orange transition-colors truncate">
+                          {tire.model_name}
+                        </h3>
+                        {tire.price_map && tire.price_map > 0 && (
+                          <div className="mt-1">
+                            <span className="text-base font-bold text-gray-900">${tire.price_map}</span>
+                            <span className="text-xs text-gray-500">/tire</span>
+                          </div>
                         )}
-                      </div>
-                      <p className="text-xs font-bold uppercase text-gray-500">{tire.make_name}</p>
-                      <h3 className="text-sm font-bold text-gray-900 group-hover:text-safety-orange transition-colors truncate">
-                        {tire.model_name}
-                      </h3>
-                      {tire.width && tire.aspect_ratio && tire.rim_size && (
-                        <p className="text-xs font-mono text-gray-500 mt-1">
-                          {tire.width}/{tire.aspect_ratio}R{tire.rim_size}
-                        </p>
-                      )}
-                      {tire.season && (
-                        <span className="mt-1 inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
-                          {tire.season}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
+                        {tire.season && (
+                          <span className="mt-1 inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                            {tire.season}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            ) : null;
+          })()}
 
           {/* FAQ Section */}
           {content?.faqs && content.faqs.length > 0 && (

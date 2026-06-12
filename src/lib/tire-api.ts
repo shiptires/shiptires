@@ -8,6 +8,7 @@
 
 import type { BrandSummaryRow, ModelSummaryRow, TireRow } from "./db/types";
 import { isCuratedBrand, getBrandLogo } from "./curated-brands";
+import { brands as staticBrands } from "@/data/brands";
 
 const API_BASE = "https://app.tireweblibrary.com/api/v1";
 
@@ -238,13 +239,23 @@ export async function apiGetAllBrands(): Promise<BrandSummaryRow[]> {
 
   return makes
     .filter((m) => isCuratedBrand(m.name))
-    .map((m) => ({
-      make_name: m.name,
-      make_image_url: getBrandLogo(m.name) || m.image_url,
-      local_logo: getBrandLogo(m.name),
-      tire_count: m.tire_count ?? 0,
-      model_count: m.model_count ?? 0,
-    }));
+    .map((m) => {
+      // API doesn't return tire_count/model_count — use static brand data as fallback
+      const staticBrand = staticBrands.find(
+        (b) => b.name.toUpperCase() === m.name.toUpperCase()
+      );
+      const staticModelCount = staticBrand?.models.length ?? 0;
+      const staticTireCount = staticBrand
+        ? staticBrand.models.reduce((acc, md) => acc + md.sizes.length, 0)
+        : 0;
+      return {
+        make_name: m.name,
+        make_image_url: getBrandLogo(m.name) || m.image_url,
+        local_logo: getBrandLogo(m.name),
+        tire_count: m.tire_count || staticTireCount,
+        model_count: m.model_count || staticModelCount,
+      };
+    });
 }
 
 export async function apiGetModelsByBrand(brandName: string): Promise<ModelSummaryRow[]> {

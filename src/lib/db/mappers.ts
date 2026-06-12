@@ -69,6 +69,30 @@ export function tireRowToSize(row: TireRow): TireSize {
   };
 }
 
+/** Collect all unique image URLs for a model from a representative tire row. */
+function collectModelImages(row: TireRow): string[] {
+  const candidates = [
+    resolveImage(row.local_thumbnail, row.thumbnail_url),
+    resolveImage(row.local_angle, row.angle_image_url),
+    resolveImage(row.local_front, row.front_image_url),
+    resolveImage(row.local_side, row.side_image_url),
+    resolveImage(row.local_side2, row.side2_image_url),
+    resolveImage(null, row.image_0100_url),
+    resolveImage(null, row.image_0200_url),
+    resolveImage(null, row.image_0301_url),
+    resolveImage(null, row.image_0302_url),
+  ];
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const url of candidates) {
+    if (url && !seen.has(url)) {
+      seen.add(url);
+      result.push(url);
+    }
+  }
+  return result;
+}
+
 /** Prefer local path → remote URL → undefined. Local paths become /images/... URLs. */
 function resolveImage(...sources: (string | null | undefined)[]): string | undefined {
   for (const src of sources) {
@@ -115,7 +139,13 @@ export function tiresToModel(
   const typeLabel = typeLabels[type];
   if (typeLabel) features.push(`${typeLabel} Tire`);
 
-  const image = resolveImage(first.local_thumbnail, first.thumbnail_url, first.image_0100_url);
+  // Find the best tire row for images — prefer one that actually has image URLs
+  const imageRow = tires.find((t) => t.thumbnail_url || t.image_0100_url || t.local_thumbnail) ?? first;
+
+  const image = resolveImage(imageRow.local_thumbnail, imageRow.thumbnail_url, imageRow.image_0100_url);
+
+  // Collect all unique images from the image-bearing tire (all angles are per-model, not per-size)
+  const images = collectModelImages(imageRow);
 
   // Auto-generate description from specs
   const description = generateDescription(modelName, first, type, sizes.length, brandName);
@@ -131,6 +161,7 @@ export function tiresToModel(
     priceRange: [minPrice, maxPrice],
     description,
     image,
+    images: images.length > 0 ? images : undefined,
   };
 }
 

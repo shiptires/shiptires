@@ -25,6 +25,7 @@ export interface TireModel {
   priceRange: [number, number]; // [min, max]
   description: string;
   image?: string;
+  images?: string[]; // all available angles: thumbnail, angle, front, side, etc.
 }
 
 export interface Brand {

@@ -36,9 +36,10 @@ export async function POST(req: Request) {
       ? JSON.parse(session.metadata.shipping_address)
       : null;
 
-    // Store order in Supabase
+    // Store order in Supabase (unified tire_orders table)
+    const authUserId = session.metadata?.auth_user_id || null;
     try {
-      await getSupabase().from("orders").insert({
+      await getSupabase().from("tire_orders").insert({
         stripe_session_id: session.id,
         customer_name: session.metadata?.customer_name || "",
         customer_email: session.customer_email || "",
@@ -47,6 +48,7 @@ export async function POST(req: Request) {
         items,
         total: (session.amount_total || 0) / 100,
         status: "paid",
+        auth_user_id: authUserId || null,
       });
     } catch {
       // Log but don't fail the webhook

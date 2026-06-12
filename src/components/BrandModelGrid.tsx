@@ -43,27 +43,31 @@ export default function BrandModelGrid({
     <div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-bold text-gray-900">
-          Shop All {brandName} Models ({filtered.length}) — Ship Free
+          All {brandName} Tires ({filtered.length})
         </h2>
         {/* Search input */}
-        <input
-          type="text"
-          placeholder={`Search ${brandName} models...`}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue focus:outline-none sm:w-64"
-        />
+        <div className="relative sm:w-72">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+          <input
+            type="text"
+            placeholder={`Search ${brandName} models...`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 pl-10 pr-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-safety-orange focus:outline-none focus:ring-1 focus:ring-safety-orange/30"
+          />
+        </div>
       </div>
 
       {/* Type filter tabs */}
       {types.length > 1 && (
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium uppercase text-gray-500 mr-1">Type:</span>
           <button
             onClick={() => setActiveType(null)}
-            className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               !activeType
-                ? "bg-navy text-white"
+                ? "bg-gray-900 text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
@@ -75,9 +79,9 @@ export default function BrandModelGrid({
               <button
                 key={type}
                 onClick={() => setActiveType(activeType === type ? null : type)}
-                className={`rounded-full px-3 py-1 text-xs font-bold transition-colors ${
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                   activeType === type
-                    ? "bg-navy text-white"
+                    ? "bg-gray-900 text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
@@ -88,7 +92,8 @@ export default function BrandModelGrid({
         </div>
       )}
 
-      <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Horizontal card list */}
+      <div className="mt-6 space-y-4">
         {filtered.map((model) => (
           <TireCard
             key={model.slug}
@@ -101,8 +106,8 @@ export default function BrandModelGrid({
       </div>
 
       {filtered.length === 0 && (
-        <div className="mt-8 text-center text-gray-500">
-          No models match your filter. Try a different type or search term.
+        <div className="mt-8 rounded-xl border-2 border-dashed border-gray-300 p-12 text-center">
+          <p className="text-gray-500">No models match your filter. Try a different type or search term.</p>
         </div>
       )}
     </div>

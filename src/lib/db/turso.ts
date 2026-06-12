@@ -15,7 +15,8 @@ import {
   apiSearchTires,
   apiGetDistinctSizesForBrand,
 } from "../tire-api";
-import { isCuratedBrand, CURATED_BRANDS } from "../curated-brands";
+import { isCuratedBrand, CURATED_BRANDS, getBrandLogo } from "../curated-brands";
+import { brands as staticBrands } from "@/data/brands";
 
 let _client: Client | null = null;
 
@@ -95,8 +96,22 @@ async function _fetchAllBrands(): Promise<BrandSummaryRow[]> {
 
   // DB empty/failed — fall back to API
   const apiRows = await apiGetAllBrands();
-  _allBrandsCache = { data: apiRows, ts: Date.now() };
-  return apiRows;
+  if (apiRows.length > 0) {
+    _allBrandsCache = { data: apiRows, ts: Date.now() };
+    return apiRows;
+  }
+
+  // API also failed — use static brand data as last resort
+  console.log("[turso] Both DB and API failed — using static brand data");
+  const staticRows: BrandSummaryRow[] = staticBrands.map((b) => ({
+    make_name: b.name.toUpperCase(),
+    make_image_url: getBrandLogo(b.name.toUpperCase()) || "",
+    local_logo: getBrandLogo(b.name.toUpperCase()) || "",
+    tire_count: b.models.reduce((acc, m) => acc + m.sizes.length, 0),
+    model_count: b.models.length,
+  }));
+  _allBrandsCache = { data: staticRows, ts: Date.now() };
+  return staticRows;
 }
 
 export async function getBrandBySlug(slug: string): Promise<BrandSummaryRow | null> {
@@ -153,7 +168,26 @@ export async function getModelsByBrand(slug: string): Promise<ModelSummaryRow[]>
   if (rows.length > 0) return rows;
 
   // DB empty — fall back to API
-  return apiGetModelsByBrand(brandName);
+  const apiRows = await apiGetModelsByBrand(brandName);
+  if (apiRows.length > 0) return apiRows;
+
+  // Both failed — use static brand data
+  const staticBrand = staticBrands.find(
+    (b) => b.name.toUpperCase() === brandName!.toUpperCase()
+  );
+  if (staticBrand) {
+    return staticBrand.models.map((m) => ({
+      model_name: m.name,
+      tire_count: m.sizes.length,
+      min_price: m.priceRange?.[0] ?? null,
+      max_price: m.priceRange?.[1] ?? null,
+      season: m.type === "all-season" ? "All-Season" : m.type === "winter" ? "Winter" : m.type === "performance" ? "Summer" : null,
+      terrain: null,
+      category: m.type,
+      thumbnail_url: null,
+    })) as ModelSummaryRow[];
+  }
+  return [];
 }
 
 export async function getModelBySlug(
@@ -379,6 +413,58 @@ export async function getTopBrandsForType(type: string): Promise<BrandSummaryRow
 }
 
 // ---------------------------------------------------------------------------
+// Showcase models per tire type (for homepage category section)
+// ---------------------------------------------------------------------------
+
+export interface ShowcaseModel {
+  make_name: string;
+  model_name: string;
+  min_price: number;
+  max_price: number;
+  tire_count: number;
+  thumbnail_url: string | null;
+  make_image_url: string | null;
+}
+
+export async function getShowcaseModelsForType(type: string, limit = 2): Promise<ShowcaseModel[]> {
+  const db = getDb();
+
+  let condition = "";
+  switch (type) {
+    case "all-season": condition = "season IN ('All-Season', 'All-Weather')"; break;
+    case "winter": condition = "season = 'Winter'"; break;
+    case "summer": condition = "season = 'Summer'"; break;
+    case "performance": condition = "(category LIKE '%performance%' OR category LIKE '%uhp%')"; break;
+    case "all-terrain": condition = "terrain = 'All-Terrain (A/T)'"; break;
+    case "mud-terrain": condition = "terrain = 'Mud-Terrain (M/T)'"; break;
+    case "highway": condition = "terrain = 'Highway Terrain (H/T)'"; break;
+    case "touring": condition = "category LIKE '%touring%'"; break;
+    default: return [];
+  }
+
+  const result = await safeExecute(
+    `SELECT
+      make_name,
+      model_name,
+      MIN(price_map) as min_price,
+      MAX(price_map) as max_price,
+      COUNT(*) as tire_count,
+      MAX(thumbnail_url) as thumbnail_url,
+      MAX(make_image_url) as make_image_url
+    FROM tires
+    WHERE ${condition}
+      AND price_map > 0
+      AND thumbnail_url IS NOT NULL
+      AND model_name NOT LIKE '%Retread%'
+      AND model_name NOT LIKE '%Pre-Mold%'
+    GROUP BY make_name, model_name
+    ORDER BY tire_count DESC
+    LIMIT ${limit}`
+  );
+  return result.rows as unknown as ShowcaseModel[];
+}
+
+// ---------------------------------------------------------------------------
 // Stats
 // ---------------------------------------------------------------------------
 
@@ -429,8 +515,15 @@ async function _fetchStats(): Promise<{
 
   // DB empty — fall back to API
   const apiStats = await apiGetStats();
-  _statsCache = { data: apiStats, ts: Date.now() };
-  return apiStats;
+  if (apiStats.brandCount > 0) {
+    _statsCache = { data: apiStats, ts: Date.now() };
+    return apiStats;
+  }
+
+  // Both failed — use static data
+  const fallback = { brandCount: 34, modelCount: 800, tireCount: 307000 };
+  _statsCache = { data: fallback, ts: Date.now() };
+  return fallback;
 }
 
 // ---------------------------------------------------------------------------

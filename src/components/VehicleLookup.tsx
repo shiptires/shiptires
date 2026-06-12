@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { yearRange } from "@/lib/api-helpers";
 
 interface Make {
@@ -13,6 +14,10 @@ interface Model {
   Model_Name: string;
 }
 
+function toSlug(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[]) => void }) {
   const [year, setYear] = useState("");
   const [make, setMake] = useState("");
@@ -22,10 +27,21 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
   const [tireSizes, setTireSizes] = useState<string[]>([]);
   const [loading, setLoading] = useState<"makes" | "models" | "tires" | null>(null);
   const [error, setError] = useState("");
+  const initialized = useRef(false);
+
+  // Pre-populate from URL query params on mount
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+    const params = new URLSearchParams(window.location.search);
+    const qYear = params.get("year");
+    const qMake = params.get("make");
+    if (qYear) setYear(qYear);
+    if (qMake) setMake(qMake);
+  }, []);
 
   useEffect(() => {
     if (!year) return;
-    setMake("");
     setModel("");
     setModels([]);
     setTireSizes([]);
@@ -80,6 +96,9 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
       .finally(() => setLoading(null));
   }, [year, make, model, onResult]);
 
+  const makeSlug = make ? toSlug(make) : "";
+  const modelSlug = model ? toSlug(model) : "";
+
   return (
     <div className="space-y-3">
       {/* Year */}
@@ -90,7 +109,7 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
         <select
           id="v-year"
           value={year}
-          onChange={(e) => setYear(e.target.value)}
+          onChange={(e) => { setYear(e.target.value); setMake(""); }}
           className="w-full rounded-md border border-ink-grey/20 px-4 py-2.5 text-sm focus:border-safety-orange focus:ring-2 focus:ring-safety-orange/20 focus:outline-none bg-white text-rubber"
         >
           <option value="">Select Year</option>
@@ -118,6 +137,19 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
           ))}
         </select>
       </div>
+
+      {/* Link to rich make page */}
+      {make && !model && (
+        <Link
+          href={`/tires/vehicle/${makeSlug}`}
+          className="flex items-center gap-2 rounded-md bg-navy/5 border border-navy/10 px-4 py-2.5 text-sm font-semibold text-navy hover:bg-navy/10 transition-colors"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          </svg>
+          View all {make} tires, models & sizes
+        </Link>
+      )}
 
       {/* Model */}
       <div>
@@ -171,6 +203,16 @@ export default function VehicleLookup({ onResult }: { onResult?: (sizes: string[
               </a>
             ))}
           </div>
+          {/* Link to vehicle-specific page */}
+          <Link
+            href={year ? `/tires/vehicle/${makeSlug}/${modelSlug}/${year}` : `/tires/vehicle/${makeSlug}/${modelSlug}`}
+            className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-safety-orange hover:underline"
+          >
+            Shop all {make} {model} tires
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
+          </Link>
         </div>
       )}
 

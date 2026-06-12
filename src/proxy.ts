@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createProxyClient } from "@/lib/supabase/proxy";
 
 async function isValidAdminSession(cookieValue: string): Promise<boolean> {
   const secret = process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_PASSWORD || "";
@@ -56,7 +57,23 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  // Supabase session refresh — keeps auth tokens fresh on every page request
+  const response = NextResponse.next({ request });
+  const supabase = createProxyClient(request, response);
+  await supabase.auth.getUser();
+
+  // Protect /account routes — redirect unauthenticated users to /login
+  if (pathname.startsWith("/account")) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/login";
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  return response;
 }
 
 export const config = {

@@ -1,16 +1,10 @@
 /**
- * Database provider — Turso (libSQL) for Vercel deployment.
+ * Database provider — always uses Turso.
  *
- * Set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN in environment.
- * For local development with SQLite, set USE_LOCAL_SQLITE=1 and
- * TIRE_DB_PATH to use the local sqlite driver instead.
+ * Local SQLite was attempted but Turbopack doesn't handle dynamic require()
+ * correctly, causing build failures on Vercel. Since Turso is on a paid tier,
+ * it's fast and reliable for both builds and runtime.
  */
-
-const useTurso = !process.env.USE_LOCAL_SQLITE;
-
-// Dynamically choose the driver. Both export the same function signatures.
-// Turso functions are async; SQLite functions are sync.
-// All callers should await the results regardless.
 
 export {
   getAllBrands,
@@ -25,6 +19,7 @@ export {
   searchTires,
   getStats,
   getTopBrandsForType,
+  getShowcaseModelsForType,
   getTiresForFeed,
   toSlug,
   getBrandSlugMap,

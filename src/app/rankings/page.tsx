@@ -6,9 +6,17 @@ export const metadata: Metadata = {
   title:
     "Tire Performance Index — Racing-Informed Tire Rankings | Ship.Tires",
   description:
-    "Data-driven tire rankings informed by racing technology. Find the best tires for wet weather, track days, off-road, and touring.",
+    "Data-driven tire rankings informed by racing technology. Find the best tires for wet weather, track days, off-road, touring, winter, EV, truck, and budget tires.",
   alternates: { canonical: "https://ship.tires/rankings" },
 };
+
+/* ---------- slug helper ---------- */
+function slug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
 
 /* ---------- category icons ---------- */
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -30,6 +38,26 @@ const categoryIcons: Record<string, React.ReactNode> = {
   "best-touring-long-distance": (
     <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+    </svg>
+  ),
+  "best-winter-tires": (
+    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m0 13.5V21m-6.364-2.636l1.591-1.591m9.546 0l1.591 1.591M3 12h2.25m13.5 0H21m-14.636-6.364l1.591 1.591m9.546 0l-1.591-1.591M12 8.25a3.75 3.75 0 100 7.5 3.75 3.75 0 000-7.5z" />
+    </svg>
+  ),
+  "best-ev-tires": (
+    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 10.5h.375c.621 0 1.125.504 1.125 1.125v2.25c0 .621-.504 1.125-1.125 1.125H21M3.75 18h15A2.25 2.25 0 0021 15.75v-6a2.25 2.25 0 00-2.25-2.25h-15A2.25 2.25 0 001.5 9.75v6A2.25 2.25 0 003.75 18z" />
+    </svg>
+  ),
+  "best-truck-tires": (
+    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+    </svg>
+  ),
+  "best-budget-tires": (
+    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   ),
 };
@@ -66,9 +94,37 @@ function scoreWidth(score: number): string {
   return `${(score / 10) * 100}%`;
 }
 
+/* ---------- dynamic stats ---------- */
+const totalCategories = tireRankings.length;
+const totalTires = tireRankings.reduce((sum, cat) => sum + cat.tires.length, 0);
+
+/* ---------- ItemList schemas ---------- */
+const itemListSchemas = tireRankings.map((cat) => ({
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: cat.category,
+  description: cat.description,
+  numberOfItems: cat.tires.length,
+  itemListElement: cat.tires.map((tire) => ({
+    "@type": "ListItem",
+    position: tire.rank,
+    name: `${tire.brand} ${tire.model}`,
+    url: `https://ship.tires/tires/${slug(tire.brand)}/${slug(tire.model)}`,
+  })),
+}));
+
 export default function RankingsPage() {
   return (
     <div className="bg-gray-50">
+      {/* ItemList JSON-LD per category */}
+      {itemListSchemas.map((schema) => (
+        <script
+          key={schema.name}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
+
       {/* ============================== HERO ============================== */}
       <section className="relative bg-navy text-white overflow-hidden">
         {/* subtle decorative gradient */}
@@ -133,10 +189,10 @@ export default function RankingsPage() {
           {/* floating stat cards */}
           <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
-              { label: "Categories Ranked", value: "4" },
-              { label: "Tires Evaluated", value: "20" },
-              { label: "Data Points", value: "100+" },
-              { label: "Racing Series Referenced", value: "8+" },
+              { label: "Categories Ranked", value: String(totalCategories) },
+              { label: "Tires Evaluated", value: String(totalTires) },
+              { label: "Data Points", value: `${totalTires * 5}+` },
+              { label: "Racing Series Referenced", value: "10+" },
             ].map((stat) => (
               <div
                 key={stat.label}
@@ -197,8 +253,9 @@ export default function RankingsPage() {
             {/* ranking cards */}
             <div className="mt-8 space-y-3">
               {category.tires.map((tire) => (
-                <div
+                <Link
                   key={`${category.slug}-${tire.rank}`}
+                  href={`/tires/${slug(tire.brand)}/${slug(tire.model)}`}
                   className={`flex items-center gap-4 rounded-xl border p-4 shadow-sm transition-all hover:shadow-md sm:p-5 ${
                     tire.rank === 1
                       ? "border-amber-300 bg-amber-50/40 ring-1 ring-amber-200/60"
@@ -244,7 +301,7 @@ export default function RankingsPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>

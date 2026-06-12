@@ -18,11 +18,11 @@ Ship.Tires is a US-based online tire retailer offering free delivery on every or
 - [Blog](https://ship.tires/blog): Tire guides, tips, and industry news
 - [Racing](https://ship.tires/racing): Motorsport coverage (F1, NASCAR, Le Mans, IndyCar)
 - [Racing Tech](https://ship.tires/racing-tech): Technical articles on racing tire technology
-- [Installers](https://ship.tires/installers): Find tire installers near you by zip code
+- [Installers](https://ship.tires/installers): Find tire installers by state, city, and zip code
 
 ## Tire Brands (34)
 
-Michelin, Goodyear, Bridgestone, Continental, Pirelli, Hankook, Cooper, Firestone, BFGoodrich, Yokohama, Toyo, Falken, General Tire, Kumho, Nexen, Nitto, Dunlop, Nokian, Maxxis, Radar, Ironman, Sumitomo, Uniroyal, Kelly, Mastercraft, Federal, Kenda, Laufenn, Milestar, Sailun, Westlake, Mickey Thompson, Achilles, Fuzion
+Advanta, BFGoodrich, Bridgestone, Continental, Cooper, Dunlop, Falken, Firestone, General Tire, Goodyear, Hankook, Hoosier, Kenda, Kumho, Laufenn, Maxxis, Michelin, Mickey Thompson, Nankang, Nexen, Nitto, Nokian, Pirelli, Power King, Radar, Range Finder, Riken, Sumitomo, Toyo, Uniroyal, Vitour, Vogue, Vredestein, Yokohama
 
 ## Tire Categories
 
@@ -34,6 +34,14 @@ All-Season, Winter/Snow, Performance, All-Terrain, Touring, Truck & SUV, Highway
 2. Request a quote or call (279) 238-8473
 3. Tires ship free to your door or your local installer
 4. Get installed at any tire shop near you
+
+## Content & Resources
+
+- [Blog](https://ship.tires/blog): Tire guides, tips, and how-to articles (tire size guide, all-season vs winter, when to replace tires, speed ratings explained)
+- [Racing](https://ship.tires/racing): Motorsport coverage — F1, NASCAR, Le Mans, IndyCar tire technology and race reports
+- [Racing Tech](https://ship.tires/racing-tech): Technical articles on racing tire technology (compounds, wet weather tech, temperature management)
+- [Rankings](https://ship.tires/rankings): Tire performance rankings by category (best wet weather, track day, all-terrain, touring)
+- [Installers](https://ship.tires/installers): Find tire installers by state, city, and zip code
 
 ## URL Patterns
 
@@ -47,7 +55,11 @@ All-Season, Winter/Snow, Performance, All-Terrain, Touring, Truck & SUV, Highway
 - City+Brand+Size pages: https://ship.tires/locations/{state}/{city}/{brand}/{size}
 - Vehicle pages: https://ship.tires/tires/vehicle/{make} (e.g., /tires/vehicle/honda)
 - Vehicle model pages: https://ship.tires/tires/vehicle/{make}/{model}
-- Installer pages: https://ship.tires/installers/{zip}
+- Vehicle year pages: https://ship.tires/tires/vehicle/{make}/{model}/{year} (e.g., /tires/vehicle/honda/civic/2024)
+- City+Vehicle pages: https://ship.tires/locations/{state}/{city}/vehicle/{make}/{model} (e.g., /locations/california/los-angeles/vehicle/honda/civic)
+- Installer state pages: https://ship.tires/installers/{state_abbr}
+- Installer city pages: https://ship.tires/installers/{state_abbr}/{city}
+- Installer zip pages: https://ship.tires/installers/{state_abbr}/{city}/{zip}
 
 ## API Endpoints
 
@@ -58,12 +70,22 @@ All-Season, Winter/Snow, Performance, All-Terrain, Touring, Truck & SUV, Highway
 - GET /api/markdown?path=/tires/michelin -- Get any page as AI-friendly markdown
 - POST /api/contact -- Submit a tire inquiry or quote request
 
+## Per-Entity LLM Files
+
+- Brand: https://ship.tires/tires/{brand}/llm.txt
+- Model: https://ship.tires/tires/{brand}/{model}/llm.txt
+- Size: https://ship.tires/tires/size/{size}/llm.txt
+- Vehicle make: https://ship.tires/tires/vehicle/{make}/llm.txt
+- Vehicle model: https://ship.tires/tires/vehicle/{make}/{model}/llm.txt
+- Location: https://ship.tires/locations/{state}/{city}/llm.txt
+- Installer: https://ship.tires/installers/{state_abbr}/{city}/{zip}/llm.txt
+
 ## AI & Agent Discovery
 
 - OpenAPI spec: https://ship.tires/openapi.json
 - Agent card: https://ship.tires/.well-known/ai-agent.json
 - AI plugin: https://ship.tires/.well-known/ai-plugin.json
-- Full inventory: https://ship.tires/llm-full.txt
+- Full inventory: https://ship.tires/llms-full.txt
 - Append .md to any page URL for markdown content
 
 ## Contact
@@ -75,4 +97,6 @@ All-Season, Winter/Snow, Performance, All-Terrain, Touring, Truck & SUV, Highway
 
 ## For More Details
 
-See https://ship.tires/llm-full.txt for complete inventory with all brands, models, sizes, pricing, and full city coverage.
+- Summary version: https://ship.tires/llm.txt
+- Full version: https://ship.tires/llm-full.txt
+- Complete inventory: https://ship.tires/llms-full.txt

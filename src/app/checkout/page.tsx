@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import type { ShippingAddress } from "@/lib/types";
 
 export default function CheckoutPage() {
   const { items, subtotal, totalItems } = useCart();
+  const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState<ShippingAddress>({
@@ -20,6 +22,29 @@ export default function CheckoutPage() {
     state: "",
     zip: "",
   });
+
+  // Pre-fill from profile when logged in
+  useEffect(() => {
+    if (!profile) return;
+    const nameParts = (profile.full_name || "").split(" ");
+    const defaultAddress = profile.saved_addresses?.[0];
+    setForm((prev) => ({
+      ...prev,
+      firstName: prev.firstName || nameParts[0] || "",
+      lastName: prev.lastName || nameParts.slice(1).join(" ") || "",
+      email: prev.email || profile.email || "",
+      phone: prev.phone || profile.phone || "",
+      ...(defaultAddress && !prev.address1
+        ? {
+            address1: defaultAddress.address1 || "",
+            address2: defaultAddress.address2 || "",
+            city: defaultAddress.city || "",
+            state: defaultAddress.state || "",
+            zip: defaultAddress.zip || "",
+          }
+        : {}),
+    }));
+  }, [profile]);
 
   if (items.length === 0) {
     return (
@@ -48,7 +73,7 @@ export default function CheckoutPage() {
       const res = await fetch("/api/checkout/create-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, shipping: form }),
+        body: JSON.stringify({ items, shipping: form, auth_user_id: user?.id || "" }),
       });
 
       const data = await res.json();

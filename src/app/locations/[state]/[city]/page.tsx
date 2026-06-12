@@ -32,7 +32,10 @@ export async function generateMetadata({
   return {
     title: `Shop Tires in ${city.name}, ${state.abbreviation} — ${stats.brandCount} Brands, Ship Free`,
     description: `Shop tires in ${city.name}, ${state.abbreviation}. ${stats.brandCount} brands including Michelin, Goodyear, Bridgestone, Continental & Pirelli. Ship free to your door or installer. Tires for Honda, Toyota, Ford, BMW & all vehicles. ${stats.modelCount}+ models available.`,
-    alternates: { canonical: `https://ship.tires/locations/${stateSlug}/${citySlug}` },
+    alternates: {
+      canonical: `https://ship.tires/locations/${stateSlug}/${citySlug}`,
+      types: { "text/plain": `https://ship.tires/locations/${stateSlug}/${citySlug}/llm.txt` },
+    },
   };
 }
 

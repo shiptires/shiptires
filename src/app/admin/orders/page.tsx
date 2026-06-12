@@ -86,6 +86,7 @@ export default async function OrdersPage({
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Date</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-500">Customer</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Phone</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Items</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Subtotal</th>
@@ -138,9 +139,13 @@ function OrderRow({
     <>
       <tr className="border-b border-gray-100 hover:bg-gray-50">
         <td className="py-3 px-4 text-gray-600">{formatDate(String(order.created_at))}</td>
+        <td className="py-3 px-4">
+          <div className="font-medium text-gray-900">{String(order.customer_name || "—")}</div>
+          <div className="text-xs text-gray-500">{String(order.customer_email || "")}</div>
+        </td>
         <td className="py-3 px-4 font-medium text-gray-900">{String(order.customer_phone)}</td>
         <td className="py-3 px-4 text-gray-600">{summarizeItems(items)}</td>
-        <td className="py-3 px-4 text-gray-900">{formatCurrency(Number(order.subtotal) || 0)}</td>
+        <td className="py-3 px-4 text-gray-900">{formatCurrency(Number(order.subtotal) || Number(order.total) || 0)}</td>
         <td className="py-3 px-4"><StatusBadge status={String(order.status)} /></td>
         <td className="py-3 px-4">
           <div className="flex items-center gap-2">
@@ -162,7 +167,7 @@ function OrderRow({
       </tr>
       {isExpanded && (
         <tr className="bg-gray-50 border-b border-gray-100">
-          <td colSpan={6} className="px-4 py-4">
+          <td colSpan={7} className="px-4 py-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div>
                 <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Order Items</h4>

@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About Ship.Tires — America's Tire Delivery Network",
   description:
-    "Ship.Tires is a nationwide tire shipping company delivering 20+ top brands to your door or local installer. Free shipping on every order.",
+    "Ship.Tires is a nationwide tire shipping company delivering 34 curated brands to your door or local installer. Free shipping on every order.",
   alternates: { canonical: "https://ship.tires/about" },
 };
 
@@ -36,7 +36,7 @@ export default function AboutPage() {
             <h2 className="text-2xl font-black text-gray-900">Our Mission</h2>
             <p className="text-gray-600 leading-relaxed">
               Ship.Tires was built on a simple idea: buying tires should be easy, affordable, and hassle-free.
-              We connect customers with the tires they need from 20+ top brands and ship them free to anywhere
+              We connect customers with the tires they need from 34 curated brands and ship them free to anywhere
               in the continental United States — directly to your home or your local installer.
             </p>
 
@@ -54,7 +54,7 @@ export default function AboutPage() {
                 { title: "Free Shipping, Always", desc: "Every order ships free. No minimum purchase, no hidden fees, no surprises." },
                 { title: "Ship to Your Installer", desc: "We'll ship directly to your preferred tire shop so they're ready when you arrive." },
                 { title: "Expert Guidance", desc: "Our tire experts help you find the perfect fit for your vehicle, driving style, and budget." },
-                { title: "Huge Selection", desc: "20+ brands, 100+ models, 800+ sizes. From economy to ultra-premium, we have it all." },
+                { title: "Huge Selection", desc: "34 brands, 800+ models, 307,000+ sizes. From economy to ultra-premium, we have it all." },
               ].map((item) => (
                 <div key={item.title} className="rounded-lg bg-gray-50 p-5 border border-gray-100">
                   <h3 className="font-bold text-gray-900">{item.title}</h3>
@@ -65,10 +65,11 @@ export default function AboutPage() {
 
             <h2 className="text-2xl font-black text-gray-900">Our Brands</h2>
             <p className="text-gray-600 leading-relaxed">
-              We carry the brands you trust: Michelin, Goodyear, Bridgestone, Continental, Pirelli,
-              Hankook, Cooper, Firestone, BFGoodrich, Yokohama, Toyo, Falken, General, Kumho, Nexen,
-              Nitto, Dunlop, Maxxis, Ironman, and Sumitomo. Whether you need premium touring tires
-              for your sedan or rugged all-terrain tires for your truck, we have you covered.
+              We carry 34 curated brands you trust: Advanta, BFGoodrich, Bridgestone, Continental, Cooper,
+              Dunlop, Falken, Firestone, General Tire, Goodyear, Hankook, Hoosier, Kenda, Kumho, Laufenn,
+              Maxxis, Michelin, Mickey Thompson, Nankang, Nexen, Nitto, Nokian, Pirelli, Power King, Radar,
+              Range Finder, Riken, Sumitomo, Toyo, Uniroyal, Vitour, Vogue, Vredestein, and Yokohama.
+              Whether you need premium touring tires for your sedan or rugged all-terrain tires for your truck, we have you covered.
             </p>
           </div>
         </div>

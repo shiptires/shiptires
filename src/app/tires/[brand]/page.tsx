@@ -12,6 +12,7 @@ import {
 import { getLogoUrl } from "@/lib/api-helpers";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { getActiveRebates, getRebatesForBrand } from "@/lib/rebates";
+import { getRankingsForBrand } from "@/lib/ranking-helpers";
 import { getBrandAuthority } from "@/data/brand-authority";
 import BrandModelGrid from "@/components/BrandModelGrid";
 import BrandModelPicker from "@/components/BrandModelPicker";
@@ -35,7 +36,10 @@ export async function generateMetadata({
   return {
     title: `Shop ${brandRow.make_name} Tires — ${models.length} Models, Ship Free`,
     description: `Shop ${brandRow.make_name} tires online and ship free. ${models.length} models, ${brandRow.tire_count} sizes available. Find ${brandRow.make_name} tires for Honda, Toyota, Ford, Chevrolet, BMW & all vehicles. Free shipping to Los Angeles, New York, Houston, Chicago & nationwide.`,
-    alternates: { canonical: `https://ship.tires/tires/${brandSlug}` },
+    alternates: {
+      canonical: `https://ship.tires/tires/${brandSlug}`,
+      types: { "text/plain": `https://ship.tires/tires/${brandSlug}/llm.txt` },
+    },
   };
 }
 
@@ -56,11 +60,12 @@ export default async function BrandPage({
   const models = sortedRows.map(modelSummaryToModel);
   const manufacturer = await getManufacturer(brandRow.make_name);
   const popularSizes = await getDistinctSizesForBrand(brandSlug);
-  const allRebates = await getActiveRebates();
+  const allRebates = await getActiveRebates().catch(() => []);
   const brandRebates = getRebatesForBrand(allRebates, brandRow.make_name);
 
   const logoUrl = brand.logoUrl || getLogoUrl(brand.domain);
   const authority = getBrandAuthority(brandSlug);
+  const brandRankings = getRankingsForBrand(brandSlug);
 
   const breadcrumb = buildBreadcrumbSchema([
     { name: "Home", url: "https://ship.tires" },
@@ -105,6 +110,22 @@ export default async function BrandPage({
                 {models.length} models{brand.tireCount ? <> &middot; {brand.tireCount.toLocaleString()} tires</> : ""} &middot; Ship free
                 to your door or installer
               </p>
+              {brandRankings.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {brandRankings.map((r) => (
+                    <Link
+                      key={`${r.categorySlug}-${r.modelSlug}`}
+                      href={`/tires/${brandSlug}/${r.modelSlug}`}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 border border-amber-400/30 px-3 py-1 text-xs font-bold text-amber-300 hover:bg-amber-500/30 transition-colors"
+                    >
+                      <svg className="h-3.5 w-3.5 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-4.52 0" />
+                      </svg>
+                      #{r.rank} {r.category} — {r.model}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

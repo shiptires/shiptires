@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getStripe } from "@/lib/stripe";
+import { createClient } from "@/lib/supabase/server";
 import CartClearer from "@/components/CartClearer";
 
 export default async function CheckoutSuccessPage({
@@ -14,6 +15,16 @@ export default async function CheckoutSuccessPage({
     total: number;
     items: { brand: string; model: string; size: string; qty: number; price: number }[];
   } | null = null;
+
+  // Check if user is logged in
+  let isLoggedIn = false;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    isLoggedIn = !!user;
+  } catch {
+    // Not logged in
+  }
 
   if (session_id) {
     try {
@@ -74,17 +85,26 @@ export default async function CheckoutSuccessPage({
         )}
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          {isLoggedIn ? (
+            <Link
+              href="/account/orders"
+              className="rounded-lg bg-orange px-6 py-3 text-sm font-bold text-white hover:bg-orange-dark transition-colors"
+            >
+              View in Account
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-lg bg-orange px-6 py-3 text-sm font-bold text-white hover:bg-orange-dark transition-colors"
+            >
+              Create Account to Track Orders
+            </Link>
+          )}
           <Link
             href="/tires"
-            className="rounded-lg bg-orange px-6 py-3 text-sm font-bold text-white hover:bg-orange-dark transition-colors"
-          >
-            Continue Shopping
-          </Link>
-          <Link
-            href="/"
             className="rounded-lg border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
-            Back to Home
+            Continue Shopping
           </Link>
         </div>
 

@@ -32,7 +32,10 @@ export async function generateMetadata({
   return {
     title: `All ${parsed.display} Tires — Compare Prices & Brands`,
     description: `Shop all ${parsed.display} tires. Compare brands, prices, and specs. Free shipping on every tire order. Find the perfect ${parsed.display} tire for your vehicle.`,
-    alternates: { canonical: `https://ship.tires/tires/size/${size}` },
+    alternates: {
+      canonical: `https://ship.tires/tires/size/${size}`,
+      types: { "text/plain": `https://ship.tires/tires/size/${size}/llm.txt` },
+    },
   };
 }
 

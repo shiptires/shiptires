@@ -111,8 +111,8 @@
     "/api/tires/brands": {
       "get": {
         "operationId": "listBrands",
-        "summary": "List all 21 tire brands with models and pricing",
-        "description": "Returns all tire brands carried by Ship.Tires, including model details, price ranges, and direct URLs. All brands ship free nationwide.",
+        "summary": "List all 34 tire brands with models and pricing",
+        "description": "Returns all 34 tire brands carried by Ship.Tires, including model details, price ranges, and direct URLs. All brands ship free nationwide.",
         "responses": {
           "200": {
             "description": "Complete brand catalog",

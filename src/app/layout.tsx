@@ -86,7 +86,7 @@ const jsonLd = {
   email: "info@ship.tires",
   logo: "https://ship.tires/logo.png",
   description:
-    "Shop tires online from 34 brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Hankook, Yokohama, Cooper, Toyo, Falken, Firestone, Kumho, Nexen, Nitto, Dunlop, Nokian, General, Kelly, Maxxis, and more. Ship free to your door or installer anywhere in the US. Find tires for Honda, Toyota, Ford, Chevrolet, BMW, Mercedes-Benz, Nissan, Hyundai, Kia, Jeep, Ram, GMC, Subaru, Volkswagen, Audi, Lexus, Mazda, Tesla & all vehicles.",
+    "Shop tires online from 34 curated brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Hankook, Yokohama, Cooper, Toyo, Falken, Firestone, Kumho, Nexen, Nitto, Dunlop, Nokian, General Tire, Maxxis, and more. Ship free to your door or installer anywhere in the US. Find tires for Honda, Toyota, Ford, Chevrolet, BMW, Mercedes-Benz, Nissan, Hyundai, Kia, Jeep, Ram, GMC, Subaru, Volkswagen, Audi, Lexus, Mazda, Tesla & all vehicles.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Sacramento",
@@ -99,14 +99,12 @@ const jsonLd = {
   },
   priceRange: "$$",
   brand: [
-    "Michelin", "Goodyear", "Bridgestone", "Continental", "Pirelli", "BFGoodrich",
-    "Hankook", "Yokohama", "Cooper", "Toyo", "Falken", "Firestone", "Kumho",
-    "Nexen", "Nitto", "Dunlop", "Nokian", "General", "Kelly", "Maxxis",
-    "Sumitomo", "Uniroyal", "Mastercraft", "Federal", "Kenda", "Laufenn",
-    "Ironman", "Radar", "Achilles", "Fuzion", "Sailun", "Westlake", "Hankook",
-    "Milestar", "Gladiator", "Patriot", "Lexani", "Vercelli", "Atturo", "Mickey Thompson",
-    "Dick Cepek", "Pro Comp", "Carlisle", "Titan", "Alliance", "Galaxy", "Harvest King",
-    "Multi-Mile", "Dean", "Starfire",
+    "Advanta", "BFGoodrich", "Bridgestone", "Continental", "Cooper", "Dunlop",
+    "Falken", "Firestone", "General Tire", "Goodyear", "Hankook", "Hoosier",
+    "Kenda", "Kumho", "Laufenn", "Maxxis", "Michelin", "Mickey Thompson",
+    "Nankang", "Nexen", "Nitto", "Nokian", "Pirelli", "Power King", "Radar",
+    "Range Finder", "Riken", "Sumitomo", "Toyo", "Uniroyal", "Vitour", "Vogue",
+    "Vredestein", "Yokohama",
   ].map((b) => ({ "@type": "Brand", name: b })),
   hasOfferCatalog: {
     "@type": "OfferCatalog",

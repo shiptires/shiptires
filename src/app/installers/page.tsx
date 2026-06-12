@@ -94,22 +94,22 @@ export default function InstallersPage() {
           </h2>
           <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { zip: "90001", label: "Los Angeles, CA" },
-              { zip: "10001", label: "New York, NY" },
-              { zip: "60601", label: "Chicago, IL" },
-              { zip: "77001", label: "Houston, TX" },
-              { zip: "85001", label: "Phoenix, AZ" },
-              { zip: "19101", label: "Philadelphia, PA" },
-              { zip: "78201", label: "San Antonio, TX" },
-              { zip: "92101", label: "San Diego, CA" },
-              { zip: "75201", label: "Dallas, TX" },
-              { zip: "95624", label: "Sacramento, CA" },
-              { zip: "32801", label: "Orlando, FL" },
-              { zip: "30301", label: "Atlanta, GA" },
+              { href: "/installers/ca/los-angeles/90001", label: "Los Angeles, CA", zip: "90001" },
+              { href: "/installers/ny/new-york/10001", label: "New York, NY", zip: "10001" },
+              { href: "/installers/il/chicago/60601", label: "Chicago, IL", zip: "60601" },
+              { href: "/installers/tx/houston/77001", label: "Houston, TX", zip: "77001" },
+              { href: "/installers/az/phoenix/85001", label: "Phoenix, AZ", zip: "85001" },
+              { href: "/installers/pa/philadelphia/19101", label: "Philadelphia, PA", zip: "19101" },
+              { href: "/installers/tx/san-antonio/78201", label: "San Antonio, TX", zip: "78201" },
+              { href: "/installers/ca/san-diego/92101", label: "San Diego, CA", zip: "92101" },
+              { href: "/installers/tx/dallas/75201", label: "Dallas, TX", zip: "75201" },
+              { href: "/installers/ca/sacramento/95624", label: "Sacramento, CA", zip: "95624" },
+              { href: "/installers/fl/orlando/32801", label: "Orlando, FL", zip: "32801" },
+              { href: "/installers/ga/atlanta/30301", label: "Atlanta, GA", zip: "30301" },
             ].map((area) => (
               <Link
                 key={area.zip}
-                href={`/installers/${area.zip}`}
+                href={area.href}
                 className="rounded-lg border border-gray-200 bg-white p-4 text-center hover:shadow-md hover:border-blue transition-all"
               >
                 <span className="block text-sm font-bold text-gray-900">{area.label}</span>

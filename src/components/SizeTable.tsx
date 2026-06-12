@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import type { TireSize } from "@/lib/types";
+import { parseUTQG } from "@/lib/utqg";
 import AddToCartButton from "./AddToCartButton";
 import TireImageLightbox from "./TireImageLightbox";
 
@@ -40,6 +41,7 @@ export default function SizeTable({
   const [activeRim, setActiveRim] = useState<string | null>(null);
 
   const displaySizes = activeRim ? (rimGroups.get(activeRim) ?? []) : sizes;
+  const hasUtqg = sizes.some((s) => parseUTQG(s.utqg) !== null);
 
   return (
     <div>
@@ -82,6 +84,7 @@ export default function SizeTable({
               <th className="py-3 pr-4">Size</th>
               <th className="py-3 pr-4">Load</th>
               <th className="py-3 pr-4">Speed</th>
+              {hasUtqg && <th className="py-3 pr-4">UTQG</th>}
               <th className="py-3 pr-4">Price</th>
               <th className="py-3 pr-4">Set of 4</th>
               <th className="py-3"></th>
@@ -116,6 +119,14 @@ export default function SizeTable({
                 <td className="py-3 pr-4 font-mono font-medium text-gray-900">{size.size}</td>
                 <td className="py-3 pr-4 text-gray-600">{size.loadIndex || "—"}</td>
                 <td className="py-3 pr-4 text-gray-600">{size.speedRating || "—"}</td>
+                {hasUtqg && (
+                  <td className="py-3 pr-4 text-gray-600 font-mono text-xs">
+                    {(() => {
+                      const parsed = parseUTQG(size.utqg);
+                      return parsed ? `${parsed.treadwear} / ${parsed.traction} / ${parsed.temperature}` : "—";
+                    })()}
+                  </td>
+                )}
                 <td className="py-3 pr-4 font-bold text-gray-900">
                   {size.price > 0 ? `$${size.price}` : "—"}
                 </td>

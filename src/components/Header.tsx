@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import CartIcon from "@/components/CartIcon";
+import UserMenu from "@/components/UserMenu";
 
 const navigation = [
   { name: "Tires", href: "/tires" },
@@ -81,6 +82,7 @@ export default function Header({ brandCount, modelCount, tireCount }: { brandCou
                 </svg>
                 (279) 238-8473
               </a>
+              <UserMenu />
               <CartIcon />
               <Link
                 href="/tires"
@@ -92,6 +94,7 @@ export default function Header({ brandCount, modelCount, tireCount }: { brandCou
 
             {/* Mobile right side */}
             <div className="flex items-center gap-3 ml-auto lg:hidden">
+              <UserMenu />
               <CartIcon />
               <Link
                 href="/tires"

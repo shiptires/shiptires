@@ -26,9 +26,10 @@ function validateAndPriceItems(items: CartItem[]): CartItem[] {
 
 export async function POST(req: Request) {
   try {
-    const { items, shipping } = (await req.json()) as {
+    const { items, shipping, auth_user_id } = (await req.json()) as {
       items: CartItem[];
       shipping: ShippingAddress;
+      auth_user_id?: string;
     };
 
     if (!items?.length) {
@@ -74,6 +75,7 @@ export async function POST(req: Request) {
             qty: i.quantity,
           }))
         ),
+        auth_user_id: auth_user_id || "",
       },
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://ship.tires"}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://ship.tires"}/cart`,

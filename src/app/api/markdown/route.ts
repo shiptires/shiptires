@@ -88,7 +88,7 @@ function generateMarkdown(path: string): string | null {
 function homepageMarkdown(): string {
   return `# Ship.Tires — Tires Shipped Fast. Installed Near You.
 
-> Nationwide tire shipping with free delivery. Browse 20+ top brands, find the perfect fit for your vehicle, and get tires shipped to your door or local installer.
+> Nationwide tire shipping with free delivery. Browse 34 top brands, find the perfect fit for your vehicle, and get tires shipped to your door or local installer.
 
 ## Contact
 - Phone/Text: (279) 238-8473 (call or text to order)
@@ -98,7 +98,7 @@ function homepageMarkdown(): string {
 ## How It Works
 
 1. **Find Your Tires** — Search by vehicle (year/make/model) or enter your tire size directly
-2. **Get a Quote** — Browse competitive pricing from 20+ premium brands
+2. **Get a Quote** — Browse competitive pricing from 34 premium brands
 3. **Free Shipping** — Tires shipped to your door or directly to a local installer near you
 
 ## Tire Categories
@@ -144,7 +144,7 @@ Ship.Tires is a nationwide online tire retailer based in Sacramento, California.
 Make buying tires as simple as ordering anything else online. No confusing part numbers, no driving to multiple shops for quotes, no lugging heavy tires in your car.
 
 ## What We Offer
-- 20+ premium tire brands
+- 34 premium tire brands
 - 100+ tire models across all categories
 - Free shipping to all 50 states
 - Ship-to-installer convenience
@@ -199,7 +199,7 @@ Absolutely. Choose from our network of certified installation partners at checko
 Use our Vehicle Lookup tool — enter your year, make, model, and trim, and we'll show you the manufacturer-recommended tire sizes. You can also find your tire size on the placard inside your driver's door jamb.
 
 ## What brands do you carry?
-We carry 20+ brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, Cooper, Hankook, Yokohama, Toyo, Falken, BFGoodrich, Firestone, General Tire, Kumho, and Nitto.
+We carry 34 curated brands: Advanta, BFGoodrich, Bridgestone, Continental, Cooper, Dunlop, Falken, Firestone, General Tire, Goodyear, Hankook, Hoosier, Kenda, Kumho, Laufenn, Maxxis, Michelin, Mickey Thompson, Nankang, Nexen, Nitto, Nokian, Pirelli, Power King, Radar, Range Finder, Riken, Sumitomo, Toyo, Uniroyal, Vitour, Vogue, Vredestein, and Yokohama.
 
 ## Can I return tires?
 Unmounted tires can be returned within 30 days for a full refund. Once mounted, manufacturer warranties apply.
@@ -306,7 +306,7 @@ Top picks for pickup trucks, SUVs, and crossovers. Built for heavier loads and l
 Rankings are based on independent testing, customer reviews, tread life data, and value for money.
 
 ## Browse All Brands
-Visit https://ship.tires/tires to see our full catalog of 20+ brands and 100+ models.
+Visit https://ship.tires/tires to see our full catalog of 34 brands and 800+ models.
 `;
 }
 
@@ -314,7 +314,7 @@ function searchMarkdown(): string {
   return `# Search Tires — Ship.Tires
 
 ## Search by Tire Size
-Enter your tire size (e.g., 225/65R17, 245/40R18) to find all compatible tires from our catalog of 20+ brands.
+Enter your tire size (e.g., 225/65R17, 245/40R18) to find all compatible tires from our catalog of 34 brands.
 
 ## Search by Vehicle
 Use our Vehicle Lookup tool to find tires by year, make, and model.
@@ -358,7 +358,7 @@ ${post.content}
 ---
 
 ## About Ship.Tires
-Ship.Tires offers free nationwide tire shipping with 20+ premium brands. Visit https://ship.tires or call or text (279) 238-8473 to order.
+Ship.Tires offers free nationwide tire shipping with 34 premium brands. Visit https://ship.tires or call or text (279) 238-8473 to order.
 `;
 }
 
@@ -456,7 +456,7 @@ Ship.Tires offers free nationwide tire shipping with racing-derived tire technol
 
 function tiresIndexMarkdown(): string {
   let md = `# All Tire Brands — Ship.Tires\n\n`;
-  md += `Browse our complete catalog of 20+ premium tire brands with free nationwide shipping.\n\n`;
+  md += `Browse our complete catalog of 34 premium tire brands with free nationwide shipping.\n\n`;
   for (const brand of brands) {
     md += `## [${brand.name}](https://ship.tires/tires/${brand.slug})\n`;
     md += `*${brand.country} · Founded ${brand.founded}*\n\n`;
@@ -516,10 +516,10 @@ function locationMarkdown(stateSlug: string, citySlug: string): string | null {
   const otherCities = state.cities.filter((c) => c.slug !== citySlug);
 
   let md = `# Tire Shipping to ${city.name}, ${state.abbreviation} — Ship.Tires\n\n`;
-  md += `Free tire delivery to ${city.name}, ${state.name}. Browse 20+ brands, find your size, and get tires shipped to your door or a local installer in ${city.name}.\n\n`;
+  md += `Free tire delivery to ${city.name}, ${state.name}. Browse 34 brands, find your size, and get tires shipped to your door or a local installer in ${city.name}.\n\n`;
   md += `## How to Get Tires in ${city.name}\n\n`;
   md += `1. **Find Your Size** — Use our vehicle lookup or enter your tire size\n`;
-  md += `2. **Choose Your Tires** — Browse 20+ brands with competitive pricing\n`;
+  md += `2. **Choose Your Tires** — Browse 34 brands with competitive pricing\n`;
   md += `3. **Free Delivery** — Shipped to your ${city.name} address or local installer\n\n`;
   md += `## Brands Available in ${city.name}, ${state.abbreviation}\n`;
   md += brands.slice(0, 10).map((b) => `- ${b.name}`).join("\n") + "\n\n";

@@ -1,5 +1,6 @@
 import Database from "better-sqlite3";
 import path from "path";
+import fs from "fs";
 import type {
   TireRow,
   ManufacturerRow,
@@ -424,6 +425,43 @@ export function toSlug(name: string): string {
 
 // Cache for brand name lookups (populated lazily)
 let _brandSlugCache: Map<string, string> | null = null;
+
+// ---------------------------------------------------------------------------
+// Feed export
+// ---------------------------------------------------------------------------
+
+export function getTiresForFeed(
+  offset: number,
+  limit: number,
+  filterBrands?: string[]
+): { tires: TireRow[]; total: number } {
+  const db = getDb();
+  const brands = filterBrands && filterBrands.length > 0
+    ? filterBrands.map((b) => b.toUpperCase())
+    : null;
+
+  let where = "WHERE price_map > 0";
+  const args: (string | number)[] = [];
+
+  if (brands) {
+    where += ` AND make_name IN (${brands.map(() => "?").join(", ")})`;
+    args.push(...brands);
+  }
+
+  const countRow = db
+    .prepare(`SELECT COUNT(*) as total FROM tires ${where}`)
+    .get(...args) as { total: number };
+
+  const tires = db
+    .prepare(`SELECT * FROM tires ${where} ORDER BY make_name, model_name LIMIT ? OFFSET ?`)
+    .all(...args, limit, offset) as TireRow[];
+
+  return { tires, total: countRow.total };
+}
+
+// ---------------------------------------------------------------------------
+// Helpers: slug <-> name resolution
+// ---------------------------------------------------------------------------
 
 export function getBrandSlugMap(): Map<string, string> {
   if (_brandSlugCache) return _brandSlugCache;

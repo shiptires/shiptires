@@ -89,9 +89,9 @@ export default async function TiresPage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 space-y-12">
-        {/* Top Brands */}
-        <div>
+      {/* Top Brands */}
+      <div>
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-gray-900">Shop Top Tire Brands</h2>
           <p className="mt-1 text-sm text-gray-500">
             Shop the most popular tire brands — ship free nationwide
@@ -103,7 +103,7 @@ export default async function TiresPage() {
                 <Link
                   key={brand.slug}
                   href={`/tires/${brand.slug}`}
-                  className="group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-blue text-center"
+                  className="group flex flex-col items-center rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-safety-orange text-center"
                 >
                   <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gray-50 mb-3">
                     <Image
@@ -112,10 +112,9 @@ export default async function TiresPage() {
                       width={64}
                       height={64}
                       className="h-12 w-12 object-contain"
-
                     />
                   </div>
-                  <h3 className="text-sm font-bold text-gray-900 group-hover:text-blue transition-colors">
+                  <h3 className="text-sm font-bold text-gray-900 group-hover:text-safety-orange transition-colors">
                     {brand.name}
                   </h3>
                   <p className="mt-0.5 text-xs text-gray-500">
@@ -126,15 +125,15 @@ export default async function TiresPage() {
             })}
           </div>
         </div>
+      </div>
 
-        {/* All Brands with filter */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Shop All {brands.length} Brands A–Z</h2>
-          <p className="mt-1 mb-4 text-sm text-gray-500">
-            Shop all {brands.length} tire brands. Find tires for Honda, Toyota, Ford, Chevrolet, BMW & every vehicle. Ship free.
-          </p>
-          <BrandFilter brands={brandItems} />
-        </div>
+      {/* All Brands with filter */}
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <h2 className="text-2xl font-bold text-gray-900">Shop All {brands.length} Brands A-Z</h2>
+        <p className="mt-1 mb-4 text-sm text-gray-500">
+          Shop all {brands.length} tire brands. Find tires for Honda, Toyota, Ford, Chevrolet, BMW & every vehicle. Ship free.
+        </p>
+        <BrandFilter brands={brandItems} />
       </div>
     </div>
   );

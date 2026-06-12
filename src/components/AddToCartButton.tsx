@@ -43,6 +43,20 @@ export default function AddToCartButton({
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+
+    fetch("/api/add-to-cart-alert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        product: `${brand} ${model}`,
+        size,
+        brand,
+        price,
+        qty: defaultQty,
+        page: window.location.href,
+        time: new Date().toISOString(),
+      }),
+    }).catch(() => {});
   };
 
   return (
