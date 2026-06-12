@@ -62,25 +62,66 @@ if (!INDEXNOW_KEY) {
 }
 
 // ---------------------------------------------------------------------------
-// Fetch sitemap and extract URLs
+// Fetch a single sitemap/index and extract <loc> URLs
 // ---------------------------------------------------------------------------
-async function fetchSitemapUrls() {
-  console.log(`Fetching sitemap: ${SITEMAP_URL}`);
-  const res = await fetch(SITEMAP_URL);
+async function fetchXmlLocs(url) {
+  const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`Failed to fetch sitemap: ${res.status} ${res.statusText}`);
+    console.error(`  Warning: failed to fetch ${url}: ${res.status}`);
+    return { locs: [], isSitemapIndex: false };
   }
   const xml = await res.text();
 
-  // Extract all <loc>...</loc> values
-  const urls = [];
+  const locs = [];
   const locRegex = /<loc>\s*(.*?)\s*<\/loc>/gi;
   let match;
   while ((match = locRegex.exec(xml)) !== null) {
-    urls.push(match[1]);
+    locs.push(match[1]);
   }
 
-  return urls;
+  // Detect sitemap index (contains <sitemap> tags)
+  const isSitemapIndex = /<sitemap>/i.test(xml);
+  return { locs, isSitemapIndex };
+}
+
+// ---------------------------------------------------------------------------
+// Recursively fetch all page URLs from sitemap index + sub-sitemaps
+// ---------------------------------------------------------------------------
+async function fetchSitemapUrls() {
+  console.log(`Fetching sitemap index: ${SITEMAP_URL}`);
+  const { locs, isSitemapIndex } = await fetchXmlLocs(SITEMAP_URL);
+
+  if (!isSitemapIndex) {
+    console.log(`  Direct sitemap with ${locs.length} URLs`);
+    return locs;
+  }
+
+  console.log(`  Sitemap index with ${locs.length} sub-sitemaps`);
+  const allUrls = [];
+
+  // Fetch all sub-sitemaps in parallel (batches of 10 to avoid hammering)
+  for (let i = 0; i < locs.length; i += 10) {
+    const batch = locs.slice(i, i + 10);
+    const results = await Promise.all(
+      batch.map(async (subUrl) => {
+        const { locs: subLocs, isSitemapIndex: nested } = await fetchXmlLocs(subUrl);
+        if (nested) {
+          // One more level deep (shouldn't happen but handle it)
+          const deepResults = await Promise.all(
+            subLocs.map((u) => fetchXmlLocs(u).then((r) => r.locs))
+          );
+          return deepResults.flat();
+        }
+        return subLocs;
+      })
+    );
+    for (const urls of results) {
+      allUrls.push(...urls);
+    }
+    console.log(`  Fetched ${Math.min(i + 10, locs.length)}/${locs.length} sub-sitemaps (${allUrls.length} URLs so far)`);
+  }
+
+  return allUrls;
 }
 
 // ---------------------------------------------------------------------------
