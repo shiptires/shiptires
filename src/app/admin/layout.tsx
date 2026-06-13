@@ -19,7 +19,7 @@ function LogoutButton() {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
+    <div className="fixed inset-0 z-[100] bg-gray-50 text-gray-900 flex flex-col">
       {/* Top bar */}
       <header className="bg-black border-b border-gray-800 pl-14 md:pl-6 pr-6 py-3 flex items-center justify-between shrink-0">
         <span className="text-white font-bold text-lg tracking-tight">
