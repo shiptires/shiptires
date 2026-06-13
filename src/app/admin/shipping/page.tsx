@@ -1,25 +1,43 @@
 import { listCarriers, listServices } from "@/lib/shipstation";
-import type { Carrier, Service } from "@/lib/shipstation";
+import type { Service } from "@/lib/shipstation";
 
 export const dynamic = "force-dynamic";
 
 export default async function ShippingPage() {
-  const carriers = await listCarriers();
+  let carrierServices: { carrier: { name: string; code: string; accountNumber: string; primary: boolean }; services: Service[] }[] = [];
+  let error = "";
 
-  const carrierServices = await Promise.all(
-    carriers.map(async (carrier) => {
-      try {
-        const services = await listServices(carrier.code);
-        return { carrier, services };
-      } catch {
-        return { carrier, services: [] as Service[] };
-      }
-    })
-  );
+  try {
+    const carriers = await listCarriers();
+
+    carrierServices = await Promise.all(
+      carriers.map(async (carrier) => {
+        try {
+          const services = await listServices(carrier.code);
+          return { carrier, services };
+        } catch {
+          return { carrier, services: [] as Service[] };
+        }
+      })
+    );
+  } catch (e) {
+    error = e instanceof Error ? e.message : "Failed to load carriers from ShipStation";
+  }
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Shipping Carriers</h1>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg px-5 py-4 text-sm text-red-700 mb-6">
+          <p className="font-medium">Error loading carriers</p>
+          <p className="mt-1 text-red-600">{error}</p>
+        </div>
+      )}
+
+      {carrierServices.length === 0 && !error && (
+        <p className="text-gray-400 text-sm">No carriers found.</p>
+      )}
 
       <div className="space-y-6">
         {carrierServices.map(({ carrier, services }) => (
