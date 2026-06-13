@@ -21,7 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
       {/* Top bar */}
-      <header className="bg-[#0a1628] border-b border-gray-800 px-6 py-3 flex items-center justify-between shrink-0">
+      <header className="bg-black border-b border-gray-800 pl-14 md:pl-6 pr-6 py-3 flex items-center justify-between shrink-0">
         <span className="text-white font-bold text-lg tracking-tight">
           Ship.Tires <span className="text-gray-500 font-normal text-sm ml-1">Admin</span>
         </span>
@@ -30,7 +30,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <div className="flex flex-1 min-h-0">
         <AdminSidebar />
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
           {children}
         </main>
       </div>

@@ -1,6 +1,7 @@
 import { getSupabase } from "@/lib/supabase";
 import StatusBadge from "@/components/admin/StatusBadge";
 import OrderStatusUpdater from "./OrderStatusUpdater";
+import OrderShipping from "./OrderShipping";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,7 @@ export default async function OrdersPage({
             href={s === "all" ? "/admin/orders" : `/admin/orders?status=${s}`}
             className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
               activeFilter === s
-                ? "bg-blue-600 text-white"
+                ? "bg-safety-orange text-white"
                 : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
             }`}
           >
@@ -78,11 +79,11 @@ export default async function OrdersPage({
       </div>
 
       {/* Orders table */}
-      <div className="bg-white rounded-lg border border-gray-200">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
         {allOrders.length === 0 ? (
           <p className="px-5 py-12 text-center text-gray-400 text-sm">No orders found</p>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[700px]">
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left py-3 px-4 font-medium text-gray-500">Date</th>
@@ -154,7 +155,7 @@ function OrderRow({
                 href={String(order.checkout_url)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 text-xs"
+                className="text-safety-orange hover:text-orange-700 text-xs"
               >
                 Link
               </a>
@@ -168,7 +169,8 @@ function OrderRow({
       {isExpanded && (
         <tr className="bg-gray-50 border-b border-gray-100">
           <td colSpan={7} className="px-4 py-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Items */}
               <div>
                 <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Order Items</h4>
                 <div className="space-y-2">
@@ -181,11 +183,29 @@ function OrderRow({
                   ))}
                 </div>
               </div>
+              {/* Status */}
               <div>
                 <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Update Status</h4>
                 <OrderStatusUpdater
                   orderId={String(order.id)}
                   currentStatus={String(order.status)}
+                />
+              </div>
+              {/* Shipping */}
+              <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Shipping</h4>
+                <OrderShipping
+                  orderId={String(order.id)}
+                  orderStatus={String(order.status)}
+                  shippingAddress={(order.shipping_address as Record<string, string>) || null}
+                  customerEmail={String(order.customer_email || "")}
+                  customerName={String(order.customer_name || "")}
+                  trackingNumber={order.tracking_number ? String(order.tracking_number) : null}
+                  carrier={order.carrier ? String(order.carrier) : null}
+                  serviceCode={order.service_code ? String(order.service_code) : null}
+                  shipmentCost={order.shipment_cost != null ? Number(order.shipment_cost) : null}
+                  shipmentId={order.shipment_id ? String(order.shipment_id) : null}
+                  shippedAt={order.shipped_at ? String(order.shipped_at) : null}
                 />
               </div>
             </div>

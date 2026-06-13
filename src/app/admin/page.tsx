@@ -106,7 +106,7 @@ export default async function AdminDashboard() {
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
             <h2 className="font-semibold text-gray-900">Recent Orders</h2>
-            <Link href="/admin/orders" className="text-sm text-blue-600 hover:text-blue-800">
+            <Link href="/admin/orders" className="text-sm text-safety-orange hover:text-orange-700">
               View all
             </Link>
           </div>
@@ -140,7 +140,7 @@ export default async function AdminDashboard() {
         <div className="bg-white rounded-lg border border-gray-200">
           <div className="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
             <h2 className="font-semibold text-gray-900">Recent SMS</h2>
-            <Link href="/admin/conversations" className="text-sm text-blue-600 hover:text-blue-800">
+            <Link href="/admin/conversations" className="text-sm text-safety-orange hover:text-orange-700">
               View all
             </Link>
           </div>

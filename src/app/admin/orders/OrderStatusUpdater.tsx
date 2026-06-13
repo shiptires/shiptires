@@ -49,7 +49,7 @@ export default function OrderStatusUpdater({
       <button
         onClick={handleUpdate}
         disabled={saving || status === currentStatus}
-        className="text-sm px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+        className="text-sm px-3 py-1.5 bg-safety-orange text-white rounded hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
       >
         {saving ? "Saving..." : "Update"}
       </button>
