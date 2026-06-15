@@ -5,7 +5,7 @@ import {
   addFixedPriceItem,
   getActiveListings,
   getCompetitivePrice,
-  revisePrice,
+  reviseItemWithImages,
   tireToEbayItem,
   tireToSku,
 } from "@/lib/ebay";
@@ -150,8 +150,12 @@ export async function POST(req: Request) {
         const existing = existingMap.get(existingTitle);
 
         if (existing) {
-          // Product already listed — revise price if different (keeps listing fresh)
-          await revisePrice(existing.itemId, parseFloat(mapped.listing.price));
+          // Product already listed — revise price + push all images
+          await reviseItemWithImages(
+            existing.itemId,
+            parseFloat(mapped.listing.price),
+            mapped.listing.imageUrls
+          );
           result.revised++;
         } else {
           // New product — create listing

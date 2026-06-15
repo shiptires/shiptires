@@ -153,6 +153,7 @@ export interface EbayListingInput {
   price: string;
   quantity: number;
   imageUrl: string;
+  imageUrls: string[];
   sku: string;
   itemSpecifics: Record<string, string>;
 }
@@ -202,7 +203,7 @@ function buildAddItemXml(
     <Quantity>${item.quantity}</Quantity>
     <SKU>${escapeXml(item.sku)}</SKU>
     <PictureDetails>
-      <PictureURL>${escapeXml(item.imageUrl)}</PictureURL>
+${(item.imageUrls.length > 0 ? item.imageUrls : [item.imageUrl]).map((url) => `      <PictureURL>${escapeXml(url)}</PictureURL>`).join("\n")}
     </PictureDetails>
     <ItemSpecifics>
 ${specificsXml}
@@ -417,6 +418,42 @@ export async function revisePrice(
   return { success: true };
 }
 
+/** Revise price AND images on an existing eBay listing */
+export async function reviseItemWithImages(
+  itemId: string,
+  newPrice: number,
+  imageUrls: string[]
+): Promise<{ success: boolean }> {
+  const token = await getAccessToken();
+  const pictureXml = imageUrls.length > 0
+    ? `    <PictureDetails>\n${imageUrls.map((url) => `      <PictureURL>${escapeXml(url)}</PictureURL>`).join("\n")}\n    </PictureDetails>`
+    : "";
+
+  const xml = `<?xml version="1.0" encoding="utf-8"?>
+<ReviseFixedPriceItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+  <RequesterCredentials>
+    <eBayAuthToken>${token}</eBayAuthToken>
+  </RequesterCredentials>
+  <ErrorLanguage>en_US</ErrorLanguage>
+  <Item>
+    <ItemID>${itemId}</ItemID>
+    <StartPrice currencyID="USD">${newPrice.toFixed(2)}</StartPrice>
+${pictureXml}
+  </Item>
+</ReviseFixedPriceItemRequest>`;
+
+  const result = await tradingApiCall("ReviseFixedPriceItem", xml);
+
+  if (result.ack === "Failure") {
+    const realErrors = result.errors.filter((e) => e.severity === "Error");
+    throw new Error(
+      realErrors.map((e) => `${e.code}: ${e.message}`).join("; ") || "ReviseFixedPriceItem failed"
+    );
+  }
+
+  return { success: true };
+}
+
 /** Revise prices for multiple eBay listings */
 export async function revisePrices(
   items: Array<{ itemId: string; newPrice: number }>
@@ -574,17 +611,51 @@ function parseSizeFromName(name: string): {
 
 const R2_BASE = "https://pub-1404e52fd5554e9dac9a045b7bb89f22.r2.dev";
 
-function resolveImageUrl(row: TireRow): string | null {
-  const sources = [row.local_thumbnail, row.thumbnail_url, row.image_0100_url];
-  for (const src of sources) {
-    if (!src || src === "FAILED") continue;
-    if (src.startsWith("images/") || src.startsWith("images\\")) {
-      const r2Path = src.replace(/\\/g, "/").replace(/^images\//, "");
-      return `${R2_BASE}/${r2Path}`;
-    }
-    if (src.startsWith("http")) return src;
+function resolveOneImage(src: string | null | undefined): string | null {
+  if (!src || src === "FAILED") return null;
+  if (src.startsWith("images/") || src.startsWith("images\\")) {
+    const r2Path = src.replace(/\\/g, "/").replace(/^images\//, "");
+    return `${R2_BASE}/${r2Path}`;
   }
+  if (src.startsWith("http")) return src;
   return null;
+}
+
+/** Resolve all available image URLs for a tire (up to 12 for eBay) */
+function resolveAllImageUrls(row: TireRow): string[] {
+  const sources = [
+    row.local_thumbnail,
+    row.local_angle,
+    row.local_front,
+    row.local_side,
+    row.local_side2,
+    row.thumbnail_url,
+    row.angle_image_url,
+    row.front_image_url,
+    row.side_image_url,
+    row.side2_image_url,
+    row.image_0100_url,
+    row.image_0200_url,
+    row.image_0301_url,
+    row.image_0302_url,
+  ];
+
+  const urls: string[] = [];
+  const seen = new Set<string>();
+  for (const src of sources) {
+    const url = resolveOneImage(src);
+    if (url && !seen.has(url)) {
+      seen.add(url);
+      urls.push(url);
+      if (urls.length >= 12) break; // eBay max 12 photos
+    }
+  }
+  return urls;
+}
+
+function resolveImageUrl(row: TireRow): string | null {
+  const urls = resolveAllImageUrls(row);
+  return urls.length > 0 ? urls[0] : null;
 }
 
 function buildEbayTitle(tire: TireRow): string {
@@ -671,7 +742,8 @@ export function tireToEbayItem(
   tire: TireRow,
   competitivePrice?: number | null
 ): { listing: EbayListingInput; price: number } | null {
-  const imageUrl = resolveImageUrl(tire);
+  const imageUrls = resolveAllImageUrls(tire);
+  const imageUrl = imageUrls[0] || null;
   if (!imageUrl) return null;
 
   const mpn = tire.item_number || tire.gm_code;
@@ -719,6 +791,7 @@ export function tireToEbayItem(
     price: price.toFixed(2),
     quantity: LISTING_QUANTITY,
     imageUrl,
+    imageUrls,
     sku,
     itemSpecifics,
   };
