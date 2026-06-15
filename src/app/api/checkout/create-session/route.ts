@@ -1,27 +1,80 @@
 import { getStripe } from "@/lib/stripe";
-import { brands } from "@/data/brands";
+import { searchTires, toSlug } from "@/lib/db";
 import type { CartItem, ShippingAddress } from "@/lib/types";
 
-function validateAndPriceItems(items: CartItem[]): CartItem[] {
-  return items.map((item) => {
-    const brand = brands.find((b) => b.slug === item.brandSlug);
-    if (!brand) throw new Error(`Brand not found: ${item.brandSlug}`);
+async function validateAndPriceItems(items: CartItem[]): Promise<CartItem[]> {
+  const validated: CartItem[] = [];
 
-    const model = brand.models.find((m) => m.slug === item.modelSlug);
-    if (!model) throw new Error(`Model not found: ${item.modelSlug}`);
+  for (const item of items) {
+    const result = await searchTires({
+      brand: item.brandSlug,
+      size: item.size,
+      limit: 50,
+    });
 
-    const size = model.sizes.find((s) => s.size === item.size);
-    if (!size) throw new Error(`Size not found: ${item.size}`);
+    const match = result.tires.find(
+      (t) => toSlug(t.model_name) === item.modelSlug
+    );
 
-    return {
-      ...item,
-      brand: brand.name,
-      model: model.name,
-      price: size.price, // server-side price — never trust client
-      loadIndex: size.loadIndex,
-      speedRating: size.speedRating,
-    };
-  });
+    if (!match) {
+      const brandCheck = await searchTires({ brand: item.brandSlug, limit: 1 });
+      if (brandCheck.total === 0) {
+        throw new Error(`Brand not found: ${item.brandSlug}`);
+      }
+      const modelCheck = await searchTires({ brand: item.brandSlug, limit: 100 });
+      const modelExists = modelCheck.tires.some(
+        (t) => toSlug(t.model_name) === item.modelSlug
+      );
+      if (!modelExists) {
+        throw new Error(`Model not found: ${item.modelSlug}`);
+      }
+      throw new Error(
+        `Size not found: ${item.size} for ${item.brandSlug} ${item.modelSlug}`
+      );
+    }
+
+    const price = typeof match.price_map === "string"
+      ? parseFloat(match.price_map) || 0
+      : match.price_map ?? 0;
+
+    if (price <= 0) {
+      const priced = result.tires.find(
+        (t) =>
+          toSlug(t.model_name) === item.modelSlug &&
+          (typeof t.price_map === "string"
+            ? parseFloat(t.price_map) > 0
+            : (t.price_map ?? 0) > 0)
+      );
+      if (!priced) {
+        throw new Error(
+          `Price unavailable for ${item.size} ${match.make_name} ${match.model_name}. Please call (279) 238-8473 for a quote.`
+        );
+      }
+      const pricedValue = typeof priced.price_map === "string"
+        ? parseFloat(priced.price_map)
+        : priced.price_map ?? 0;
+
+      validated.push({
+        ...item,
+        brand: priced.make_name,
+        model: priced.model_name,
+        price: pricedValue,
+        loadIndex: parseInt(priced.load_rating ?? "0") || 0,
+        speedRating: priced.speed_rating ?? "",
+      });
+    } else {
+      validated.push({
+        ...item,
+        brand: match.make_name,
+        model: match.model_name,
+        price,
+        loadIndex: parseInt(match.load_rating ?? "0") || 0,
+        speedRating: match.speed_rating ?? "",
+      });
+    }
+  }
+
+  return validated;
 }
 
 export async function POST(req: Request) {
@@ -40,7 +93,7 @@ export async function POST(req: Request) {
       return Response.json({ error: "Shipping info required" }, { status: 400 });
     }
 
-    const validated = validateAndPriceItems(items);
+    const validated = await validateAndPriceItems(items);
 
     const line_items = validated.map((item) => ({
       price_data: {
