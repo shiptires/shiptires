@@ -1,5 +1,5 @@
 import { isAdminRequest } from "@/lib/admin-auth";
-import { getTiresForFeed } from "@/lib/db";
+import { searchTires } from "@/lib/db";
 import type { TireRow } from "@/lib/db";
 import {
   addFixedPriceItem,
@@ -20,21 +20,6 @@ interface SyncResult {
   errors: Array<{ sku: string; error: string }>;
   total: number;
   dryRun: boolean;
-}
-
-const R2_BASE = "https://pub-1404e52fd5554e9dac9a045b7bb89f22.r2.dev";
-
-function resolveImageUrl(row: TireRow): string | null {
-  const sources = [row.local_thumbnail, row.thumbnail_url, row.image_0100_url];
-  for (const src of sources) {
-    if (!src || src === "FAILED") continue;
-    if (src.startsWith("images/") || src.startsWith("images\\")) {
-      const r2Path = src.replace(/\\/g, "/").replace(/^images\//, "");
-      return `${R2_BASE}/${r2Path}`;
-    }
-    if (src.startsWith("http")) return src;
-  }
-  return null;
 }
 
 /** Build a product key from a tire to identify duplicates (same brand+model+size) */
@@ -74,18 +59,64 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const {
-      brandSlugs,
+      brand,
+      model,
+      width,
+      aspectRatio,
+      rimSize,
+      season,
+      terrain,
+      minPrice,
+      maxPrice,
       limit = 500,
-      offset = 0,
       dryRun = false,
     } = body as {
-      brandSlugs?: string[];
+      brand?: string;
+      model?: string;
+      width?: string;
+      aspectRatio?: string;
+      rimSize?: string;
+      season?: string;
+      terrain?: string;
+      minPrice?: number;
+      maxPrice?: number;
       limit?: number;
-      offset?: number;
       dryRun?: boolean;
     };
 
-    const { tires, total } = await getTiresForFeed(offset, limit, brandSlugs);
+    // Use searchTires with all filters — paginate through all results
+    const pageSize = Math.min(limit, 100);
+    let allTires: TireRow[] = [];
+    let total = 0;
+    let page = 1;
+
+    while (allTires.length < limit) {
+      const searchResult = await searchTires({
+        brand: brand || undefined,
+        query: model || undefined,
+        width: width || undefined,
+        aspectRatio: aspectRatio || undefined,
+        rimSize: rimSize || undefined,
+        season: season || undefined,
+        terrain: terrain || undefined,
+        minPrice: minPrice ?? undefined,
+        maxPrice: maxPrice ?? undefined,
+        page,
+        limit: pageSize,
+      });
+
+      if (page === 1) total = searchResult.total;
+      allTires = allTires.concat(searchResult.tires);
+
+      if (searchResult.tires.length < pageSize || allTires.length >= limit) break;
+      page++;
+    }
+
+    // Trim to requested limit
+    if (allTires.length > limit) allTires = allTires.slice(0, limit);
+
+    // Filter to only tires with pricing
+    allTires = allTires.filter((t) => (t.price_map ?? 0) > 0);
 
     const result: SyncResult = {
       synced: 0,
@@ -103,7 +134,7 @@ export async function POST(req: Request) {
     // Track products we've already processed in this batch
     const seenInBatch = new Set<string>();
 
-    for (const tire of tires) {
+    for (const tire of allTires) {
       const sku = tireToSku(tire);
       const key = productKey(tire);
 
@@ -114,16 +145,6 @@ export async function POST(req: Request) {
         continue;
       }
       seenInBatch.add(key);
-
-      // Must have image + identifier
-      const imageUrl = resolveImageUrl(tire);
-      const gtin = tire.ean || tire.upc;
-      const mpn = tire.item_number || tire.gm_code;
-
-      if (!imageUrl || (!gtin && !mpn)) {
-        result.skipped++;
-        continue;
-      }
 
       try {
         // Look up competitive pricing

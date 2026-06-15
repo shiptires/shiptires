@@ -12,6 +12,23 @@ const BRANDS = [
   "VITOUR", "VOGUE", "VREDESTEIN", "YOKOHAMA",
 ];
 
+const SEASONS = ["All-Season", "Summer", "Winter", "All-Weather"];
+const TERRAINS = ["Highway", "All-Terrain (A/T)", "Mud-Terrain (M/T)", "Rugged Terrain"];
+
+interface FilterModel {
+  name: string;
+  count: number;
+  season: string | null;
+  terrain: string | null;
+}
+
+interface FilterSize {
+  width: string;
+  aspectRatio: string;
+  rimSize: string;
+  count: number;
+}
+
 interface SyncStatus {
   configured: boolean;
   policiesConfigured: boolean;
@@ -47,12 +64,23 @@ export default function EbayPage() {
   // Sync tab state
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(true);
-  const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
+  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedModel, setSelectedModel] = useState("");
+  const [filterWidth, setFilterWidth] = useState("");
+  const [filterAspect, setFilterAspect] = useState("");
+  const [filterRim, setFilterRim] = useState("");
+  const [filterSeason, setFilterSeason] = useState("");
+  const [filterTerrain, setFilterTerrain] = useState("");
+  const [filterMinPrice, setFilterMinPrice] = useState("");
+  const [filterMaxPrice, setFilterMaxPrice] = useState("");
   const [dryRun, setDryRun] = useState(true);
   const [limit, setLimit] = useState(500);
   const [syncing, setSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [brandModels, setBrandModels] = useState<FilterModel[]>([]);
+  const [brandSizes, setBrandSizes] = useState<FilterSize[]>([]);
+  const [filtersLoading, setFiltersLoading] = useState(false);
 
   // Manage tab state
   const [listings, setListings] = useState<EbayListing[]>([]);
@@ -125,22 +153,33 @@ export default function EbayPage() {
     }
   }
 
-  function toggleBrand(brand: string) {
-    setSelectedBrands((prev) => {
-      const next = new Set(prev);
-      if (next.has(brand)) next.delete(brand);
-      else next.add(brand);
-      return next;
-    });
-  }
+  // Fetch models/sizes when brand changes
+  useEffect(() => {
+    if (!selectedBrand) {
+      setBrandModels([]);
+      setBrandSizes([]);
+      setSelectedModel("");
+      return;
+    }
+    setFiltersLoading(true);
+    setSelectedModel("");
+    fetch(`/api/admin/ebay/filters?brand=${encodeURIComponent(selectedBrand)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setBrandModels(data.models || []);
+        setBrandSizes(data.sizes || []);
+      })
+      .catch(() => {
+        setBrandModels([]);
+        setBrandSizes([]);
+      })
+      .finally(() => setFiltersLoading(false));
+  }, [selectedBrand]);
 
-  function selectAll() {
-    setSelectedBrands(new Set(BRANDS));
-  }
-
-  function selectNone() {
-    setSelectedBrands(new Set());
-  }
+  // Derive unique widths, aspects, rims from brand sizes
+  const availableWidths = [...new Set(brandSizes.map((s) => s.width))].sort((a, b) => Number(a) - Number(b));
+  const availableAspects = [...new Set(brandSizes.filter((s) => !filterWidth || s.width === filterWidth).map((s) => s.aspectRatio))].sort((a, b) => Number(a) - Number(b));
+  const availableRims = [...new Set(brandSizes.filter((s) => (!filterWidth || s.width === filterWidth) && (!filterAspect || s.aspectRatio === filterAspect)).map((s) => s.rimSize))].sort((a, b) => Number(a) - Number(b));
 
   async function startSync() {
     setSyncing(true);
@@ -148,14 +187,20 @@ export default function EbayPage() {
     setSyncError(null);
 
     try {
-      const body: Record<string, unknown> = {
-        dryRun,
-        limit,
-        offset: 0,
-      };
-      if (selectedBrands.size > 0 && selectedBrands.size < BRANDS.length) {
-        body.brandSlugs = Array.from(selectedBrands);
+      const body: Record<string, unknown> = { dryRun, limit };
+
+      // Brand → slug
+      if (selectedBrand) {
+        body.brand = selectedBrand.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
       }
+      if (selectedModel) body.model = selectedModel;
+      if (filterWidth) body.width = filterWidth;
+      if (filterAspect) body.aspectRatio = filterAspect;
+      if (filterRim) body.rimSize = filterRim;
+      if (filterSeason) body.season = filterSeason;
+      if (filterTerrain) body.terrain = filterTerrain;
+      if (filterMinPrice) body.minPrice = parseFloat(filterMinPrice);
+      if (filterMaxPrice) body.maxPrice = parseFloat(filterMaxPrice);
 
       const res = await fetch("/api/admin/ebay/sync", {
         method: "POST",
@@ -171,7 +216,6 @@ export default function EbayPage() {
       const data: SyncResult = await res.json();
       setSyncResult(data);
 
-      // Refresh status after sync
       if (!dryRun) fetchStatus();
     } catch (e) {
       setSyncError(e instanceof Error ? e.message : "Sync failed");
@@ -409,53 +453,168 @@ export default function EbayPage() {
               </label>
             </div>
 
-            {/* Brand selection */}
-            <div className="mb-4">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-sm font-medium text-gray-700">Brands:</span>
-                <button
-                  onClick={selectAll}
-                  className="text-xs text-safety-orange hover:text-orange-700"
-                >
-                  Select All
-                </button>
-                <button
-                  onClick={selectNone}
-                  className="text-xs text-gray-500 hover:text-gray-700"
-                >
-                  Clear
-                </button>
-                <span className="text-xs text-gray-400">
-                  {selectedBrands.size === 0
-                    ? "(all brands)"
-                    : `${selectedBrands.size} selected`}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {BRANDS.map((brand) => (
-                  <button
-                    key={brand}
-                    onClick={() => toggleBrand(brand)}
-                    className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                      selectedBrands.has(brand)
-                        ? "bg-safety-orange text-white"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
+            {/* Filters */}
+            <div className="space-y-3 mb-4">
+              {/* Row 1: Brand + Model */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Brand</label>
+                  <select
+                    value={selectedBrand}
+                    onChange={(e) => setSelectedBrand(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange"
                   >
-                    {brand}
-                  </button>
-                ))}
+                    <option value="">All Brands</option>
+                    {BRANDS.map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">
+                    Model {filtersLoading && selectedBrand ? "(loading...)" : ""}
+                  </label>
+                  <select
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                    disabled={!selectedBrand || brandModels.length === 0}
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange disabled:bg-gray-50 disabled:text-gray-400"
+                  >
+                    <option value="">All Models</option>
+                    {brandModels.map((m) => (
+                      <option key={m.name} value={m.name}>
+                        {m.name} ({m.count})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 2: Size filters */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Width</label>
+                  <select
+                    value={filterWidth}
+                    onChange={(e) => { setFilterWidth(e.target.value); setFilterAspect(""); setFilterRim(""); }}
+                    disabled={!selectedBrand}
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange disabled:bg-gray-50 disabled:text-gray-400"
+                  >
+                    <option value="">Any</option>
+                    {availableWidths.map((w) => (
+                      <option key={w} value={w}>{w}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Aspect Ratio</label>
+                  <select
+                    value={filterAspect}
+                    onChange={(e) => { setFilterAspect(e.target.value); setFilterRim(""); }}
+                    disabled={!selectedBrand}
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange disabled:bg-gray-50 disabled:text-gray-400"
+                  >
+                    <option value="">Any</option>
+                    {availableAspects.map((a) => (
+                      <option key={a} value={a}>{a}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Rim Size</label>
+                  <select
+                    value={filterRim}
+                    onChange={(e) => setFilterRim(e.target.value)}
+                    disabled={!selectedBrand}
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange disabled:bg-gray-50 disabled:text-gray-400"
+                  >
+                    <option value="">Any</option>
+                    {availableRims.map((r) => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 3: Season, Terrain, Price Range */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Season</label>
+                  <select
+                    value={filterSeason}
+                    onChange={(e) => setFilterSeason(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange"
+                  >
+                    <option value="">Any</option>
+                    {SEASONS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Terrain</label>
+                  <select
+                    value={filterTerrain}
+                    onChange={(e) => setFilterTerrain(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange"
+                  >
+                    <option value="">Any</option>
+                    {TERRAINS.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Min Price (MAP)</label>
+                  <input
+                    type="number"
+                    value={filterMinPrice}
+                    onChange={(e) => setFilterMinPrice(e.target.value)}
+                    placeholder="$0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Max Price (MAP)</label>
+                  <input
+                    type="number"
+                    value={filterMaxPrice}
+                    onChange={(e) => setFilterMaxPrice(e.target.value)}
+                    placeholder="$999"
+                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange"
+                  />
+                </div>
               </div>
             </div>
 
             {/* Sync button */}
-            <button
-              onClick={startSync}
-              disabled={syncing}
-              className="px-4 py-2 bg-safety-orange text-white rounded font-medium text-sm hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {syncing ? "Syncing..." : dryRun ? "Preview Sync" : "Sync to eBay"}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={startSync}
+                disabled={syncing}
+                className="px-4 py-2 bg-safety-orange text-white rounded font-medium text-sm hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {syncing ? "Syncing..." : dryRun ? "Preview Sync" : "Sync to eBay"}
+              </button>
+              {(selectedBrand || filterSeason || filterTerrain || filterMinPrice || filterMaxPrice) && (
+                <button
+                  onClick={() => {
+                    setSelectedBrand("");
+                    setSelectedModel("");
+                    setFilterWidth("");
+                    setFilterAspect("");
+                    setFilterRim("");
+                    setFilterSeason("");
+                    setFilterTerrain("");
+                    setFilterMinPrice("");
+                    setFilterMaxPrice("");
+                  }}
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Clear all filters
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Sync results */}
