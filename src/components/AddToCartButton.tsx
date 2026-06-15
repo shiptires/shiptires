@@ -13,6 +13,7 @@ interface AddToCartButtonProps {
   loadIndex: number;
   speedRating: string;
   defaultQty?: number;
+  image?: string;
 }
 
 export default function AddToCartButton({
@@ -25,6 +26,7 @@ export default function AddToCartButton({
   loadIndex,
   speedRating,
   defaultQty = 4,
+  image,
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
@@ -40,6 +42,7 @@ export default function AddToCartButton({
       quantity: defaultQty,
       loadIndex,
       speedRating,
+      image,
     });
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);

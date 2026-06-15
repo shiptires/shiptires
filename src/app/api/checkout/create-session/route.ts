@@ -99,8 +99,9 @@ export async function POST(req: Request) {
       price_data: {
         currency: "usd",
         product_data: {
-          name: `${item.brand} ${item.model}`,
-          description: `Size: ${item.size} | Load: ${item.loadIndex} | Speed: ${item.speedRating}`,
+          name: `${item.brand} ${item.model} (${item.size})`,
+          description: `Size: ${item.size} | Load Index: ${item.loadIndex} | Speed Rating: ${item.speedRating} | Free Shipping | 3-7 Day Delivery`,
+          ...(item.image ? { images: [item.image] } : {}),
         },
         unit_amount: Math.round(item.price * 100),
       },

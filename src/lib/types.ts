@@ -115,6 +115,8 @@ export interface TireRanking {
     rank: number;
     brand: string;
     model: string;
+    /** DB model name when it differs from display name (used for slug/URL resolution) */
+    dbModel?: string;
     score: number;
     racingConnection: string;
   }[];
@@ -143,6 +145,7 @@ export interface CartItem {
   quantity: number;
   loadIndex: number;
   speedRating: string;
+  image?: string;
 }
 
 export interface ShippingAddress {

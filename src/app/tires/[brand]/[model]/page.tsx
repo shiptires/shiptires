@@ -69,12 +69,12 @@ export default async function ModelPage({
   if (!data) notFound();
 
   const model = tiresToModel(data.model, data.tires, data.brand);
-  const brandRow = await getBrandBySlug(brandSlug);
+  const [brandRow, allModels] = await Promise.all([
+    getBrandBySlug(brandSlug),
+    getModelsByBrand(brandSlug),
+  ]);
   const brand = brandRow ? brandSummaryToBrand(brandRow) : null;
   const logoUrl = brand?.logoUrl || getLogoUrl(brand?.domain || "");
-
-  // Related models from same brand
-  const allModels = await getModelsByBrand(brandSlug);
   const relatedModels = allModels
     .filter((m) => toSlug(m.model_name) !== modelSlug)
     .slice(0, 3)
@@ -365,6 +365,7 @@ export default async function ModelPage({
                         price={size.price}
                         loadIndex={size.loadIndex}
                         speedRating={size.speedRating}
+                        image={model.image}
                       />
                     </div>
                   </div>

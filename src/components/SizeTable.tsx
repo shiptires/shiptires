@@ -144,6 +144,7 @@ export default function SizeTable({
                       price={size.price}
                       loadIndex={size.loadIndex}
                       speedRating={size.speedRating}
+                      image={tireImage}
                     />
                   ) : (
                     <a

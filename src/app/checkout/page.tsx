@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { ShippingAddress } from "@/lib/types";
@@ -11,6 +12,7 @@ export default function CheckoutPage() {
   const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [form, setForm] = useState<ShippingAddress>({
     firstName: "",
     lastName: "",
@@ -234,13 +236,30 @@ export default function CheckoutPage() {
           <div className="lg:col-span-1">
             <div className="sticky top-32 rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
               <h3 className="text-lg font-bold text-gray-900">Order Summary</h3>
-              <ul className="mt-4 space-y-3">
+              <ul className="mt-4 space-y-4">
                 {items.map((item) => (
-                  <li key={`${item.brandSlug}-${item.modelSlug}-${item.size}`} className="flex justify-between text-sm">
-                    <span className="text-gray-600">
-                      {item.brand} {item.model} ({item.size}) &times; {item.quantity}
-                    </span>
-                    <span className="font-medium text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
+                  <li key={`${item.brandSlug}-${item.modelSlug}-${item.size}`} className="flex gap-3">
+                    {item.image ? (
+                      <Image
+                        src={item.image}
+                        alt={`${item.brand} ${item.model}`}
+                        width={56}
+                        height={56}
+                        className="rounded-md object-contain bg-gray-50 flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-14 h-14 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10" strokeWidth="1.5"/><path strokeWidth="1.5" d="M12 2a15.3 15.3 0 0 1 0 20M12 2a15.3 15.3 0 0 0 0 20"/></svg>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{item.brand} {item.model}</p>
+                      <p className="text-xs text-gray-500">{item.size} &middot; Load: {item.loadIndex} &middot; Speed: {item.speedRating}</p>
+                      <div className="mt-1 flex justify-between items-baseline">
+                        <span className="text-xs text-gray-500">&times;{item.quantity} @ ${item.price.toFixed(2)}/ea</span>
+                        <span className="text-sm font-bold text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -253,18 +272,48 @@ export default function CheckoutPage() {
                   <dt className="text-gray-500">Shipping</dt>
                   <dd className="font-medium text-green-600">Free</dd>
                 </div>
+                <div className="flex justify-between text-sm">
+                  <dt className="text-gray-500">Estimated Delivery</dt>
+                  <dd className="font-medium text-gray-900">3-7 business days</dd>
+                </div>
                 <div className="border-t border-gray-200 pt-3 flex justify-between">
                   <dt className="font-bold text-gray-900">Total</dt>
                   <dd className="font-bold text-lg text-gray-900">${subtotal.toFixed(2)}</dd>
                 </div>
               </dl>
+
+              {/* Terms & Return Policy */}
+              <label className="mt-5 flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-orange focus:ring-orange"
+                />
+                <span className="text-xs text-gray-600 leading-snug">
+                  I agree to the{" "}
+                  <Link href="/returns" target="_blank" className="text-orange underline hover:text-orange-dark">
+                    Return &amp; Refund Policy
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/shipping" target="_blank" className="text-orange underline hover:text-orange-dark">
+                    Shipping Policy
+                  </Link>. Tires may be returned within 30 days if unmounted and unused.
+                </span>
+              </label>
+
               <button
                 type="submit"
-                disabled={loading}
-                className="mt-6 block w-full rounded-lg bg-orange py-3 text-center text-sm font-bold text-white hover:bg-orange-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || !agreedToTerms}
+                className="mt-5 block w-full rounded-lg bg-orange py-3 text-center text-sm font-bold text-white hover:bg-orange-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Processing..." : "Pay with Stripe"}
               </button>
+              {!agreedToTerms && (
+                <p className="mt-2 text-center text-xs text-red-500">
+                  Please agree to the return policy to continue
+                </p>
+              )}
               <p className="mt-3 text-center text-xs text-gray-400">
                 Secure checkout powered by Stripe
               </p>
