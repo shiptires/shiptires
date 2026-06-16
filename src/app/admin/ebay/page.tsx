@@ -44,7 +44,15 @@ interface SyncResult {
   duplicatesInBatch: number;
   errors: Array<{ sku: string; error: string }>;
   total: number;
+  existingOnEbay: number;
+  existingSkuCount: number;
   dryRun: boolean;
+  debug?: {
+    ebayTitles: string[];
+    ebaySkus: string[];
+    generatedTitles: string[];
+    generatedSkus: string[];
+  };
 }
 
 interface EbayListing {
@@ -56,7 +64,51 @@ interface EbayListing {
   imageUrl: string;
 }
 
-type Tab = "sync" | "manage";
+type Tab = "sync" | "manage" | "distributor";
+
+// ── Distributor pricing constants ──────────────────────────
+const DIST_SHIPPING = 55;
+const DIST_EBAY_FVF = 0.1325;
+const DIST_MISC = 0.02;
+const DIST_MARGIN = 0.15;
+
+function calcDistPrice(cost: number): number {
+  return Math.round(((cost + DIST_SHIPPING) / (1 - DIST_EBAY_FVF - DIST_MISC - DIST_MARGIN)) * 100) / 100;
+}
+
+interface DistributorItem {
+  id: string;
+  brand: string;
+  model: string;
+  size: string;
+  quantity: number;
+  cost: number;
+  partNumber: string;
+  ebayPrice: number;
+  dbMatch: "pending" | "found" | "not_found";
+  tireId?: number;
+  status: "pending" | "uploaded" | "error";
+  error?: string;
+}
+
+interface DistSyncResult {
+  synced: number;
+  revised: number;
+  skipped: number;
+  errors: Array<{ sku: string; error: string }>;
+  total: number;
+  dryRun: boolean;
+  itemResults: Array<{
+    brand: string;
+    model: string;
+    size: string;
+    status: string;
+    ebayPrice?: number;
+    error?: string;
+    tireId?: number;
+    itemId?: string;
+  }>;
+}
 
 export default function EbayPage() {
   const [activeTab, setActiveTab] = useState<Tab>("sync");
@@ -104,8 +156,33 @@ export default function EbayPage() {
   // Confirmation modal
   const [confirmAction, setConfirmAction] = useState<{ type: string; message: string; onConfirm: () => void } | null>(null);
 
+  // Distributor tab state
+  const [distBrand, setDistBrand] = useState("BFGoodrich");
+  const [distModel, setDistModel] = useState("");
+  const [distSize, setDistSize] = useState("");
+  const [distQty, setDistQty] = useState("4");
+  const [distCost, setDistCost] = useState("");
+  const [distPartNum, setDistPartNum] = useState("");
+  const [distItems, setDistItems] = useState<DistributorItem[]>([]);
+  const [distDryRun, setDistDryRun] = useState(true);
+  const [distSyncing, setDistSyncing] = useState(false);
+  const [distResult, setDistResult] = useState<DistSyncResult | null>(null);
+  const [distError, setDistError] = useState<string | null>(null);
+  const [distChecking, setDistChecking] = useState(false);
+  const [distDistributors, setDistDistributors] = useState<Array<{ id: string; name: string; default_shipping_cost: number }>>([]);
+  const [distSelectedDistributor, setDistSelectedDistributor] = useState("");
+
   useEffect(() => {
     fetchStatus();
+    // Fetch distributors for the distributor tab dropdown
+    fetch("/api/admin/distributors")
+      .then((r) => r.json())
+      .then((data) => {
+        const dists = data.distributors || [];
+        setDistDistributors(dists);
+        if (dists.length > 0) setDistSelectedDistributor(dists[0].id);
+      })
+      .catch(() => {});
   }, []);
 
   const fetchListings = useCallback(async (page = 1) => {
@@ -388,6 +465,16 @@ export default function EbayPage() {
         >
           Manage Listings
         </button>
+        <button
+          onClick={() => setActiveTab("distributor")}
+          className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === "distributor"
+              ? "border-safety-orange text-safety-orange"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Distributor
+        </button>
       </div>
 
       {/* ═══════════════ SYNC TAB ═══════════════ */}
@@ -630,10 +717,14 @@ export default function EbayPage() {
               <h2 className="font-semibold text-gray-900 mb-3">
                 {syncResult.dryRun ? "Dry Run Results" : "Sync Results"}
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4 mb-4">
                 <div>
                   <p className="text-xs text-gray-500">Total in DB</p>
                   <p className="text-lg font-semibold text-gray-900">{syncResult.total.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Existing on eBay</p>
+                  <p className="text-lg font-semibold text-gray-500">{(syncResult.existingOnEbay || 0).toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">{syncResult.dryRun ? "Would Sync" : "Synced (New)"}</p>
@@ -677,6 +768,39 @@ export default function EbayPage() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+              )}
+
+              {syncResult.debug && (
+                <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded text-xs font-mono">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2 font-sans">Debug: Title/SKU Comparison</h3>
+                  <p className="text-gray-500 mb-1 font-sans">SKUs in eBay map: {syncResult.existingSkuCount ?? "?"}</p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <div>
+                      <p className="font-sans font-medium text-gray-600 mb-1">eBay Titles (from API):</p>
+                      {(syncResult.debug.ebayTitles || []).map((t, i) => (
+                        <p key={i} className="text-gray-700 truncate" title={t}>{t}</p>
+                      ))}
+                      {(syncResult.debug.ebayTitles || []).length === 0 && <p className="text-gray-400 italic">none</p>}
+                      <p className="font-sans font-medium text-gray-600 mt-2 mb-1">eBay SKUs:</p>
+                      {(syncResult.debug.ebaySkus || []).map((s, i) => (
+                        <p key={i} className="text-gray-700">{s}</p>
+                      ))}
+                      {(syncResult.debug.ebaySkus || []).length === 0 && <p className="text-gray-400 italic">none</p>}
+                    </div>
+                    <div>
+                      <p className="font-sans font-medium text-gray-600 mb-1">Generated Titles (from DB):</p>
+                      {(syncResult.debug.generatedTitles || []).map((t, i) => (
+                        <p key={i} className="text-gray-700 truncate" title={t}>{t}</p>
+                      ))}
+                      {(syncResult.debug.generatedTitles || []).length === 0 && <p className="text-gray-400 italic">none</p>}
+                      <p className="font-sans font-medium text-gray-600 mt-2 mb-1">Generated SKUs:</p>
+                      {(syncResult.debug.generatedSkus || []).map((s, i) => (
+                        <p key={i} className="text-gray-700">{s}</p>
+                      ))}
+                      {(syncResult.debug.generatedSkus || []).length === 0 && <p className="text-gray-400 italic">none</p>}
+                    </div>
                   </div>
                 </div>
               )}
@@ -873,6 +997,459 @@ export default function EbayPage() {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ═══════════════ DISTRIBUTOR TAB ═══════════════ */}
+      {activeTab === "distributor" && (
+        <>
+          {/* Distributor selector */}
+          <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
+            <div className="flex items-center gap-4">
+              <label className="text-sm font-medium text-gray-700">Distributor:</label>
+              <select
+                value={distSelectedDistributor}
+                onChange={(e) => setDistSelectedDistributor(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange"
+              >
+                {distDistributors.length === 0 && <option value="">No distributors — add one first</option>}
+                {distDistributors.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+              <span className="text-xs text-gray-400">Items will be saved to this distributor&apos;s inventory on sync</span>
+            </div>
+          </div>
+
+          {/* Input form */}
+          <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
+            <h2 className="font-semibold text-gray-900 mb-4">Add Distributor Item</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Brand</label>
+                <input
+                  type="text"
+                  value={distBrand}
+                  onChange={(e) => setDistBrand(e.target.value)}
+                  placeholder="BFGoodrich"
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Model</label>
+                <input
+                  type="text"
+                  value={distModel}
+                  onChange={(e) => setDistModel(e.target.value)}
+                  placeholder="All-Terrain T/A KO2"
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Size</label>
+                <input
+                  type="text"
+                  value={distSize}
+                  onChange={(e) => setDistSize(e.target.value)}
+                  placeholder="LT255/75R17"
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Qty</label>
+                <input
+                  type="number"
+                  value={distQty}
+                  onChange={(e) => setDistQty(e.target.value)}
+                  min={1}
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Cost ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={distCost}
+                  onChange={(e) => setDistCost(e.target.value)}
+                  placeholder="212.00"
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Part# <span className="text-gray-400">(opt)</span></label>
+                <input
+                  type="text"
+                  value={distPartNum}
+                  onChange={(e) => setDistPartNum(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange"
+                />
+              </div>
+            </div>
+            <button
+              onClick={async () => {
+                if (!distBrand || !distModel || !distSize || !distCost) return;
+                const cost = parseFloat(distCost);
+                if (isNaN(cost) || cost <= 0) return;
+                const qty = parseInt(distQty) || 4;
+                const itemId = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+                const newItem: DistributorItem = {
+                  id: itemId,
+                  brand: distBrand.trim(),
+                  model: distModel.trim(),
+                  size: distSize.trim(),
+                  quantity: qty,
+                  cost,
+                  partNumber: distPartNum.trim(),
+                  ebayPrice: calcDistPrice(cost),
+                  dbMatch: "pending",
+                  status: "pending",
+                };
+                setDistItems((prev) => [...prev, newItem]);
+                // Clear size, cost, part# for next entry (keep brand/model)
+                setDistSize("");
+                setDistCost("");
+                setDistPartNum("");
+
+                // Auto-check DB match
+                try {
+                  const res = await fetch("/api/admin/ebay/distributor-sync", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      items: [{
+                        brand: newItem.brand,
+                        model: newItem.model,
+                        size: newItem.size,
+                        quantity: newItem.quantity,
+                        cost: newItem.cost,
+                        partNumber: newItem.partNumber || undefined,
+                      }],
+                      shippingCost: DIST_SHIPPING,
+                      ebayFvf: DIST_EBAY_FVF,
+                      miscRate: DIST_MISC,
+                      marginRate: DIST_MARGIN,
+                      dryRun: true,
+                    }),
+                  });
+                  const data = await res.json();
+                  const result = data.itemResults?.[0];
+                  if (result) {
+                    setDistItems((prev) =>
+                      prev.map((i) =>
+                        i.id === itemId
+                          ? { ...i, dbMatch: result.tireId ? "found" as const : "not_found" as const, tireId: result.tireId }
+                          : i
+                      )
+                    );
+                  }
+                } catch {
+                  // Non-fatal — user can still check manually
+                }
+              }}
+              disabled={!distBrand || !distModel || !distSize || !distCost}
+              className="px-4 py-2 bg-safety-orange text-white rounded font-medium text-sm hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Add Item
+            </button>
+          </div>
+
+          {/* Items table */}
+          {distItems.length > 0 && (
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="py-2.5 px-3 text-left font-medium text-gray-500">Brand</th>
+                      <th className="py-2.5 px-3 text-left font-medium text-gray-500">Model</th>
+                      <th className="py-2.5 px-3 text-left font-medium text-gray-500">Size</th>
+                      <th className="py-2.5 px-3 text-right font-medium text-gray-500">Qty</th>
+                      <th className="py-2.5 px-3 text-right font-medium text-gray-500">Cost</th>
+                      <th className="py-2.5 px-3 text-right font-medium text-gray-500">eBay Price</th>
+                      <th className="py-2.5 px-3 text-center font-medium text-gray-500">DB Match</th>
+                      <th className="py-2.5 px-3 text-center font-medium text-gray-500">Status</th>
+                      <th className="py-2.5 px-3 w-12"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {distItems.map((item) => (
+                      <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-2 px-3 text-gray-900 text-xs">{item.brand}</td>
+                        <td className="py-2 px-3 text-gray-900 text-xs">{item.model}</td>
+                        <td className="py-2 px-3 text-gray-700 font-mono text-xs">{item.size}</td>
+                        <td className="py-2 px-3 text-right text-gray-700 text-xs">{item.quantity}</td>
+                        <td className="py-2 px-3 text-right text-gray-700 text-xs">${item.cost.toFixed(2)}</td>
+                        <td className="py-2 px-3 text-right font-medium text-gray-900 text-xs">${item.ebayPrice.toFixed(2)}</td>
+                        <td className="py-2 px-3 text-center">
+                          {item.dbMatch === "pending" && (
+                            <span className="text-gray-400 text-xs">--</span>
+                          )}
+                          {item.dbMatch === "found" && (
+                            <span className="text-green-600" title={`Tire ID: ${item.tireId}`}>&#10003;</span>
+                          )}
+                          {item.dbMatch === "not_found" && (
+                            <span className="text-yellow-500" title="Not found in DB">&#9888;</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          {item.status === "pending" && (
+                            <span className="inline-block px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-xs">Pending</span>
+                          )}
+                          {item.status === "uploaded" && (
+                            <span className="inline-block px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs">Uploaded</span>
+                          )}
+                          {item.status === "error" && (
+                            <span className="inline-block px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs" title={item.error}>Error</span>
+                          )}
+                        </td>
+                        <td className="py-2 px-3">
+                          <button
+                            onClick={() => setDistItems((prev) => prev.filter((i) => i.id !== item.id))}
+                            className="text-xs text-red-500 hover:text-red-700"
+                            title="Remove"
+                          >
+                            &#10005;
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Action bar */}
+          {distItems.length > 0 && (
+            <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
+              <div className="flex flex-wrap items-center gap-4">
+                <button
+                  onClick={async () => {
+                    setDistChecking(true);
+                    try {
+                      // Use dry run to check DB matches
+                      const res = await fetch("/api/admin/ebay/distributor-sync", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          items: distItems.map((i) => ({
+                            brand: i.brand,
+                            model: i.model,
+                            size: i.size,
+                            quantity: i.quantity,
+                            cost: i.cost,
+                            partNumber: i.partNumber || undefined,
+                          })),
+                          shippingCost: DIST_SHIPPING,
+                          ebayFvf: DIST_EBAY_FVF,
+                          miscRate: DIST_MISC,
+                          marginRate: DIST_MARGIN,
+                          dryRun: true,
+                        }),
+                      });
+                      const data = await res.json();
+                      if (!res.ok) throw new Error(data.error);
+                      // Update items with DB match info
+                      if (data.itemResults) {
+                        setDistItems((prev) =>
+                          prev.map((item, idx) => {
+                            const result = data.itemResults[idx];
+                            if (!result) return item;
+                            return {
+                              ...item,
+                              dbMatch: result.tireId ? "found" as const : "not_found" as const,
+                              tireId: result.tireId,
+                            };
+                          })
+                        );
+                      }
+                    } catch (e) {
+                      setDistError(e instanceof Error ? e.message : "Check failed");
+                    } finally {
+                      setDistChecking(false);
+                    }
+                  }}
+                  disabled={distChecking || distSyncing}
+                  className="px-4 py-2 bg-blue-600 text-white rounded font-medium text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {distChecking ? "Checking..." : "Check DB Matches"}
+                </button>
+
+                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={distDryRun}
+                    onChange={(e) => setDistDryRun(e.target.checked)}
+                    className="rounded border-gray-300 text-safety-orange focus:ring-safety-orange"
+                  />
+                  Dry Run
+                </label>
+
+                <button
+                  onClick={async () => {
+                    setDistSyncing(true);
+                    setDistResult(null);
+                    setDistError(null);
+                    try {
+                      const pendingItems = distItems.filter((i) => i.status === "pending");
+                      if (pendingItems.length === 0) {
+                        setDistError("No pending items to sync");
+                        return;
+                      }
+                      const res = await fetch("/api/admin/ebay/distributor-sync", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          items: pendingItems.map((i) => ({
+                            brand: i.brand,
+                            model: i.model,
+                            size: i.size,
+                            quantity: i.quantity,
+                            cost: i.cost,
+                            partNumber: i.partNumber || undefined,
+                          })),
+                          shippingCost: DIST_SHIPPING,
+                          ebayFvf: DIST_EBAY_FVF,
+                          miscRate: DIST_MISC,
+                          marginRate: DIST_MARGIN,
+                          dryRun: distDryRun,
+                          distributorId: distSelectedDistributor || undefined,
+                        }),
+                      });
+                      const data: DistSyncResult = await res.json();
+                      if (!res.ok) throw new Error((data as unknown as { error: string }).error);
+                      setDistResult(data);
+
+                      // Update item statuses from results
+                      if (data.itemResults) {
+                        const pendingIds = pendingItems.map((i) => i.id);
+                        setDistItems((prev) =>
+                          prev.map((item) => {
+                            const pendingIdx = pendingIds.indexOf(item.id);
+                            if (pendingIdx === -1) return item;
+                            const result = data.itemResults[pendingIdx];
+                            if (!result) return item;
+                            return {
+                              ...item,
+                              dbMatch: result.tireId ? "found" as const : "not_found" as const,
+                              tireId: result.tireId,
+                              status: distDryRun
+                                ? item.status
+                                : result.status === "synced" || result.status === "revised"
+                                ? "uploaded" as const
+                                : result.status === "error"
+                                ? "error" as const
+                                : item.status,
+                              error: result.error,
+                            };
+                          })
+                        );
+                      }
+                    } catch (e) {
+                      setDistError(e instanceof Error ? e.message : "Sync failed");
+                    } finally {
+                      setDistSyncing(false);
+                    }
+                  }}
+                  disabled={distSyncing || distChecking || distItems.filter((i) => i.status === "pending").length === 0}
+                  className="px-4 py-2 bg-safety-orange text-white rounded font-medium text-sm hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {distSyncing ? "Syncing..." : distDryRun ? "Preview Sync" : "Sync to eBay"}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setDistItems([]);
+                    setDistResult(null);
+                    setDistError(null);
+                  }}
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Distributor sync error */}
+          {distError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg px-5 py-4 text-sm text-red-700 mb-6">
+              <p className="font-medium">Error</p>
+              <p className="mt-1 text-red-600">{distError}</p>
+            </div>
+          )}
+
+          {/* Distributor sync results */}
+          {distResult && (
+            <div className="bg-white rounded-lg border border-gray-200 p-5">
+              <h2 className="font-semibold text-gray-900 mb-3">
+                {distResult.dryRun ? "Dry Run Results" : "Sync Results"}
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-4">
+                <div>
+                  <p className="text-xs text-gray-500">Total Items</p>
+                  <p className="text-lg font-semibold text-gray-900">{distResult.total}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">{distResult.dryRun ? "Would Sync" : "Synced"}</p>
+                  <p className="text-lg font-semibold text-green-600">{distResult.synced}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Revised</p>
+                  <p className="text-lg font-semibold text-blue-600">{distResult.revised}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Skipped</p>
+                  <p className="text-lg font-semibold text-yellow-600">{distResult.skipped}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Errors</p>
+                  <p className="text-lg font-semibold text-red-600">{distResult.errors.length}</p>
+                </div>
+              </div>
+              {distResult.errors.length > 0 && (
+                <div className="mt-3">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Errors</h3>
+                  <div className="max-h-40 overflow-y-auto border border-gray-200 rounded">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          <th className="text-left py-1.5 px-3 font-medium text-gray-500">SKU</th>
+                          <th className="text-left py-1.5 px-3 font-medium text-gray-500">Error</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {distResult.errors.map((err, i) => (
+                          <tr key={i} className="border-b border-gray-100">
+                            <td className="py-1.5 px-3 font-mono text-gray-700">{err.sku}</td>
+                            <td className="py-1.5 px-3 text-red-600">{err.error}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Pricing formula reference */}
+          {distItems.length === 0 && (
+            <div className="bg-gray-50 rounded-lg border border-gray-200 p-5 text-sm text-gray-600">
+              <h3 className="font-medium text-gray-800 mb-2">Pricing Formula</h3>
+              <p className="font-mono text-xs mb-2">
+                eBay Price = (Cost + ${DIST_SHIPPING}) / (1 - {DIST_EBAY_FVF} - {DIST_MISC} - {DIST_MARGIN})
+              </p>
+              <p className="text-xs text-gray-500">
+                Shipping: ${DIST_SHIPPING} | eBay FVF: {(DIST_EBAY_FVF * 100).toFixed(2)}% | Misc: {(DIST_MISC * 100)}% | Margin: {(DIST_MARGIN * 100)}%
+              </p>
+              <div className="mt-3 space-y-1 text-xs">
+                <p>Example: $212 cost &rarr; ${calcDistPrice(212).toFixed(2)} eBay price</p>
+                <p>Example: $293.95 cost &rarr; ${calcDistPrice(293.95).toFixed(2)} eBay price</p>
+              </div>
             </div>
           )}
         </>

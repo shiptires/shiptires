@@ -32,16 +32,69 @@ function getDb(): Client {
   return _client;
 }
 
-/** Execute a query with timeout + error fallback. Returns empty rows on failure. */
+// ---------------------------------------------------------------------------
+// Build-phase detection
+// ---------------------------------------------------------------------------
+
+const IS_BUILD = process.env.NEXT_PHASE === "phase-production-build";
+const DEFAULT_TIMEOUT = IS_BUILD ? 30_000 : 20_000;
+
+// ---------------------------------------------------------------------------
+// Concurrency semaphore — prevents thundering herd against Turso
+// ---------------------------------------------------------------------------
+
+const MAX_CONCURRENT = 6;
+let _running = 0;
+const _queue: (() => void)[] = [];
+
+function semAcquire(): Promise<void> {
+  if (_running < MAX_CONCURRENT) {
+    _running++;
+    return Promise.resolve();
+  }
+  return new Promise<void>((resolve) => {
+    _queue.push(() => { _running++; resolve(); });
+  });
+}
+
+function semRelease(): void {
+  _running--;
+  if (_queue.length > 0) {
+    const next = _queue.shift()!;
+    next();
+  }
+}
+
+/** Execute a query with semaphore, retry, timeout + error fallback. Returns empty rows on failure. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function safeExecute(stmt: any, timeoutMs = 30000) {
+async function safeExecute(stmt: any, timeoutMs = DEFAULT_TIMEOUT) {
   const db = getDb();
-  const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error("DB_TIMEOUT")), timeoutMs));
+  const emptyResult = { rows: [] as any[], columns: [] as string[], columnTypes: [] as string[], rowsAffected: 0, lastInsertRowid: undefined };
+
+  const attempt = async () => {
+    const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error("DB_TIMEOUT")), timeoutMs));
+    return Promise.race([db.execute(stmt), timeout]);
+  };
+
+  await semAcquire();
   try {
-    return await Promise.race([db.execute(stmt), timeout]);
+    return await attempt();
   } catch (e) {
-    console.warn(`[turso] query failed: ${e instanceof Error ? e.message : e}`);
-    return { rows: [] as any[], columns: [] as string[], columnTypes: [] as string[], rowsAffected: 0, lastInsertRowid: undefined };
+    console.warn(`[turso] query attempt 1 failed: ${e instanceof Error ? e.message : e}, retrying in 1s…`);
+  } finally {
+    semRelease();
+  }
+
+  // Retry once with 1s backoff
+  await new Promise((r) => setTimeout(r, 1000));
+  await semAcquire();
+  try {
+    return await attempt();
+  } catch (e) {
+    console.warn(`[turso] query attempt 2 failed: ${e instanceof Error ? e.message : e}`);
+    return emptyResult;
+  } finally {
+    semRelease();
   }
 }
 
@@ -53,7 +106,7 @@ let _allBrandsCache: { data: BrandSummaryRow[]; ts: number } | null = null;
 let _allBrandsPromise: Promise<BrandSummaryRow[]> | null = null;
 let _statsCache: { data: { brandCount: number; modelCount: number; tireCount: number }; ts: number } | null = null;
 let _statsPromise: Promise<{ brandCount: number; modelCount: number; tireCount: number }> | null = null;
-const CACHE_TTL = 300_000; // 5 min in-process cache
+const CACHE_TTL = IS_BUILD ? 1_800_000 : 300_000; // Build: 30 min, Runtime: 5 min
 
 // ---------------------------------------------------------------------------
 // Brand queries
@@ -75,16 +128,15 @@ async function _fetchAllBrands(): Promise<BrandSummaryRow[]> {
   // DB-primary: try Turso first, filter to curated brands
   const result = await safeExecute(
     `SELECT
-      t.make_name,
-      MAX(t.make_image_url) as make_image_url,
-      MAX(m.local_logo) as local_logo,
+      make_name,
+      MAX(make_image_url) as make_image_url,
+      NULL as local_logo,
       COUNT(*) as tire_count,
-      COUNT(DISTINCT t.model_name) as model_count
-    FROM tires t
-    LEFT JOIN manufacturers m ON UPPER(m.name) = UPPER(t.make_name)
-    WHERE t.make_name IS NOT NULL AND t.make_name != ''
-    GROUP BY t.make_name
-    ORDER BY t.make_name ASC`
+      COUNT(DISTINCT model_name) as model_count
+    FROM tires
+    WHERE make_name IS NOT NULL AND make_name != ''
+    GROUP BY make_name
+    ORDER BY make_name ASC`
   );
   const dbRows = (result.rows as unknown as BrandSummaryRow[]).filter(
     (r) => isCuratedBrand(r.make_name)
@@ -134,7 +186,27 @@ export async function getManufacturer(brandName: string): Promise<ManufacturerRo
 // Model queries
 // ---------------------------------------------------------------------------
 
+const _modelsByBrandCache = new Map<string, { data: ModelSummaryRow[]; ts: number }>();
+const _modelsByBrandPromise = new Map<string, Promise<ModelSummaryRow[]>>();
+
 export async function getModelsByBrand(slug: string): Promise<ModelSummaryRow[]> {
+  // Return cached if fresh
+  const cached = _modelsByBrandCache.get(slug);
+  if (cached && Date.now() - cached.ts < CACHE_TTL) {
+    return cached.data;
+  }
+  // Deduplicate concurrent calls for the same slug
+  const pending = _modelsByBrandPromise.get(slug);
+  if (pending) return pending;
+
+  const promise = _fetchModelsByBrand(slug).finally(() => {
+    _modelsByBrandPromise.delete(slug);
+  });
+  _modelsByBrandPromise.set(slug, promise);
+  return promise;
+}
+
+async function _fetchModelsByBrand(slug: string): Promise<ModelSummaryRow[]> {
   // Resolve brand name from slug
   let brandName: string | null = null;
   const slugMap = await getBrandSlugMap();
@@ -165,18 +237,24 @@ export async function getModelsByBrand(slug: string): Promise<ModelSummaryRow[]>
     args: [brandName],
   });
   const rows = result.rows as unknown as ModelSummaryRow[];
-  if (rows.length > 0) return rows;
+  if (rows.length > 0) {
+    _modelsByBrandCache.set(slug, { data: rows, ts: Date.now() });
+    return rows;
+  }
 
   // DB empty — fall back to API
   const apiRows = await apiGetModelsByBrand(brandName);
-  if (apiRows.length > 0) return apiRows;
+  if (apiRows.length > 0) {
+    _modelsByBrandCache.set(slug, { data: apiRows, ts: Date.now() });
+    return apiRows;
+  }
 
   // Both failed — use static brand data
   const staticBrand = staticBrands.find(
     (b) => b.name.toUpperCase() === brandName!.toUpperCase()
   );
   if (staticBrand) {
-    return staticBrand.models.map((m) => ({
+    const staticRows = staticBrand.models.map((m) => ({
       model_name: m.name,
       tire_count: m.sizes.length,
       min_price: m.priceRange?.[0] ?? null,
@@ -186,6 +264,8 @@ export async function getModelsByBrand(slug: string): Promise<ModelSummaryRow[]>
       category: m.type,
       thumbnail_url: null,
     })) as ModelSummaryRow[];
+    _modelsByBrandCache.set(slug, { data: staticRows, ts: Date.now() });
+    return staticRows;
   }
   return [];
 }
@@ -375,6 +455,119 @@ export async function searchTires(params: SearchParams): Promise<SearchResult> {
 }
 
 // ---------------------------------------------------------------------------
+// Model-level search (for search page)
+// ---------------------------------------------------------------------------
+
+export interface ModelSearchRow {
+  make_name: string;
+  model_name: string;
+  tire_count: number;
+  min_price: number | null;
+  max_price: number | null;
+  thumbnail_url: string | null;
+  make_image_url: string | null;
+  season: string | null;
+  terrain: string | null;
+  category: string | null;
+  warranty: string | null;
+  speed_ratings: string | null;
+}
+
+export interface ModelSearchResult {
+  models: ModelSearchRow[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export async function searchModels(params: SearchParams): Promise<ModelSearchResult> {
+  const page = params.page ?? 1;
+  const limit = Math.min(params.limit ?? 24, 100);
+  const offset = (page - 1) * limit;
+
+  const conditions: string[] = [];
+  const values: (string | number)[] = [];
+
+  if (params.brand) {
+    const brandName = await slugToBrandName(params.brand);
+    if (brandName) {
+      conditions.push("make_name = ?");
+      values.push(brandName);
+    }
+  } else {
+    const brands = Array.from(CURATED_BRANDS.keys());
+    conditions.push(`make_name IN (${brands.map(() => "?").join(", ")})`);
+    values.push(...brands);
+  }
+
+  if (params.width) { conditions.push("width = ?"); values.push(params.width); }
+  if (params.aspectRatio) { conditions.push("aspect_ratio = ?"); values.push(params.aspectRatio); }
+  if (params.rimSize) { conditions.push("rim_size = ?"); values.push(params.rimSize); }
+
+  if (params.size) {
+    const match = params.size.match(/^(\d{2,3})\/(\d{2,3})R(\d{2,3})$/i);
+    if (match) {
+      conditions.push("width = ? AND aspect_ratio = ? AND rim_size = ?");
+      values.push(match[1], match[2], match[3]);
+    }
+  }
+
+  if (params.season) { conditions.push("season = ?"); values.push(params.season); }
+  if (params.terrain) { conditions.push("terrain = ?"); values.push(params.terrain); }
+  if (params.category) { conditions.push("category LIKE ?"); values.push(`%${params.category}%`); }
+  if (params.minPrice != null) { conditions.push("price_map >= ?"); values.push(params.minPrice); }
+  if (params.maxPrice != null) { conditions.push("price_map <= ?"); values.push(params.maxPrice); }
+
+  if (params.query) {
+    conditions.push("(name LIKE ? OR model_name LIKE ? OR make_name LIKE ?)");
+    const q = `%${params.query}%`;
+    values.push(q, q, q);
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+  const countResult = await safeExecute({
+    sql: `SELECT COUNT(*) as total FROM (SELECT 1 FROM tires ${where} GROUP BY make_name, model_name)`,
+    args: values,
+  });
+  const total = Number((countResult.rows[0] as unknown as { total: number })?.total ?? 0);
+
+  if (total > 0) {
+    const modelsResult = await safeExecute({
+      sql: `SELECT
+        make_name,
+        model_name,
+        COUNT(*) as tire_count,
+        MIN(CASE WHEN price_map > 0 THEN price_map END) as min_price,
+        MAX(price_map) as max_price,
+        MAX(thumbnail_url) as thumbnail_url,
+        MAX(make_image_url) as make_image_url,
+        MAX(season) as season,
+        MAX(terrain) as terrain,
+        MAX(category) as category,
+        MAX(warranty) as warranty,
+        GROUP_CONCAT(DISTINCT speed_rating) as speed_ratings
+      FROM tires ${where}
+      GROUP BY make_name, model_name
+      ORDER BY tire_count DESC
+      LIMIT ? OFFSET ?`,
+      args: [...values, limit, offset],
+    });
+
+    return {
+      models: modelsResult.rows as unknown as ModelSearchRow[],
+      total,
+      page,
+      limit,
+      totalPages: Math.min(Math.ceil(total / limit), 50),
+    };
+  }
+
+  return { models: [], total: 0, page, limit, totalPages: 0 };
+}
+
+// ---------------------------------------------------------------------------
 // Top brands by tire type
 // ---------------------------------------------------------------------------
 
@@ -389,7 +582,7 @@ export async function getTopBrandsForType(type: string): Promise<BrandSummaryRow
     case "performance": condition = "(category LIKE '%performance%' OR category LIKE '%uhp%')"; break;
     case "all-terrain": condition = "terrain = 'All-Terrain (A/T)'"; break;
     case "mud-terrain": condition = "terrain = 'Mud-Terrain (M/T)'"; break;
-    case "highway": condition = "terrain = 'Highway Terrain (H/T)'"; break;
+    case "highway": condition = "terrain = 'Highway Terrain(H/T)'"; break;
     case "touring": condition = "category LIKE '%touring%'"; break;
     default: return [];
   }
@@ -437,7 +630,7 @@ export async function getShowcaseModelsForType(type: string, limit = 2): Promise
     case "performance": condition = "(category LIKE '%performance%' OR category LIKE '%uhp%')"; break;
     case "all-terrain": condition = "terrain = 'All-Terrain (A/T)'"; break;
     case "mud-terrain": condition = "terrain = 'Mud-Terrain (M/T)'"; break;
-    case "highway": condition = "terrain = 'Highway Terrain (H/T)'"; break;
+    case "highway": condition = "terrain = 'Highway Terrain(H/T)'"; break;
     case "touring": condition = "category LIKE '%touring%'"; break;
     default: return [];
   }
@@ -524,6 +717,19 @@ async function _fetchStats(): Promise<{
   const fallback = { brandCount: 34, modelCount: 800, tireCount: 307000 };
   _statsCache = { data: fallback, ts: Date.now() };
   return fallback;
+}
+
+// ---------------------------------------------------------------------------
+// Single tire lookup by ID — used by /buy/[id] for Google Shopping checkout
+// ---------------------------------------------------------------------------
+
+export async function getTireById(id: number): Promise<TireRow | null> {
+  const result = await safeExecute({
+    sql: `SELECT * FROM tires WHERE id = ?`,
+    args: [id],
+  });
+  if (result.rows.length === 0) return null;
+  return result.rows[0] as unknown as TireRow;
 }
 
 // ---------------------------------------------------------------------------

@@ -12,6 +12,13 @@ const EBAY_CATEGORY_ID = "179680"; // eBay Motors > Tires
 const LISTING_QUANTITY = 50;
 const MAP_MARKUP = 1.15; // 15% above MAP fallback
 
+// ── eBay marketplace fees ───────────────────────────────────
+// Final Value Fee (~13.25%) + misc buffer (3%) = 16.25% total
+// Formula: base_price / (1 - total_fee_rate) so seller nets the base after eBay takes fees
+const EBAY_FVF_RATE = 0.1325; // eBay final value fee
+const EBAY_MISC_RATE = 0.03;  // misc (payment processing, buffer)
+const EBAY_TOTAL_FEE = EBAY_FVF_RATE + EBAY_MISC_RATE; // 0.1625
+
 // ── OAuth token cache ───────────────────────────────────────
 let _cachedToken: { token: string; expiresAt: number } | null = null;
 
@@ -94,6 +101,15 @@ function escapeXml(str: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
+}
+
+function unescapeXml(str: string): string {
+  return str
+    .replace(/&apos;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&gt;/g, ">")
+    .replace(/&lt;/g, "<")
+    .replace(/&amp;/g, "&");
 }
 
 interface TradingApiResult {
@@ -308,8 +324,8 @@ export async function getActiveListings(
   while ((match = itemRegex.exec(result.rawXml)) !== null) {
     const block = match[1];
     const itemId = block.match(/<ItemID>(\d+)<\/ItemID>/)?.[1] || "";
-    const sku = block.match(/<SKU>([\s\S]*?)<\/SKU>/)?.[1] || "";
-    const title = block.match(/<Title>([\s\S]*?)<\/Title>/)?.[1] || "";
+    const sku = unescapeXml(block.match(/<SKU>([\s\S]*?)<\/SKU>/)?.[1] || "");
+    const title = unescapeXml(block.match(/<Title>([\s\S]*?)<\/Title>/)?.[1] || "");
     const priceStr = block.match(/<CurrentPrice[^>]*>([\d.]+)<\/CurrentPrice>/)?.[1];
     const quantity = parseInt(block.match(/<Quantity>(\d+)<\/Quantity>/)?.[1] || "0");
     const imageUrl = block.match(/<PictureURL>([\s\S]*?)<\/PictureURL>/)?.[1] || "";
@@ -716,7 +732,8 @@ function buildEbayDescription(tire: TireRow): string {
   return lines.join("\n");
 }
 
-function calculatePrice(tire: TireRow, competitivePrice: number | null): number {
+/** Calculate the base (site) price for a tire — MAP * markup or competitive */
+export function calculateBasePrice(tire: TireRow, competitivePrice: number | null): number {
   const mapPrice = tire.price_map ?? 0;
   const fallback = mapPrice * MAP_MARKUP;
 
@@ -731,6 +748,88 @@ function calculatePrice(tire: TireRow, competitivePrice: number | null): number 
   }
 
   return fallback;
+}
+
+/**
+ * Calculate the site display price for a tire.
+ * This is the eBay price minus eBay fees — i.e. the base price the seller nets.
+ * Site buyers don't pay eBay fees, so the site price = base price (MAP * markup).
+ */
+export function calculateSitePrice(tire: TireRow): number {
+  const basePrice = calculateBasePrice(tire, null);
+  return Math.round(basePrice * 100) / 100;
+}
+
+/** Calculate the eBay listing price — base price adjusted to cover marketplace fees */
+function calculatePrice(tire: TireRow, competitivePrice: number | null): number {
+  const basePrice = calculateBasePrice(tire, competitivePrice);
+  if (basePrice <= 0) return 0;
+  // Gross up so that after eBay takes fees, we net the base price
+  return Math.round((basePrice / (1 - EBAY_TOTAL_FEE)) * 100) / 100;
+}
+
+// ── Distributor pricing ──────────────────────────────────────
+
+/** Calculate the eBay sell price from distributor cost + fees */
+export function calculateDistributorPrice(
+  cost: number,
+  shippingCost: number,
+  ebayFvf: number,
+  miscRate: number,
+  marginRate: number
+): number {
+  return Math.round(((cost + shippingCost) / (1 - ebayFvf - miscRate - marginRate)) * 100) / 100;
+}
+
+/** Map a DB tire + distributor pricing to an eBay listing */
+export function distributorToEbayItem(
+  tire: TireRow,
+  ebayPrice: number,
+  quantity: number
+): EbayListingInput | null {
+  const imageUrls = resolveAllImageUrls(tire);
+  if (imageUrls.length === 0) return null;
+
+  const title = buildEbayTitle(tire);
+  const description = buildEbayDescription(tire);
+
+  const parsed = parseSizeFromName(tire.name);
+  const width = tire.width || parsed.width;
+  const aspectRatio = tire.aspect_ratio || parsed.aspectRatio;
+  const rimSize = tire.rim_size || parsed.rimSize;
+  if (!width || !aspectRatio || !rimSize) return null;
+
+  const mpn = tire.item_number || tire.gm_code;
+
+  const itemSpecifics: Record<string, string> = {
+    Brand: tire.make_name,
+    Quantity: "1",
+    "Section Width": `${width} mm`,
+    "Aspect Ratio": aspectRatio,
+    "Rim Diameter": `${rimSize} in`,
+    "Tire Size": `${width}/${aspectRatio}R${rimSize}`,
+  };
+  if (mpn) itemSpecifics["Manufacturer Part Number"] = mpn;
+  if (tire.load_rating) itemSpecifics["Load Index"] = tire.load_rating;
+  if (tire.speed_rating) itemSpecifics["Speed Rating"] = tire.speed_rating;
+  if (tire.season) itemSpecifics["Type"] = tire.season;
+  if (tire.terrain) itemSpecifics["Performance Category"] = tire.terrain;
+  if (tire.ply_rating) itemSpecifics["Ply Rating"] = tire.ply_rating;
+  if (tire.load_range) itemSpecifics["Load Range"] = tire.load_range;
+  if (tire.upc) itemSpecifics["UPC"] = tire.upc;
+  if (tire.ean) itemSpecifics["EAN"] = tire.ean;
+
+  return {
+    title,
+    description,
+    categoryId: EBAY_CATEGORY_ID,
+    price: ebayPrice.toFixed(2),
+    quantity,
+    imageUrl: imageUrls[0],
+    imageUrls,
+    sku: `DST-${tire.id}`,
+    itemSpecifics,
+  };
 }
 
 export function tireToSku(tire: TireRow): string {

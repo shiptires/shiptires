@@ -1,5 +1,7 @@
 import { getTiresForFeed, toSlug } from "@/lib/db";
 import type { TireRow } from "@/lib/db";
+import { sitePrice, sitePriceFromCost } from "@/lib/pricing";
+import { getDistributorPricingMap } from "@/lib/distributors";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -20,7 +22,7 @@ const GOOGLE_CATEGORY =
   "Vehicles & Parts > Vehicle Parts & Accessories > Motor Vehicle Parts > Motor Vehicle Wheel Systems > Motor Vehicle Tires";
 const GOOGLE_CATEGORY_ID = "2636";
 
-const ITEMS_PER_PAGE = 10_000;
+const ITEMS_PER_PAGE = 50_000;
 const MAX_LIMIT = 50_000;
 
 function escapeXml(s: string): string {
@@ -33,13 +35,10 @@ function escapeXml(s: string): string {
 }
 
 function resolveImageUrl(row: TireRow): string | null {
-  // Prefer local thumbnail, then remote thumbnail, then primary image
-  const sources = [row.local_thumbnail, row.thumbnail_url, row.image_0100_url];
+  // Prefer R2 CDN thumbnail, then primary image — skip local paths (they 404)
+  const sources = [row.thumbnail_url, row.image_0100_url, row.local_thumbnail];
   for (const src of sources) {
     if (!src) continue;
-    if (src.startsWith("images/") || src.startsWith("images\\")) {
-      return `https://ship.tires/${src.replace(/\\/g, "/")}`;
-    }
     if (src.startsWith("http")) return src;
   }
   return null;
@@ -53,7 +52,7 @@ function buildSize(row: TireRow): string {
 }
 
 function buildTitle(row: TireRow, size: string): string {
-  return `${row.make_name} ${row.model_name} ${size} Tire`;
+  return `${row.make_name} ${row.model_name} ${size} Tire - 1 Tire`;
 }
 
 function buildDescription(row: TireRow, size: string): string {
@@ -69,7 +68,10 @@ function buildDescription(row: TireRow, size: string): string {
   return parts.join(" | ");
 }
 
-function buildItemXml(row: TireRow): string {
+function buildItemXml(
+  row: TireRow,
+  distPricing?: Map<number, { cost: number; shipping: number }>
+): string {
   const size = buildSize(row);
   const title = escapeXml(buildTitle(row, size));
   const description = escapeXml(buildDescription(row, size));
@@ -77,14 +79,20 @@ function buildItemXml(row: TireRow): string {
   const modelSlug = toSlug(row.model_name);
   const link = `https://ship.tires/tires/${brandSlug}/${modelSlug}`;
   const imageLink = resolveImageUrl(row);
-  const price = (row.price_map ?? 0).toFixed(2);
+
+  // Use distributor cost-based pricing when available, fall back to MAP
+  const distSource = distPricing?.get(row.id);
+  const price = distSource
+    ? sitePriceFromCost(distSource.cost, distSource.shipping).toFixed(2)
+    : sitePrice(row.price_map).toFixed(2);
 
   // Prefer EAN > UPC for GTIN; fall back to item_number as MPN
   const gtin = row.ean || row.upc || "";
   const mpn = row.item_number || row.gm_code || "";
 
-  // Must have at least one identifier
+  // Must have at least one identifier and an image — Google rejects products without images
   if (!gtin && !mpn) return "";
+  if (!imageLink) return "";
 
   const lines = [
     "    <item>",
@@ -92,6 +100,7 @@ function buildItemXml(row: TireRow): string {
     `      <g:title>${title}</g:title>`,
     `      <g:description>${description}</g:description>`,
     `      <g:link>${link}</g:link>`,
+    `      <g:checkout_link_template>https://ship.tires/buy/${row.id}</g:checkout_link_template>`,
   ];
 
   if (imageLink) {
@@ -121,6 +130,12 @@ function buildItemXml(row: TireRow): string {
     );
   }
 
+  // Explicitly single tire — not a set
+  lines.push(
+    "      <g:multipack>1</g:multipack>",
+    "      <g:is_bundle>no</g:is_bundle>"
+  );
+
   // Free shipping
   lines.push(
     "      <g:shipping>",
@@ -128,6 +143,12 @@ function buildItemXml(row: TireRow): string {
     "        <g:service>Standard</g:service>",
     "        <g:price>0 USD</g:price>",
     "      </g:shipping>"
+  );
+
+  // Exclude from local programs (online-only store, no physical inventory)
+  lines.push(
+    "      <g:excluded_destination>free_local_listings</g:excluded_destination>",
+    "      <g:excluded_destination>local_inventory_ads</g:excluded_destination>"
   );
 
   lines.push("    </item>");
@@ -149,11 +170,19 @@ export async function GET(req: Request) {
     ? brandsParam.split(",").map((b) => b.trim()).filter(Boolean)
     : undefined;
 
+  // Fetch distributor pricing map (for tires we have in distributor inventory)
+  let distPricing: Map<number, { cost: number; shipping: number }> | undefined;
+  try {
+    distPricing = await getDistributorPricingMap();
+  } catch {
+    // Supabase unavailable — use MAP pricing only
+  }
+
   const { tires, total } = await getTiresForFeed(offset, limit, filterBrands);
   const totalPages = Math.ceil(total / limit);
 
   const items = tires
-    .map(buildItemXml)
+    .map((row) => buildItemXml(row, distPricing))
     .filter(Boolean)
     .join("\n");
 

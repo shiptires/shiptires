@@ -93,13 +93,17 @@ function collectModelImages(row: TireRow): string[] {
   return result;
 }
 
-/** Prefer local path → remote URL → undefined. Local paths become /images/... URLs. */
+const R2_BASE = "https://pub-1404e52fd5554e9dac9a045b7bb89f22.r2.dev";
+
+/** Resolve image URL: local paths → R2 URL, remote URLs pass through. */
 function resolveImage(...sources: (string | null | undefined)[]): string | undefined {
   for (const src of sources) {
-    if (!src) continue;
-    // Local path from sync (e.g. "images/tires/abc.webp") → serve via nginx
+    if (!src || src === "FAILED") continue;
+    // Local path from sync (e.g. "images/tires/abc.webp") → R2 URL
     if (src.startsWith("images/") || src.startsWith("images\\")) {
-      return "/" + src.replace(/\\/g, "/");
+      // Strip "images/" prefix: "images/tires/abc.webp" → "tires/abc.webp"
+      const r2Path = src.replace(/\\/g, "/").replace(/^images\//, "");
+      return `${R2_BASE}/${r2Path}`;
     }
     // Already a full URL
     if (src.startsWith("http")) return src;

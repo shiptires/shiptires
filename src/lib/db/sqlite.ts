@@ -328,7 +328,7 @@ export function getTopBrandsForType(type: string): BrandSummaryRow[] {
       condition = "terrain = 'Mud-Terrain (M/T)'";
       break;
     case "highway":
-      condition = "terrain = 'Highway Terrain (H/T)'";
+      condition = "terrain = 'Highway Terrain(H/T)'";
       break;
     case "touring":
       condition = "category LIKE '%touring%'";
