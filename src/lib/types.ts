@@ -20,12 +20,15 @@ export interface TireModel {
   sizes: TireSize[];
   sizeCount?: number; // from API tire_count when sizes aren't loaded yet
   features: string[];
+  detailedFeatures?: string[]; // bullet-point features from tire_models table
+  benefits?: string[]; // bullet-point benefits from tire_models table
   warranty: string; // e.g. "70,000 miles"
   speedRatings: string[];
   priceRange: [number, number]; // [min, max]
   description: string;
   image?: string;
   images?: string[]; // all available angles: thumbnail, angle, front, side, etc.
+  manufacturerUrl?: string;
 }
 
 export interface Brand {

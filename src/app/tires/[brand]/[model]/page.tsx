@@ -14,6 +14,7 @@ import { getLogoUrl } from "@/lib/api-helpers";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { parseUTQG, treadwearLabel } from "@/lib/utqg";
 import { getRankingsForModel } from "@/lib/ranking-helpers";
+import { getVehiclesForSize } from "@/data/tire-sizes";
 import CartSidebar from "@/components/CartSidebar";
 import TireCard from "@/components/TireCard";
 import AddToCartButton from "@/components/AddToCartButton";
@@ -43,7 +44,7 @@ export async function generateMetadata({
   const data = await getModelBySlug(brandSlug, modelSlug);
   if (!data) return {};
 
-  const model = tiresToModel(data.model, data.tires, data.brand);
+  const model = tiresToModel(data.model, data.tires, data.brand, data.modelDetails);
   const hasPrice = model.priceRange[0] > 0;
 
   return {
@@ -68,7 +69,7 @@ export default async function ModelPage({
 
   if (!data) notFound();
 
-  const model = tiresToModel(data.model, data.tires, data.brand);
+  const model = tiresToModel(data.model, data.tires, data.brand, data.modelDetails);
   const [brandRow, allModels] = await Promise.all([
     getBrandBySlug(brandSlug),
     getModelsByBrand(brandSlug),
@@ -405,6 +406,102 @@ export default async function ModelPage({
                 <div className="rounded-xl bg-white border border-gray-200 p-6">
                   <h2 className="text-lg font-bold text-gray-900">About the {data.brand} {model.name}</h2>
                   <p className="mt-2 text-gray-600 leading-relaxed">{model.description}</p>
+
+                  {/* Detailed features from tire_models table */}
+                  {model.detailedFeatures && model.detailedFeatures.length > 0 && (
+                    <div className="mt-5">
+                      <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Key Features</h3>
+                      <ul className="space-y-2">
+                        {model.detailedFeatures.map((feature, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                            <svg className="h-4 w-4 mt-0.5 flex-shrink-0 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                              <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
+                            </svg>
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Benefits from tire_models table */}
+                  {model.benefits && model.benefits.length > 0 && (
+                    <div className="mt-5">
+                      <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3">Benefits</h3>
+                      <ul className="space-y-2">
+                        {model.benefits.map((benefit, i) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                            <svg className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" />
+                            </svg>
+                            <span>{benefit}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Manufacturer link */}
+                  {model.manufacturerUrl && (
+                    <div className="mt-4">
+                      <a
+                        href={model.manufacturerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-navy hover:text-safety-orange transition-colors"
+                      >
+                        View on {data.brand}&apos;s website
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                        </svg>
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Vehicle fitment — show which cars/trucks use these sizes */}
+                  {(() => {
+                    // Collect unique vehicles across all sizes
+                    const seen = new Set<string>();
+                    const vehicles: { make: string; model: string; makeSlug: string; modelSlug: string }[] = [];
+                    for (const s of model.sizes) {
+                      for (const v of getVehiclesForSize(s.size, 20)) {
+                        const key = `${v.make}|${v.model}`;
+                        if (!seen.has(key)) {
+                          seen.add(key);
+                          vehicles.push({
+                            ...v,
+                            makeSlug: v.make.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+                            modelSlug: v.model.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+                          });
+                        }
+                      }
+                    }
+                    if (vehicles.length === 0) return null;
+                    const display = vehicles.slice(0, 12);
+                    return (
+                      <div className="mt-4">
+                        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-2">
+                          Fits These Vehicles
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {display.map((v) => (
+                            <Link
+                              key={`${v.make}-${v.model}`}
+                              href={`/tires/vehicle/${v.makeSlug}/${v.modelSlug}`}
+                              className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700 hover:bg-gray-200 transition-colors"
+                            >
+                              {v.make} {v.model}
+                            </Link>
+                          ))}
+                          {vehicles.length > 12 && (
+                            <span className="inline-flex items-center rounded-full bg-gray-50 px-3 py-1 text-sm text-gray-500">
+                              +{vehicles.length - 12} more
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 

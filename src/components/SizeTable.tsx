@@ -1,11 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import type { TireSize } from "@/lib/types";
 import { parseUTQG } from "@/lib/utqg";
 import AddToCartButton from "./AddToCartButton";
 import TireImageLightbox from "./TireImageLightbox";
+
+function sizeToSlug(size: string): string {
+  return size.toLowerCase().replace(/\//g, "-").replace(/\./g, "-");
+}
 
 function parseRim(sizeStr: string): string {
   const match = sizeStr.match(/R(\d+)/i);
@@ -40,7 +45,15 @@ export default function SizeTable({
   const rimSizes = [...rimGroups.keys()].sort((a, b) => parseInt(a) - parseInt(b));
   const [activeRim, setActiveRim] = useState<string | null>(null);
 
-  const displaySizes = activeRim ? (rimGroups.get(activeRim) ?? []) : sizes;
+  // Always show sizes with prices first, then no-price sizes
+  const sortedSizes = (activeRim ? (rimGroups.get(activeRim) ?? []) : sizes)
+    .slice()
+    .sort((a, b) => {
+      if (a.price > 0 && b.price <= 0) return -1;
+      if (a.price <= 0 && b.price > 0) return 1;
+      return 0;
+    });
+  const displaySizes = sortedSizes;
   const hasUtqg = sizes.some((s) => parseUTQG(s.utqg) !== null);
 
   return (
@@ -116,7 +129,14 @@ export default function SizeTable({
                     </div>
                   )}
                 </td>
-                <td className="py-3 pr-4 font-mono font-medium text-gray-900">{size.size}</td>
+                <td className="py-3 pr-4 font-mono font-medium text-gray-900">
+                  <Link
+                    href={`/tires/${brandSlug}/${modelSlug}/${sizeToSlug(size.size)}`}
+                    className="text-navy hover:text-safety-orange transition-colors underline decoration-gray-300 underline-offset-2 hover:decoration-safety-orange"
+                  >
+                    {size.size}
+                  </Link>
+                </td>
                 <td className="py-3 pr-4 text-gray-600">{size.loadIndex || "—"}</td>
                 <td className="py-3 pr-4 text-gray-600">{size.speedRating || "—"}</td>
                 {hasUtqg && (
@@ -147,12 +167,15 @@ export default function SizeTable({
                       image={tireImage}
                     />
                   ) : (
-                    <a
-                      href="tel:+12792388473"
-                      className="inline-flex items-center gap-1 rounded-md bg-safety-orange px-3 py-1.5 text-xs font-bold text-white hover:bg-safety-orange/90 transition-colors"
+                    <Link
+                      href={`/tires/${brandSlug}/${modelSlug}/${sizeToSlug(size.size)}`}
+                      className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-200 transition-colors"
                     >
-                      Call for Price
-                    </a>
+                      View Options
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </Link>
                   )}
                 </td>
               </tr>

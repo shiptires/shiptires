@@ -6,6 +6,7 @@ import type {
   ModelSummaryRow,
   SearchParams,
   SearchResult,
+  TireModelDetailsRow,
 } from "./types";
 import {
   apiGetAllBrands,
@@ -37,64 +38,31 @@ function getDb(): Client {
 // ---------------------------------------------------------------------------
 
 const IS_BUILD = process.env.NEXT_PHASE === "phase-production-build";
-const DEFAULT_TIMEOUT = IS_BUILD ? 30_000 : 20_000;
 
 // ---------------------------------------------------------------------------
-// Concurrency semaphore — prevents thundering herd against Turso
+// Turso DISABLED — DB is in Oregon, Vercel in Virginia, 100% timeout rate.
+// All queries skip Turso and fall through to API/static fallbacks instantly.
+// To re-enable: set TURSO_ENABLED=1 env var (e.g. after adding a read replica).
 // ---------------------------------------------------------------------------
 
-const MAX_CONCURRENT = 6;
-let _running = 0;
-const _queue: (() => void)[] = [];
+const TURSO_DISABLED = (process.env.TURSO_ENABLED || "").trim() !== "1";
 
-function semAcquire(): Promise<void> {
-  if (_running < MAX_CONCURRENT) {
-    _running++;
-    return Promise.resolve();
-  }
-  return new Promise<void>((resolve) => {
-    _queue.push(() => { _running++; resolve(); });
-  });
-}
-
-function semRelease(): void {
-  _running--;
-  if (_queue.length > 0) {
-    const next = _queue.shift()!;
-    next();
-  }
-}
-
-/** Execute a query with semaphore, retry, timeout + error fallback. Returns empty rows on failure. */
+/** Execute a query — returns empty immediately when Turso is disabled. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function safeExecute(stmt: any, timeoutMs = DEFAULT_TIMEOUT) {
-  const db = getDb();
+async function safeExecute(stmt: any, _timeoutMs?: number) {
   const emptyResult = { rows: [] as any[], columns: [] as string[], columnTypes: [] as string[], rowsAffected: 0, lastInsertRowid: undefined };
 
-  const attempt = async () => {
+  if (TURSO_DISABLED) return emptyResult;
+
+  // When re-enabled, attempt Turso with a timeout
+  const db = getDb();
+  const timeoutMs = _timeoutMs ?? (IS_BUILD ? 30_000 : 8_000);
+  try {
     const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error("DB_TIMEOUT")), timeoutMs));
-    return Promise.race([db.execute(stmt), timeout]);
-  };
-
-  await semAcquire();
-  try {
-    return await attempt();
+    return await Promise.race([db.execute(stmt), timeout]);
   } catch (e) {
-    console.warn(`[turso] query attempt 1 failed: ${e instanceof Error ? e.message : e}, retrying in 1s…`);
-  } finally {
-    semRelease();
-  }
-
-  // Retry once with 1s backoff
-  await new Promise((r) => setTimeout(r, 1000));
-  await semAcquire();
-  try {
-    return await attempt();
-  } catch (e) {
-    console.warn(`[turso] query attempt 2 failed: ${e instanceof Error ? e.message : e}`);
+    console.warn(`[turso] query failed: ${e instanceof Error ? e.message : e}`);
     return emptyResult;
-  } finally {
-    semRelease();
   }
 }
 
@@ -125,17 +93,15 @@ export async function getAllBrands(): Promise<BrandSummaryRow[]> {
 }
 
 async function _fetchAllBrands(): Promise<BrandSummaryRow[]> {
-  // DB-primary: try Turso first, filter to curated brands
+  // DB-primary: try summary table first (pre-computed, ~100ms vs 56s)
   const result = await safeExecute(
     `SELECT
       make_name,
-      MAX(make_image_url) as make_image_url,
+      make_image_url,
       NULL as local_logo,
-      COUNT(*) as tire_count,
-      COUNT(DISTINCT model_name) as model_count
-    FROM tires
-    WHERE make_name IS NOT NULL AND make_name != ''
-    GROUP BY make_name
+      tire_count,
+      model_count
+    FROM brand_summary
     ORDER BY make_name ASC`
   );
   const dbRows = (result.rows as unknown as BrandSummaryRow[]).filter(
@@ -222,17 +188,15 @@ async function _fetchModelsByBrand(slug: string): Promise<ModelSummaryRow[]> {
   const result = await safeExecute({
     sql: `SELECT
       model_name,
-      COUNT(*) as tire_count,
-      MIN(CASE WHEN price_map > 0 THEN price_map END) as min_price,
-      MAX(CASE WHEN price_map > 0 THEN price_map END) as max_price,
-      MAX(season) as season,
-      MAX(terrain) as terrain,
-      MAX(category) as category,
-      MAX(thumbnail_url) as thumbnail_url
-    FROM tires
+      tire_count,
+      min_price,
+      max_price,
+      season,
+      terrain,
+      category,
+      thumbnail_url
+    FROM model_summary
     WHERE make_name = ?
-      AND model_name IS NOT NULL AND model_name != ''
-    GROUP BY model_name
     ORDER BY model_name ASC`,
     args: [brandName],
   });
@@ -273,7 +237,7 @@ async function _fetchModelsByBrand(slug: string): Promise<ModelSummaryRow[]> {
 export async function getModelBySlug(
   brandSlug: string,
   modelSlug: string
-): Promise<{ brand: string; model: string; tires: TireRow[] } | null> {
+): Promise<{ brand: string; model: string; tires: TireRow[]; modelDetails?: TireModelDetailsRow } | null> {
   // Resolve brand name
   let brandName: string | null = null;
   const slugMap = await getBrandSlugMap();
@@ -298,11 +262,29 @@ export async function getModelBySlug(
       args: [brandName, modelName],
     });
     const tires = result.rows as unknown as TireRow[];
-    if (tires.length > 0) return { brand: brandName, model: modelName, tires };
+    if (tires.length > 0) {
+      // Fetch rich model details from tire_models table
+      const modelId = tires[0].tire_model_id;
+      const modelDetails = modelId ? await getTireModelDetails(modelId) : null;
+      return { brand: brandName, model: modelName, tires, modelDetails: modelDetails ?? undefined };
+    }
   }
 
   // DB empty — fall back to API
   return apiGetModelBySlug(brandName, modelSlug);
+}
+
+// ---------------------------------------------------------------------------
+// Tire model details (from tire_models table — descriptions, features, benefits)
+// ---------------------------------------------------------------------------
+
+export async function getTireModelDetails(modelId: number): Promise<TireModelDetailsRow | null> {
+  const result = await safeExecute({
+    sql: `SELECT id, name, description, features, benefits, image_url, image_360_url, video_url, manufacturer_url, three_pmsf
+          FROM tire_models WHERE id = ?`,
+    args: [modelId],
+  });
+  return (result.rows[0] as unknown as TireModelDetailsRow) ?? null;
 }
 
 // ---------------------------------------------------------------------------
@@ -589,20 +571,24 @@ export async function getTopBrandsForType(type: string): Promise<BrandSummaryRow
 
   const result = await safeExecute(
     `SELECT
-      t.make_name,
-      MAX(t.make_image_url) as make_image_url,
-      MAX(m.local_logo) as local_logo,
-      COUNT(*) as tire_count,
-      COUNT(DISTINCT t.model_name) as model_count
-    FROM tires t
-    LEFT JOIN manufacturers m ON UPPER(m.name) = UPPER(t.make_name)
+      ms.make_name,
+      bs.make_image_url,
+      NULL as local_logo,
+      SUM(ms.tire_count) as tire_count,
+      COUNT(*) as model_count
+    FROM model_summary ms
+    JOIN brand_summary bs ON bs.make_name = ms.make_name
     WHERE ${condition}
-      AND t.make_name IS NOT NULL AND t.make_name != ''
-    GROUP BY t.make_name
+    GROUP BY ms.make_name
     ORDER BY tire_count DESC
     LIMIT 6`
   );
-  return result.rows as unknown as BrandSummaryRow[];
+  const rows = result.rows as unknown as BrandSummaryRow[];
+  if (rows.length > 0) return rows;
+
+  // DB failed — fall back to top brands from getAllBrands()
+  const allBrands = await getAllBrands();
+  return allBrands.slice(0, 6);
 }
 
 // ---------------------------------------------------------------------------
@@ -637,24 +623,43 @@ export async function getShowcaseModelsForType(type: string, limit = 2): Promise
 
   const result = await safeExecute(
     `SELECT
-      make_name,
-      model_name,
-      MIN(price_map) as min_price,
-      MAX(price_map) as max_price,
-      COUNT(*) as tire_count,
-      MAX(thumbnail_url) as thumbnail_url,
-      MAX(make_image_url) as make_image_url
-    FROM tires
+      ms.make_name,
+      ms.model_name,
+      ms.min_price,
+      ms.max_price,
+      ms.tire_count,
+      ms.thumbnail_url,
+      bs.make_image_url
+    FROM model_summary ms
+    JOIN brand_summary bs ON bs.make_name = ms.make_name
     WHERE ${condition}
-      AND price_map > 0
-      AND thumbnail_url IS NOT NULL
-      AND model_name NOT LIKE '%Retread%'
-      AND model_name NOT LIKE '%Pre-Mold%'
-    GROUP BY make_name, model_name
-    ORDER BY tire_count DESC
+      AND ms.min_price > 0
+      AND ms.thumbnail_url IS NOT NULL
+      AND ms.model_name NOT LIKE '%Retread%'
+      AND ms.model_name NOT LIKE '%Pre-Mold%'
+    ORDER BY ms.tire_count DESC
     LIMIT ${limit}`
   );
-  return result.rows as unknown as ShowcaseModel[];
+  const rows = result.rows as unknown as ShowcaseModel[];
+  if (rows.length > 0) return rows;
+
+  // DB failed — derive showcase from getAllBrands + getModelsByBrand
+  const allBrands = await getAllBrands();
+  const topBrand = allBrands[0];
+  if (!topBrand) return [];
+  const models = await getModelsByBrand(toSlug(topBrand.make_name));
+  return models
+    .filter((m) => m.thumbnail_url)
+    .slice(0, limit)
+    .map((m) => ({
+      make_name: topBrand.make_name,
+      model_name: m.model_name,
+      min_price: m.min_price ?? 0,
+      max_price: m.max_price ?? 0,
+      tire_count: m.tire_count ?? 0,
+      thumbnail_url: m.thumbnail_url,
+      make_image_url: topBrand.make_image_url,
+    }));
 }
 
 // ---------------------------------------------------------------------------
@@ -682,18 +687,14 @@ async function _fetchStats(): Promise<{
   modelCount: number;
   tireCount: number;
 }> {
-  // DB-primary: try Turso first, filtered to curated brands
-  const brands = Array.from(CURATED_BRANDS.keys());
-  const placeholders = brands.map(() => "?").join(", ");
-  const result = await safeExecute({
-    sql: `SELECT
-      COUNT(DISTINCT make_name) as brandCount,
-      COUNT(DISTINCT model_name) as modelCount,
-      COUNT(*) as tireCount
-    FROM tires
-    WHERE make_name IN (${placeholders})`,
-    args: brands,
-  });
+  // DB-primary: use summary tables (fast, ~100ms)
+  const result = await safeExecute(
+    `SELECT
+      COUNT(*) as brandCount,
+      SUM(model_count) as modelCount,
+      SUM(tire_count) as tireCount
+    FROM brand_summary`
+  );
   const row = result.rows[0] as unknown as { brandCount: number; modelCount: number; tireCount: number } | undefined;
   const stats = {
     brandCount: Number(row?.brandCount ?? 0),
@@ -724,12 +725,66 @@ async function _fetchStats(): Promise<{
 // ---------------------------------------------------------------------------
 
 export async function getTireById(id: number): Promise<TireRow | null> {
+  // Try Turso first
   const result = await safeExecute({
     sql: `SELECT * FROM tires WHERE id = ?`,
     args: [id],
   });
-  if (result.rows.length === 0) return null;
-  return result.rows[0] as unknown as TireRow;
+  if (result.rows.length > 0) {
+    return result.rows[0] as unknown as TireRow;
+  }
+
+  // Fallback: search via API by ID (fetches single tire detail)
+  try {
+    const { apiFetch, apiTireToRow } = await import("../tire-api");
+    const raw = await apiFetch<Record<string, unknown>>(`/tires/${id}`, 10000);
+    if (raw) return apiTireToRow(raw as never);
+  } catch {
+    // API unavailable
+  }
+  return null;
+}
+
+/** Find a tire by brand slug + model slug + size components (width, aspect, rim). */
+export async function getTireBySize(
+  brandSlug: string,
+  modelSlug: string,
+  width: string,
+  aspectRatio: string,
+  rimSize: string
+): Promise<TireRow | null> {
+  // Try Turso first
+  const result = await safeExecute({
+    sql: `SELECT * FROM tires
+          WHERE width = ? AND aspect_ratio = ? AND rim_size = ?
+          ORDER BY price_map DESC
+          LIMIT 50`,
+    args: [width, aspectRatio, rimSize],
+  });
+  if (result.rows.length > 0) {
+    const match = (result.rows as unknown as TireRow[]).find((row) => {
+      return toSlug(row.make_name) === brandSlug && toSlug(row.model_name) === modelSlug;
+    });
+    if (match) return match;
+  }
+
+  // Fallback: search via API
+  try {
+    const apiResult = await apiSearchTires({
+      brand: brandSlug,
+      width,
+      aspectRatio,
+      rimSize,
+      limit: 50,
+    });
+    const match = apiResult.tires.find(
+      (row) => toSlug(row.model_name) === modelSlug
+    );
+    if (match) return match;
+  } catch {
+    // API unavailable
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -786,10 +841,8 @@ async function slugToModelName(brandName: string, slug: string): Promise<string 
   let cache = _modelSlugCaches.get(brandName);
   if (!cache) {
     cache = new Map();
-    const db = getDb();
     const result = await safeExecute({
-      sql: `SELECT DISTINCT model_name FROM tires
-      WHERE make_name = ? AND model_name IS NOT NULL AND model_name != ''`,
+      sql: `SELECT model_name FROM model_summary WHERE make_name = ?`,
       args: [brandName],
     });
     for (const row of result.rows) {
@@ -801,7 +854,8 @@ async function slugToModelName(brandName: string, slug: string): Promise<string 
   return cache.get(slug) ?? null;
 }
 
-export function toSlug(name: string): string {
+export function toSlug(name: string | null | undefined): string {
+  if (!name) return "";
   return name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -812,9 +866,7 @@ export async function getBrandSlugMap(): Promise<Map<string, string>> {
   if (_brandSlugCache) return _brandSlugCache;
   const db = getDb();
   const result = await safeExecute(
-    `SELECT DISTINCT make_name FROM tires
-    WHERE make_name IS NOT NULL AND make_name != ''
-    ORDER BY make_name`
+    `SELECT make_name FROM brand_summary ORDER BY make_name`
   );
 
   _brandSlugCache = new Map();

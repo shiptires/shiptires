@@ -108,3 +108,17 @@ export interface SearchResult {
   limit: number;
   totalPages: number;
 }
+
+/** Row from the tire_models table (TireWeb model-level data) */
+export interface TireModelDetailsRow {
+  id: number;
+  name: string;
+  description: string | null;
+  features: string | null;
+  benefits: string | null;
+  image_url: string | null;
+  image_360_url: string | null;
+  video_url: string | null;
+  manufacturer_url: string | null;
+  three_pmsf: number | null;
+}

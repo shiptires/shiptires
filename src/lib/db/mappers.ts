@@ -1,5 +1,5 @@
 import type { Brand, TireModel, TireSize, TireType } from "@/lib/types";
-import type { TireRow, BrandSummaryRow, ModelSummaryRow } from "./types";
+import type { TireRow, BrandSummaryRow, ModelSummaryRow, TireModelDetailsRow } from "./types";
 import { toSlug } from "./sqlite";
 import { getBrandLogo } from "../curated-brands";
 
@@ -115,10 +115,20 @@ function resolveImage(...sources: (string | null | undefined)[]): string | undef
 // Map grouped tires to a TireModel
 // ---------------------------------------------------------------------------
 
+/** Parse "* Feature one* Feature two" bullet format into string array */
+function parseBulletPoints(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  return raw
+    .split("*")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
 export function tiresToModel(
   modelName: string,
   tires: TireRow[],
-  brandName?: string
+  brandName?: string,
+  modelDetails?: TireModelDetailsRow
 ): TireModel {
   const sizes = tires.map(tireRowToSize);
   const pricesWithValue = sizes.map((s) => s.price).filter((p) => p > 0);
@@ -151,8 +161,14 @@ export function tiresToModel(
   // Collect all unique images from the image-bearing tire (all angles are per-model, not per-size)
   const images = collectModelImages(imageRow);
 
-  // Auto-generate description from specs
-  const description = generateDescription(modelName, first, type, sizes.length, brandName);
+  // Use DB description if available, otherwise auto-generate
+  const description = modelDetails?.description
+    ? modelDetails.description
+    : generateDescription(modelName, first, type, sizes.length, brandName, tires);
+
+  // Parse detailed features/benefits from tire_models table
+  const detailedFeatures = parseBulletPoints(modelDetails?.features);
+  const benefits = parseBulletPoints(modelDetails?.benefits);
 
   return {
     name: modelName,
@@ -160,12 +176,15 @@ export function tiresToModel(
     type,
     sizes,
     features,
+    detailedFeatures: detailedFeatures.length > 0 ? detailedFeatures : undefined,
+    benefits: benefits.length > 0 ? benefits : undefined,
     warranty: first.warranty ?? "",
     speedRatings,
     priceRange: [minPrice, maxPrice],
     description,
     image,
     images: images.length > 0 ? images : undefined,
+    manufacturerUrl: modelDetails?.manufacturer_url ?? undefined,
   };
 }
 
@@ -174,21 +193,68 @@ function generateDescription(
   tire: TireRow,
   type: TireType,
   sizeCount: number,
-  explicitBrand?: string
+  explicitBrand?: string,
+  allTires?: TireRow[]
 ): string {
   const typeLabel = typeLabels[type];
   const brand = explicitBrand || tire.make_name || "";
   const article = /^[aeiou]/i.test(typeLabel) ? "an" : "a";
+
+  // Determine use case from type
+  const useCase: Record<string, string> = {
+    "all-season": "designed for year-round traction in dry, wet, and light snow conditions",
+    winter: "engineered for maximum grip in snow, ice, and cold-weather driving",
+    summer: "optimized for warm-weather performance with superior dry and wet handling",
+    performance: "built for high-speed handling and responsive cornering",
+    "all-terrain": "built for on- and off-road versatility across gravel, dirt, and pavement",
+    "mud-terrain": "engineered for aggressive off-road traction in mud, rock, and loose terrain",
+    highway: "designed for smooth highway cruising with long tread life",
+    touring: "built for a quiet, comfortable ride with dependable all-season traction",
+  };
+
   const parts: string[] = [
-    `The ${brand} ${modelName} is ${article} ${typeLabel.toLowerCase()} tire available in ${sizeCount} size${sizeCount !== 1 ? "s" : ""}.`,
+    `The ${brand} ${modelName} is ${article} ${typeLabel.toLowerCase()} tire ${useCase[type] || `available for ${typeLabel.toLowerCase()} driving`}.`,
   ];
+
+  // Size range info
+  if (sizeCount > 1 && allTires && allTires.length > 1) {
+    const rims = [...new Set(allTires.map((t) => t.rim_size).filter(Boolean) as string[])].sort(
+      (a, b) => parseFloat(a) - parseFloat(b)
+    );
+    if (rims.length >= 2) {
+      parts.push(
+        `Available in ${sizeCount} sizes fitting ${rims[0]}" to ${rims[rims.length - 1]}" wheels.`
+      );
+    } else {
+      parts.push(`Available in ${sizeCount} size${sizeCount !== 1 ? "s" : ""}.`);
+    }
+  } else {
+    parts.push(`Available in ${sizeCount} size${sizeCount !== 1 ? "s" : ""}.`);
+  }
+
+  // Key features
+  const features: string[] = [];
+  if (tire.three_pmsf) features.push("3-Peak Mountain Snowflake certified for severe snow");
+  if (tire.run_flat) features.push("run-flat capable");
+  if (tire.mud_and_snow) features.push("M+S rated");
+  if (tire.studdable) features.push("studdable for ice traction");
+  if (features.length > 0) {
+    parts.push(`Key features: ${features.join(", ")}.`);
+  }
+
+  // Load range for truck/commercial tires
+  if (allTires && allTires.length > 0) {
+    const loadRanges = [...new Set(allTires.map((t) => t.load_range).filter(Boolean) as string[])];
+    if (loadRanges.length > 0) {
+      parts.push(`Available in load range${loadRanges.length > 1 ? "s" : ""} ${loadRanges.join(", ")}.`);
+    }
+  }
 
   if (tire.warranty) {
     parts.push(`Backed by a ${tire.warranty} warranty.`);
   }
-  if (tire.utqg) {
-    parts.push(`UTQG rating: ${tire.utqg}.`);
-  }
+
+  parts.push("Ships free to your door or local installer.");
 
   return parts.join(" ");
 }

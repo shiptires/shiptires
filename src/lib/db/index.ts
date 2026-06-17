@@ -12,6 +12,7 @@ export {
   getManufacturer,
   getModelsByBrand,
   getModelBySlug,
+  getTireModelDetails,
   getTiresBySize,
   getTiresByBrandAndSize,
   getDistinctSizes,
@@ -22,6 +23,7 @@ export {
   getTopBrandsForType,
   getShowcaseModelsForType,
   getTireById,
+  getTireBySize,
   getTiresForFeed,
   toSlug,
   getBrandSlugMap,
@@ -41,4 +43,5 @@ export type {
   ModelSummaryRow,
   SearchParams,
   SearchResult,
+  TireModelDetailsRow,
 } from "./types";
