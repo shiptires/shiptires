@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { tireRankings } from "@/data/tire-rankings";
+import { getModelsByBrand, toSlug } from "@/lib/db/turso";
+import TireImage from "@/components/TireImage";
+import { sitePrice } from "@/lib/pricing";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -109,11 +112,41 @@ const itemListSchemas = tireRankings.map((cat) => ({
     "@type": "ListItem",
     position: tire.rank,
     name: `${tire.brand} ${tire.model}`,
-    url: `https://ship.tires/tires/${slug(tire.brand)}/${slug(tire.model)}`,
+    url: `https://ship.tires/tires/${slug(tire.brand)}/${slug(tire.dbModel ?? tire.model)}`,
   })),
 }));
 
-export default function RankingsPage() {
+export const revalidate = 300; // 5 minutes
+
+// Pre-fetch image + price data for all ranked tires
+async function getRankingTireData() {
+  const data = new Map<string, { image?: string; minPrice?: number }>();
+  const brandSlugs = new Set(
+    tireRankings.flatMap((cat) => cat.tires.map((t) => slug(t.brand)))
+  );
+
+  await Promise.all(
+    Array.from(brandSlugs).map(async (brandSlug) => {
+      try {
+        const models = await getModelsByBrand(brandSlug.toUpperCase());
+        for (const m of models) {
+          const key = `${brandSlug}/${toSlug(m.model_name)}`;
+          data.set(key, {
+            image: m.thumbnail_url ?? undefined,
+            minPrice: sitePrice(m.min_price),
+          });
+        }
+      } catch {
+        // ignore
+      }
+    })
+  );
+
+  return data;
+}
+
+export default async function RankingsPage() {
+  const tireData = await getRankingTireData();
   return (
     <div className="bg-gray-50">
       {/* ItemList JSON-LD per category */}
@@ -252,10 +285,14 @@ export default function RankingsPage() {
 
             {/* ranking cards */}
             <div className="mt-8 space-y-3">
-              {category.tires.map((tire) => (
+              {category.tires.map((tire) => {
+                const modelSlug = slug(tire.dbModel ?? tire.model);
+                const brandSlug = slug(tire.brand);
+                const info = tireData.get(`${brandSlug}/${modelSlug}`);
+                return (
                 <Link
                   key={`${category.slug}-${tire.rank}`}
-                  href={`/tires/${slug(tire.brand)}/${slug(tire.model)}`}
+                  href={`/tires/${brandSlug}/${modelSlug}`}
                   className={`flex items-center gap-4 rounded-xl border p-4 shadow-sm transition-all hover:shadow-md sm:p-5 ${
                     tire.rank === 1
                       ? "border-amber-300 bg-amber-50/40 ring-1 ring-amber-200/60"
@@ -270,6 +307,25 @@ export default function RankingsPage() {
                     #{tire.rank}
                   </div>
 
+                  {/* tire image */}
+                  <div className="hidden sm:flex h-16 w-16 shrink-0 items-center justify-center">
+                    {info?.image ? (
+                      <TireImage
+                        src={info.image}
+                        alt={`${tire.brand} ${tire.model}`}
+                        width={64}
+                        height={64}
+                        className="h-14 w-14 object-contain"
+                      />
+                    ) : (
+                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                        <svg className="h-7 w-7 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={0.5} stroke="currentColor">
+                          <circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+
                   {/* tire info */}
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-gray-900">
@@ -279,6 +335,13 @@ export default function RankingsPage() {
                     <p className="mt-1 text-sm text-gray-500 italic line-clamp-2">
                       {tire.racingConnection}
                     </p>
+                    {info?.minPrice && info.minPrice > 0 && (
+                      <div className="mt-1">
+                        <span className="text-xs text-gray-400">From </span>
+                        <span className="text-sm font-bold text-gray-900">${info.minPrice}</span>
+                        <span className="text-xs text-gray-400">/tire</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* score column */}
@@ -302,7 +365,8 @@ export default function RankingsPage() {
                     </div>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         </section>
