@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getTiresBySize, toSlug, getAllBrands, brandSummaryToBrand } from "@/lib/db";
+import { sitePrice } from "@/lib/pricing";
 import { states } from "@/data/locations";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import type { TireRow } from "@/lib/db";
@@ -81,7 +82,7 @@ export default async function SizePage({
         modelName: tire.model_name,
         modelSlug: toSlug(tire.model_name),
         season: tire.season || "",
-        price: tire.price_map ?? 0,
+        price: sitePrice(tire.price_map),
         speedRating: tire.speed_rating ?? "",
         loadRating: tire.load_rating ?? "",
         imageUrl: tire.thumbnail_url ?? tire.image_0100_url,
@@ -91,8 +92,9 @@ export default async function SizePage({
     grouped.get(key)!.tireCount++;
     // Use lowest non-zero price
     const g = grouped.get(key)!;
-    if (tire.price_map && tire.price_map > 0 && (g.price === 0 || tire.price_map < g.price)) {
-      g.price = tire.price_map;
+    const sp = sitePrice(tire.price_map);
+    if (sp > 0 && (g.price === 0 || sp < g.price)) {
+      g.price = sp;
     }
   }
 

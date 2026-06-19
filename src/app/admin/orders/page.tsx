@@ -2,6 +2,7 @@ import { getSupabase } from "@/lib/supabase";
 import StatusBadge from "@/components/admin/StatusBadge";
 import OrderStatusUpdater from "./OrderStatusUpdater";
 import OrderShipping from "./OrderShipping";
+import EbayOrderSync from "./EbayOrderSync";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,8 @@ interface OrderItem {
   brand?: string;
   model?: string;
   size?: string;
+  title?: string;
+  sku?: string;
   quantity?: number;
   price?: number;
 }
@@ -32,7 +35,9 @@ interface OrderItem {
 function summarizeItems(items: OrderItem[]) {
   if (!items || items.length === 0) return "—";
   const first = items[0];
-  const label = `${first.brand || ""} ${first.model || ""} ${first.size || ""}`.trim();
+  const label = first.brand
+    ? `${first.brand} ${first.model || ""} ${first.size || ""}`.trim()
+    : first.title || "Item";
   if (items.length === 1) return `${label} x${first.quantity || 1}`;
   return `${label} +${items.length - 1} more`;
 }
@@ -59,7 +64,10 @@ export default async function OrdersPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Orders</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
+        <EbayOrderSync />
+      </div>
 
       {/* Status filter tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
@@ -147,7 +155,14 @@ function OrderRow({
         <td className="py-3 px-4 font-medium text-gray-900">{String(order.customer_phone)}</td>
         <td className="py-3 px-4 text-gray-600">{summarizeItems(items)}</td>
         <td className="py-3 px-4 text-gray-900">{formatCurrency(Number(order.subtotal) || Number(order.total) || 0)}</td>
-        <td className="py-3 px-4"><StatusBadge status={String(order.status)} /></td>
+        <td className="py-3 px-4">
+          <div className="flex items-center gap-1.5">
+            <StatusBadge status={String(order.status)} />
+            {order.order_source === "ebay" && (
+              <span className="text-xs px-1.5 py-0.5 rounded-full font-medium bg-orange-100 text-orange-700">eBay</span>
+            )}
+          </div>
+        </td>
         <td className="py-3 px-4">
           <div className="flex items-center gap-2">
             {order.checkout_url ? (
@@ -176,7 +191,9 @@ function OrderRow({
                 <div className="space-y-2">
                   {items.map((item, i) => (
                     <div key={i} className="text-sm">
-                      <span className="font-medium">{item.brand} {item.model}</span>{" "}
+                      <span className="font-medium">
+                        {item.brand ? `${item.brand} ${item.model || ""}` : item.title || "Item"}
+                      </span>{" "}
                       <span className="text-gray-500">{item.size} x{item.quantity}</span>{" "}
                       <span className="text-gray-700">{formatCurrency((item.price || 0) * (item.quantity || 1))}</span>
                     </div>
@@ -206,6 +223,8 @@ function OrderRow({
                   shipmentCost={order.shipment_cost != null ? Number(order.shipment_cost) : null}
                   shipmentId={order.shipment_id ? String(order.shipment_id) : null}
                   shippedAt={order.shipped_at ? String(order.shipped_at) : null}
+                  orderSource={order.order_source ? String(order.order_source) : undefined}
+                  externalOrderId={order.external_order_id ? String(order.external_order_id) : undefined}
                 />
               </div>
             </div>

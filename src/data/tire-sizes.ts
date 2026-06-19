@@ -353,6 +353,158 @@ const tireSizeDatabase: Record<string, string[]> = {
   // Alfa Romeo
   "alfa romeo|giulia": ["225/45R18", "225/40R19", "255/35R19"],
   "alfa romeo|stelvio": ["235/60R18", "255/45R20"],
+  "alfa romeo|tonale": ["225/55R18", "235/45R20"],
+
+  // Jaguar
+  "jaguar|f-pace": ["235/60R18", "255/50R20", "265/40R22"],
+  "jaguar|f-type": ["245/45R18", "255/35R20", "275/30R20"],
+  "jaguar|xe": ["225/45R18", "245/40R19"],
+  "jaguar|xf": ["225/45R18", "245/40R19", "255/35R20"],
+  "jaguar|e-pace": ["225/60R18", "245/45R20"],
+  "jaguar|i-pace": ["245/50R20", "255/40R22"],
+  "jaguar|xj": ["245/45R18", "255/35R20", "275/35R20"],
+
+  // Bentley
+  "bentley|continental": ["235/50R18", "275/35R21", "275/40R20"],
+  "bentley|bentayga": ["265/45R21", "275/40R22", "285/35R22"],
+  "bentley|flying spur": ["265/40R21", "275/35R22"],
+  "bentley|continental gt": ["275/35R21", "275/40R20", "305/30R21"],
+
+  // Maserati
+  "maserati|ghibli": ["235/50R18", "245/45R19", "255/35R20"],
+  "maserati|levante": ["255/50R19", "265/40R21", "295/35R21"],
+  "maserati|grecale": ["235/55R19", "255/40R21"],
+  "maserati|quattroporte": ["245/45R19", "255/40R20", "275/35R21"],
+  "maserati|mc20": ["245/35R19", "305/30R20"],
+  "maserati|granturismo": ["245/40R20", "285/35R20"],
+
+  // Rolls-Royce
+  "rolls-royce|ghost": ["255/45R20", "275/40R21"],
+  "rolls-royce|cullinan": ["275/45R22", "295/40R22"],
+  "rolls-royce|phantom": ["255/50R21", "285/45R21"],
+  "rolls-royce|wraith": ["255/45R20", "285/35R21"],
+  "rolls-royce|dawn": ["255/45R20", "285/35R21"],
+  "rolls-royce|spectre": ["255/45R23", "305/35R23"],
+
+  // Ferrari
+  "ferrari|roma": ["235/35R20", "285/35R20"],
+  "ferrari|296 gtb": ["245/35R20", "305/35R20"],
+  "ferrari|f8 tributo": ["245/35R20", "305/30R20"],
+  "ferrari|sf90": ["255/35R20", "315/30R20"],
+  "ferrari|812 superfast": ["275/35R20", "315/35R20"],
+  "ferrari|portofino": ["235/35R20", "285/35R20"],
+  "ferrari|purosangue": ["255/40R22", "315/35R22"],
+
+  // Lamborghini
+  "lamborghini|urus": ["255/50R20", "285/35R23", "285/40R22"],
+  "lamborghini|huracan": ["245/30R20", "305/30R20"],
+  "lamborghini|aventador": ["255/30R20", "355/25R21"],
+  "lamborghini|revuelto": ["265/30R21", "345/30R21"],
+
+  // McLaren
+  "mclaren|720s": ["245/35R19", "305/30R20"],
+  "mclaren|gt": ["225/35R20", "295/30R20"],
+  "mclaren|artura": ["235/35R19", "295/35R20"],
+  "mclaren|765lt": ["245/35R19", "305/30R20"],
+
+  // Aston Martin
+  "aston martin|db11": ["255/40R20", "295/35R20"],
+  "aston martin|vantage": ["255/40R20", "295/35R20"],
+  "aston martin|dbx": ["255/50R21", "285/40R22"],
+  "aston martin|db12": ["255/35R21", "295/30R21"],
+  "aston martin|dbs superleggera": ["265/35R21", "305/30R21"],
+
+  // Lotus
+  "lotus|emira": ["225/40R19", "285/35R20"],
+  "lotus|eletre": ["255/50R20", "285/40R22"],
+  "lotus|evija": ["265/35R20", "325/30R21"],
+
+  // Fiat
+  "fiat|500": ["175/65R14", "185/55R15", "195/45R16"],
+  "fiat|500x": ["215/60R17", "225/45R18"],
+  "fiat|500e": ["205/55R16", "215/45R17"],
+  "fiat|124 spider": ["195/55R16", "205/45R17"],
+
+  // MINI
+  "mini|cooper": ["175/65R15", "195/55R16", "205/45R17"],
+  "mini|countryman": ["225/55R17", "225/50R18", "235/45R19"],
+  "mini|clubman": ["205/55R16", "225/40R18"],
+  "mini|convertible": ["175/65R15", "195/55R16", "205/45R17"],
+
+  // Rivian
+  "rivian|r1t": ["275/55R20", "275/65R20"],
+  "rivian|r1s": ["275/55R20", "275/65R20"],
+  "rivian|r2": ["255/55R20"],
+
+  // Lucid
+  "lucid|air": ["245/45R19", "245/35R21", "265/35R21"],
+  "lucid|gravity": ["255/50R20", "275/40R22"],
+
+  // Polestar
+  "polestar|polestar 2": ["245/45R19", "245/40R20"],
+  "polestar|polestar 3": ["255/50R20", "275/40R22"],
+  "polestar|polestar 4": ["245/50R19", "255/40R21"],
+
+  // Smart
+  "smart|fortwo": ["155/60R15", "175/55R15", "185/50R16"],
+  "smart|eq fortwo": ["155/60R15", "175/55R15"],
+  "smart|forfour": ["165/65R15", "185/50R16"],
+
+  // Scion (discontinued but vehicles still on road)
+  "scion|fr-s": ["205/55R16", "215/45R17"],
+  "scion|tc": ["215/45R18", "225/40R18"],
+  "scion|xb": ["195/60R16", "215/45R18"],
+  "scion|im": ["205/55R16", "225/40R18"],
+
+  // Pontiac (discontinued but vehicles still on road)
+  "pontiac|g6": ["215/60R16", "225/50R17"],
+  "pontiac|gto": ["245/45R17", "235/40R18"],
+  "pontiac|grand prix": ["225/60R16", "235/55R17"],
+  "pontiac|vibe": ["205/55R16", "215/50R17"],
+  "pontiac|firebird": ["235/55R16", "275/40R17"],
+
+  // Saturn (discontinued but vehicles still on road)
+  "saturn|vue": ["215/70R16", "235/60R17"],
+  "saturn|outlook": ["245/60R18", "255/55R20"],
+  "saturn|aura": ["215/60R16", "225/50R17"],
+  "saturn|ion": ["195/60R15", "205/55R16"],
+
+  // Suzuki (discontinued in US but vehicles still on road)
+  "suzuki|grand vitara": ["215/70R16", "225/65R17"],
+  "suzuki|sx4": ["205/60R16", "215/50R17"],
+  "suzuki|kizashi": ["215/55R17", "225/45R18"],
+  "suzuki|swift": ["185/65R15", "195/55R16"],
+
+  // Saab (discontinued but vehicles still on road)
+  "saab|9-3": ["215/55R16", "225/45R17", "235/40R18"],
+  "saab|9-5": ["215/55R16", "225/45R17"],
+
+  // Isuzu
+  "isuzu|d-max": ["245/70R16", "265/60R18"],
+  "isuzu|mu-x": ["245/70R16", "265/65R17"],
+
+  // Mercury (discontinued but vehicles still on road)
+  "mercury|grand marquis": ["225/60R16", "225/55R17"],
+  "mercury|mariner": ["225/65R17", "235/60R18"],
+  "mercury|milan": ["205/60R16", "215/50R17"],
+
+  // Hummer (pre-GMC era, vehicles still on road)
+  "hummer|h2": ["315/70R17", "305/40R22"],
+  "hummer|h3": ["265/75R16", "265/65R18"],
+
+  // Fisker
+  "fisker|ocean": ["255/50R20", "255/45R22"],
+
+  // VinFast
+  "vinfast|vf8": ["245/50R19", "255/45R20"],
+  "vinfast|vf9": ["265/45R21", "275/40R22"],
+
+  // Wagoneer (separate from Jeep branding)
+  // Already covered under jeep|wagoneer and jeep|grand wagoneer
+
+  // Scout (new EV brand)
+  "scout|terra": ["265/70R18"],
+  "scout|traveler": ["265/65R18"],
 };
 
 // Vehicle class-based fallback sizes
@@ -424,6 +576,65 @@ const modelClassMap: Record<string, string> = {
   // Luxury SUV
   escalade: "luxury", navigator: "luxury", "grand wagoneer": "luxury",
   "range rover": "luxury", gls: "luxury", x7: "luxury", lx: "luxury", qx80: "luxury",
+  // Jaguar
+  "f-pace": "suv", "f-type": "sports", xe: "sedan", xf: "sedan", "e-pace": "suv",
+  "i-pace": "luxury", xj: "luxury",
+  // Bentley
+  continental: "luxury", bentayga: "suv", "flying spur": "luxury", "continental gt": "luxury",
+  // Maserati
+  ghibli: "luxury", levante: "suv", grecale: "suv", quattroporte: "luxury",
+  mc20: "sports", granturismo: "sports",
+  // Rolls-Royce
+  ghost: "luxury", cullinan: "luxury", phantom: "luxury", wraith: "luxury",
+  dawn: "luxury", spectre: "luxury",
+  // Ferrari
+  roma: "sports", "296 gtb": "sports", "f8 tributo": "sports", sf90: "sports",
+  "812 superfast": "sports", portofino: "sports", purosangue: "suv",
+  // Lamborghini
+  urus: "suv", huracan: "sports", aventador: "sports", revuelto: "sports",
+  // McLaren
+  "720s": "sports", gt: "sports", artura: "sports", "765lt": "sports",
+  // Aston Martin
+  db11: "luxury", vantage: "sports", dbx: "suv", db12: "luxury",
+  "dbs superleggera": "sports",
+  // Lotus
+  emira: "sports", eletre: "suv", evija: "sports",
+  // Fiat
+  "500": "compact", "500x": "compact", "500e": "compact", "124 spider": "sports",
+  // MINI
+  cooper: "compact", countryman: "suv", clubman: "compact", convertible: "compact",
+  // Rivian
+  r1t: "truck", r1s: "suv", r2: "suv",
+  // Lucid
+  air: "luxury", gravity: "luxury",
+  // Polestar
+  "polestar 2": "sedan", "polestar 3": "suv", "polestar 4": "suv",
+  // Smart
+  fortwo: "compact", "eq fortwo": "compact", forfour: "compact",
+  // Scion
+  "fr-s": "sports", tc: "compact", xb: "compact", im: "compact",
+  // Pontiac
+  g6: "sedan", gto: "sports", "grand prix": "sedan", vibe: "compact", firebird: "sports",
+  // Saturn
+  vue: "suv", outlook: "suv", aura: "sedan", ion: "compact",
+  // Suzuki
+  "grand vitara": "suv", sx4: "compact", kizashi: "sedan", swift: "compact",
+  // Saab
+  "9-3": "sedan", "9-5": "sedan",
+  // Isuzu
+  "d-max": "truck", "mu-x": "suv",
+  // Mercury
+  "grand marquis": "sedan", mariner: "suv", milan: "sedan",
+  // Hummer (pre-GMC)
+  h2: "suv", h3: "suv",
+  // Fisker
+  ocean: "suv",
+  // VinFast
+  vf8: "suv", vf9: "suv",
+  // Scout
+  terra: "truck", traveler: "suv",
+  // Alfa Romeo (additional)
+  tonale: "suv",
 };
 
 export function lookupTireSizes(make: string, model: string): string[] {
@@ -454,4 +665,36 @@ export function lookupTireSizes(make: string, model: string): string[] {
 
   // Ultimate fallback - return common all-season sizes
   return ["215/55R17", "225/65R17", "235/60R18"];
+}
+
+// ---------------------------------------------------------------------------
+// Reverse lookup: tire size → vehicles that use it
+// ---------------------------------------------------------------------------
+
+let _reverseMap: Map<string, { make: string; model: string }[]> | null = null;
+
+function getReverseMap(): Map<string, { make: string; model: string }[]> {
+  if (_reverseMap) return _reverseMap;
+  _reverseMap = new Map();
+  for (const [key, sizes] of Object.entries(tireSizeDatabase)) {
+    const [makeRaw, modelRaw] = key.split("|");
+    const make = makeRaw.replace(/\b\w/g, (c) => c.toUpperCase());
+    const model = modelRaw.replace(/\b\w/g, (c) => c.toUpperCase());
+    for (const size of sizes) {
+      const normalized = size.toUpperCase();
+      if (!_reverseMap.has(normalized)) _reverseMap.set(normalized, []);
+      _reverseMap.get(normalized)!.push({ make, model });
+    }
+  }
+  return _reverseMap;
+}
+
+/** Find vehicles that use a given tire size. Returns up to `limit` results. */
+export function getVehiclesForSize(
+  size: string,
+  limit = 8
+): { make: string; model: string }[] {
+  const map = getReverseMap();
+  const normalized = size.toUpperCase().replace(/\s+/g, "");
+  return (map.get(normalized) ?? []).slice(0, limit);
 }

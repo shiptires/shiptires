@@ -10,6 +10,7 @@ import {
   modelSummaryToModel,
 } from "@/lib/db";
 import { getLogoUrl } from "@/lib/api-helpers";
+import { getBrandLogo } from "@/lib/curated-brands";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { getActiveRebates, getRebatesForBrand } from "@/lib/rebates";
 import { getRankingsForBrand } from "@/lib/ranking-helpers";
@@ -54,16 +55,18 @@ export default async function BrandPage({
   if (!brandRow) notFound();
 
   const brand = brandSummaryToBrand(brandRow);
-  const modelRows = await getModelsByBrand(brandSlug);
+  const [modelRows, manufacturer, popularSizes, allRebates] = await Promise.all([
+    getModelsByBrand(brandSlug),
+    getManufacturer(brandRow.make_name),
+    getDistinctSizesForBrand(brandSlug),
+    getActiveRebates().catch(() => []),
+  ]);
   // Sort by tire_count descending — popular models first, not alphabetical
   const sortedRows = [...modelRows].sort((a, b) => (b.tire_count ?? 0) - (a.tire_count ?? 0));
   const models = sortedRows.map(modelSummaryToModel);
-  const manufacturer = await getManufacturer(brandRow.make_name);
-  const popularSizes = await getDistinctSizesForBrand(brandSlug);
-  const allRebates = await getActiveRebates().catch(() => []);
   const brandRebates = getRebatesForBrand(allRebates, brandRow.make_name);
 
-  const logoUrl = brand.logoUrl || getLogoUrl(brand.domain);
+  const logoUrl = brand.logoUrl || getBrandLogo(brandRow.make_name) || getLogoUrl(brand.domain);
   const authority = getBrandAuthority(brandSlug);
   const brandRankings = getRankingsForBrand(brandSlug);
 

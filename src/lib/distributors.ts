@@ -20,6 +20,7 @@ export interface Distributor {
   notes: string | null;
   default_shipping_cost: number;
   active: boolean;
+  last_synced_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -37,6 +38,7 @@ export interface DistributorInventoryItem {
   active: boolean;
   ebay_item_id: string | null;
   ebay_listed_at: string | null;
+  warehouse_quantities: Record<string, number>;
   last_synced_at: string;
   created_at: string;
   updated_at: string;
@@ -196,12 +198,14 @@ export async function upsertInventoryItem(input: {
   brand: string;
   model: string;
   size: string;
+  warehouse_quantities?: Record<string, number>;
 }): Promise<DistributorInventoryItem> {
   const { data, error } = await getSupabase()
     .from("distributor_inventory")
     .upsert(
       {
         ...input,
+        warehouse_quantities: input.warehouse_quantities ?? {},
         active: true,
         last_synced_at: new Date().toISOString(),
       },
@@ -224,6 +228,7 @@ export async function bulkUpsertInventory(
     brand: string;
     model: string;
     size: string;
+    warehouse_quantities?: Record<string, number>;
   }>
 ): Promise<{ inserted: number; errors: Array<{ tire_id: number; error: string }> }> {
   let inserted = 0;
@@ -233,6 +238,7 @@ export async function bulkUpsertInventory(
   for (let i = 0; i < items.length; i += 50) {
     const chunk = items.slice(i, i + 50).map((item) => ({
       ...item,
+      warehouse_quantities: item.warehouse_quantities ?? {},
       active: true,
       last_synced_at: new Date().toISOString(),
     }));
@@ -315,6 +321,26 @@ export async function getCheapestSource(
     shipping: cheapest.distributor_shipping,
     quantity: cheapest.quantity,
   };
+}
+
+/** Get warehouse-level stock for a tire from a specific distributor */
+export async function getWarehouseStock(
+  distributorId: string,
+  tireId: number
+): Promise<Record<string, number>> {
+  const item = await getInventoryItem(distributorId, tireId);
+  if (!item) return {};
+  return item.warehouse_quantities ?? {};
+}
+
+/** Update the last_synced_at timestamp on a distributor */
+export async function updateDistributorSyncTime(distributorId: string): Promise<void> {
+  const { error } = await getSupabase()
+    .from("distributors")
+    .update({ last_synced_at: new Date().toISOString() })
+    .eq("id", distributorId);
+
+  if (error) console.warn(`Failed to update sync time: ${error.message}`);
 }
 
 /** Update eBay listing status for an inventory item */

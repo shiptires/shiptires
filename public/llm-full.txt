@@ -1,6 +1,6 @@
 # Ship.Tires — Complete Business, Product & Inventory Information
 
-> Shop & Ship Car, Truck & SUV Tires — Free Delivery to 1,000+ US cities. 34 curated brands, 800+ models, 307,000+ tires. Delivered free to your door or local installer.
+> Shop & Ship Car, Truck & SUV Tires — Free Delivery to 1,000+ US cities. 434+ brands, 800+ models, 307,000+ tires. Delivered free to your door or local installer.
 
 ---
 
@@ -21,7 +21,7 @@ Ship.Tires is an online tire retailer where you can shop & ship car, truck & SUV
 ## Core Value Proposition
 
 - **Free delivery** on every order, no minimums
-- **34 curated tire brands** in stock
+- **434+ tire brands** in stock
 - **800+ tire models** covering every driving need
 - **307,000+ tires** for every vehicle type
 - **Ship to home or installer** — customer's choice
@@ -234,35 +234,39 @@ Ship.Tires is an online tire retailer where you can shop & ship car, truck & SUV
 - **SVT-01** — All-Season, 55,000 mi, $69–$109
 - **ATX-750** — All-Terrain, 50,000 mi, $99–$169
 
-### 31. BFGoodrich — *See #9 above*
-
-### 32. Power King (USA)
+### 31. Power King (USA)
 **Models:**
 - **Towmax STR II** — Trailer, No mileage warranty, $69–$129
 - **Towmax Vanguard** — Trailer, No mileage warranty, $79–$149
 - **Super Highway II** — Highway, No mileage warranty, $89–$159
 
-### 33. Range Finder (USA)
+### 32. Range Finder (USA)
 **Models:**
 - **RST** — Trailer, No mileage warranty, $59–$109
 - **RFX** — All-Terrain, No mileage warranty, $99–$179
 
-### 34. Riken (Serbia, est. 1954)
+### 33. Riken (Serbia, est. 1954)
 **Models:**
 - **Raptor HR** — All-Season, 50,000 mi, $59–$99
 - **Raptor VR** — Performance, 45,000 mi, $69–$119
 
-### 35. Vitour (China, est. 2009)
+### 34. Vitour (China, est. 2009)
 **Models:**
 - **Tempesta Enzo** — Performance, No mileage warranty, $79–$149
 - **Ice Line** — Winter, No mileage warranty, $69–$129
 - **Spiritway** — All-Season, 50,000 mi, $59–$99
 
-### 36. Vredestein (Netherlands, est. 1909)
+### 35. Vredestein (Netherlands, est. 1909)
 **Models:**
 - **Hypertrac All Season** — All-Season, 60,000 mi, $109–$189
 - **Pinza AT** — All-Terrain, 50,000 mi, $129–$219
 - **Wintrac Pro** — Winter, No mileage warranty, $129–$229
+
+### Additional Brands (399 more)
+
+The following brands are also available on Ship.Tires. Visit https://ship.tires/tires/{brand-slug} or use the API at https://ship.tires/api/tires/brands for full model and pricing details.
+
+Accelera, Accelus, Advance, Aeolus, AG Plus, AG Pro, AG-Dura, Agstar, Airloc, Akuret, Alliance, American, American Road Star, American Tourer, Ameri*Steel, Americus, Ameritread, Amerityre, AMP, Amulet, Antares, Antyre, Aosen, Aoteli, Aplus, Aptany, Ardent, Arisun, Armohero, Armour, Armstrong, Arroyo, Ascenso, Aspen, Astro, ATF, Atlander, Atlas, Atturo, Aurora, Autogrip, Autoguard, Avon, BCT, Bearway, BKT, Black Bear, Blackhawk, Blacklion, Boto, Briway, Buckshot, Cachland, Cambridge, Capitol, Caraway, Cargomax, Carlstar, Castle Rock, Cavalier, Cavalry, CEAT, Celimo, Centara, Centennial, Chaoyang, Coker, Comforser, Concours, Constancy, Constellation, Contender, Copartner, Corsa, Cosmo, Countrywide, Crop Max, Cropmaster, Crossmax, Crosswind, CST, Cultor, Cyclone, Dawg Pound, Dayton, Dcenti, Dean, Deestone, Definity, Deli, Delinte, Delium, Delta, Denman, Dextero, Diablo, Diamondback, Dick Cepek, Diehard, Doral, Double Coin, Doublestar, Douglas, Duck Commander, Duramax, Duraturn, Duro, Durun, Dynacargo, Dynamaxx, Dynamo, Dynatrac, Dynatrail, Ecovision, Eldorado, Elevate, Evergreen, Evoluxx, Farm King, Farmboy, Farroad, Federal, Ferentino, Fierce, Finalist, Forceland, Forceum, Forerunner, Forgiato, Fortune, Freedom Hauler, Freestar, Fulda, Fullrun, Fullway, Fury, Fuzion, Galaxy, Geo-Trac, Geoquest, Geostar, GFT Rider, Ginell, Giovanna, Gislaved, Giti, Gladiator, Goalstar, Goform, Gold Crown, Goldway, Goodride, Goodtrip, Grand Spirit, Greatway, Green Max, Greenball, Greentrac, Gremax, Grenlander, GRI, Gripmax, Grit King, Gritmaster, Groundspeed, GT Radial, GTK, Haida, Hartland, Harvest King, Headway, Hemisphere, Hercules, Heritage, Hi-Fly, Hi-Run, Imperial, Innova, Interco, Interstate, Invovic, Iris, Ironhead, ITP, Jetzon, Jinyu, JK Tyre, Journey, Joyroad, K9, Kanati, Kapsen, Kelly, Kinforest, Kingstar, Koryo, Kpatos, Lancaster, Lande, Landfleet, Landgolden, Landsail, Landspider, Landy, Lanvigator, Laramie, Leao, Lemans, Lexani, Linglong, Lionhart, Lizetti, Long March, Magna, Malhotra, Mark Ma, Marshal, Master, Mastercraft, Mastertrack, Matrax, Maxam, Maxdura, Maxtrek, Mayrun, Mazzini, Mesa, Mileking, Milepro, Milestar, Minerva, Minos, Mirada, Mitas, Mitco, Momo, Montreal, MRF, MRL, Mud Claw, Multi-Mile, Nama, Nanco, National, Navitrac, Negotiator, Neoterra, Neptune, Neuton, Nika, Noble, Nutech, Obor, Ohtsu, Omni, Omni Cargo, Omni Trail, Omnimax, Onyx, Otani, OTR, Pacemark, Pacstar, Pantera, Paragon, Patriot, Pearly, Pegasus, Percheron, Performer, Petlas, Pinnacle, Pinso, Point S, Powertrac, Predator, Premiorri, Presa, Primewell, Primex, Prinx, Pro Comp, Prometer, Prostar, Provato, Quadboss, Ralson, Rapid, RBP, Red Dirt Road, Regency, Regul, Remington, Road Force, Roadclaw, Roadcruza, Roadlux, Roadmaster, Roadone, Roadtrack, Rockblade, Rodaco, Rosava, Rovelo, Royal Black, Rubbermaster, Runway, Rydanz, Saferich, Saffiro, Sailun, Samson, Sceptor, Sedona, Shinko, Sierra, Sigma, Solar, Solideal, Solidway, Sonar, Sotera, Speedways, Sportline, Starfire, Starmaxx, Starsail, Statewide, STI, Sumic, Summit, Sunfull, Sunny, Suntek, Super A, Supercargo, Supermax, Suretrac, Synergy, Syron, Tacoma, Taskmaster, Tatko, TBB Tires, Tempra, Tesche, Three-A, Thunderer, Tianli, Timberland, Tiron, Titan, Tornel, Torque, Tourador, Towstar, Tow-Master, Tracgard, Tracmax, Trailer King, Trailer Master, Transeagle, Transmax, Transporter, Travelstar, Trazano, Trelleborg, Tri-Ace, Triangle, Trivant, Turnpike, Unicorn, Universal, Vanderbilt, Vanguard, Vantage, Vee Rubber, Veento, Velocity, Venezia, Venom Power, Vercelli, Versatyre, Vizzoni, Wanda, Wanli, Waterfall, Westlake, Winda, Windforce, Windpower, Winrun, Wolfpack, Xcellent, Zeemax, Zeetex, Zenna, Zestino, Zeta
 
 ---
 
@@ -415,7 +419,7 @@ Every page on ship.tires has a .md endpoint for AI consumption. Append `.md` to 
 - Installer city: /installers/{state_abbr}/{city}
 - Installer zip: /installers/{state_abbr}/{city}/{zip} + /installers/{state_abbr}/{city}/{zip}/llm.txt
 
-### All 34 Brand Pages
+### Brand Pages
 - https://ship.tires/tires/advanta
 - https://ship.tires/tires/bfgoodrich
 - https://ship.tires/tires/bridgestone
@@ -450,6 +454,9 @@ Every page on ship.tires has a .md endpoint for AI consumption. Append `.md` to 
 - https://ship.tires/tires/vogue
 - https://ship.tires/tires/vredestein
 - https://ship.tires/tires/yokohama
+
+...and 400 more brand pages. All brands follow the URL pattern: https://ship.tires/tires/{brand-slug}
+Use the brands API at https://ship.tires/api/tires/brands for the complete list.
 
 ---
 

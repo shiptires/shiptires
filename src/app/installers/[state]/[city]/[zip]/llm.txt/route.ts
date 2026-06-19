@@ -1,6 +1,6 @@
 import zipcodes from "zipcodes";
 import {
-  fetchNearbyInstallers,
+  getInstallersForZip,
   findStateByAbbr,
   getZipsForCity,
   zipToInstallerUrl,
@@ -22,10 +22,9 @@ export async function GET(
   const displayCity = location.city;
   const displayState = location.state;
 
-  // Fetch real installer data from Google Places
-  const lat = typeof location.latitude === "string" ? parseFloat(location.latitude) : location.latitude;
-  const lng = typeof location.longitude === "string" ? parseFloat(location.longitude) : location.longitude;
-  const installers = await fetchNearbyInstallers(lat, lng);
+  // Fetch installers — checks Supabase cache first, falls back to Google Places
+  const cachedResult = await getInstallersForZip(zip);
+  const installers = cachedResult?.installers ?? [];
 
   // Nearby zips
   const nearbyZips = getZipsForCity(displayCity, displayState)

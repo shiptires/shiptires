@@ -56,7 +56,7 @@ async function safeExecute(stmt: any, _timeoutMs?: number) {
 
   // When re-enabled, attempt Turso with a timeout
   const db = getDb();
-  const timeoutMs = _timeoutMs ?? (IS_BUILD ? 30_000 : 8_000);
+  const timeoutMs = _timeoutMs ?? (IS_BUILD ? 30_000 : 3_000);
   try {
     const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error("DB_TIMEOUT")), timeoutMs));
     return await Promise.race([db.execute(stmt), timeout]);
@@ -516,6 +516,23 @@ export async function searchModels(params: SearchParams): Promise<ModelSearchRes
   const total = Number((countResult.rows[0] as unknown as { total: number })?.total ?? 0);
 
   if (total > 0) {
+    let orderBy = "tire_count DESC";
+    switch (params.sort) {
+      case "price-asc":
+        orderBy = "min_price ASC NULLS LAST";
+        break;
+      case "price-desc":
+        orderBy = "max_price DESC";
+        break;
+      case "name-asc":
+        orderBy = "model_name ASC";
+        break;
+      case "sizes-desc":
+      default:
+        orderBy = "tire_count DESC";
+        break;
+    }
+
     const modelsResult = await safeExecute({
       sql: `SELECT
         make_name,
@@ -532,7 +549,7 @@ export async function searchModels(params: SearchParams): Promise<ModelSearchRes
         GROUP_CONCAT(DISTINCT speed_rating) as speed_ratings
       FROM tires ${where}
       GROUP BY make_name, model_name
-      ORDER BY tire_count DESC
+      ORDER BY ${orderBy}
       LIMIT ? OFFSET ?`,
       args: [...values, limit, offset],
     });
@@ -802,13 +819,9 @@ export async function getTiresForFeed(
     : Array.from(CURATED_BRANDS.keys());
   const placeholders = brands.map(() => "?").join(", ");
 
-  const countResult = await safeExecute({
-    sql: `SELECT COUNT(*) as total FROM tires WHERE make_name IN (${placeholders}) AND price_map > 0`,
-    args: brands,
-  });
-  const total = Number(
-    (countResult.rows[0] as unknown as { total: number })?.total ?? 0
-  );
+  // Skip the COUNT query — it times out on Vercel for large tables.
+  // Use a known estimate for total (only used for feed description text).
+  // The actual item count on each page is derived from the fetched rows.
 
   const result = await safeExecute(
     {
@@ -821,7 +834,21 @@ export async function getTiresForFeed(
     60000
   );
 
-  return { tires: result.rows as unknown as TireRow[], total };
+  const tires = result.rows as unknown as TireRow[];
+
+  // Estimate total: if we got a full page, there are likely more rows.
+  // If this is the first page and we got a full batch, use a reasonable estimate.
+  // Otherwise, offset + actual count gives us the minimum total.
+  let total: number;
+  if (tires.length === limit) {
+    // Full page returned — estimate conservatively. The feed description will
+    // show this number but Google doesn't rely on it for crawling.
+    total = Math.max(offset + limit + limit, 75000);
+  } else {
+    total = offset + tires.length;
+  }
+
+  return { tires, total };
 }
 
 // ---------------------------------------------------------------------------
@@ -848,6 +875,14 @@ async function slugToModelName(brandName: string, slug: string): Promise<string 
     for (const row of result.rows) {
       const name = (row as unknown as { model_name: string }).model_name;
       cache.set(toSlug(name), name);
+    }
+    // Fallback: if Turso returned nothing, try the models-by-brand cache
+    if (cache.size === 0) {
+      const brandSlug = toSlug(brandName);
+      const modelRows = await getModelsByBrand(brandSlug);
+      for (const m of modelRows) {
+        cache.set(toSlug(m.model_name), m.model_name);
+      }
     }
     _modelSlugCaches.set(brandName, cache);
   }

@@ -5,6 +5,7 @@ import { states } from "@/data/locations";
 import { searchTires, toSlug } from "@/lib/db";
 import type { TireRow } from "@/lib/db";
 import { isCuratedBrand } from "@/lib/curated-brands";
+import { sitePrice } from "@/lib/pricing";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { lookupTireSizes } from "@/data/tire-sizes";
 import { vehicleMakes, getModelsForMake } from "@/data/vehicle-content";
@@ -206,8 +207,8 @@ export default async function CityVehiclePage({
                         {tire.width && tire.aspect_ratio && tire.rim_size && (
                           <span className="text-xs font-mono text-gray-500">{tire.width}/{tire.aspect_ratio}R{tire.rim_size}</span>
                         )}
-                        {tire.price_map && tire.price_map > 0 && (
-                          <p className="mt-1 text-sm font-bold text-gray-900">From ${tire.price_map}<span className="text-xs text-gray-500"> /tire</span></p>
+                        {sitePrice(tire.price_map) > 0 && (
+                          <p className="mt-1 text-sm font-bold text-gray-900">From ${sitePrice(tire.price_map).toFixed(2)}<span className="text-xs text-gray-500"> /tire</span></p>
                         )}
                       </div>
                     </Link>

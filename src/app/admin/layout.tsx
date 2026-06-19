@@ -1,8 +1,7 @@
-import AdminSidebar from "@/components/admin/AdminSidebar";
+"use client";
 
-export const metadata = {
-  title: "Admin | Ship.Tires",
-};
+import { usePathname } from "next/navigation";
+import AdminSidebar from "@/components/admin/AdminSidebar";
 
 function LogoutButton() {
   return (
@@ -18,6 +17,13 @@ function LogoutButton() {
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isLoginPage = pathname === "/admin/login";
+
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
   return (
     <div className="fixed inset-0 z-[100] bg-gray-50 text-gray-900 flex flex-col">
       {/* Top bar */}

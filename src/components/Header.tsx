@@ -10,10 +10,6 @@ const navigation = [
   { name: "Tires", href: "/tires" },
   { name: "Vehicle Lookup", href: "/vehicle-lookup" },
   { name: "Shipping", href: "/shipping" },
-  { name: "About", href: "/about" },
-  { name: "Blog", href: "/blog" },
-  { name: "FAQ", href: "/faq" },
-  { name: "Contact", href: "/contact" },
 ];
 
 export default function Header({ brandCount, modelCount, tireCount }: { brandCount?: number; modelCount?: number; tireCount?: number } = {}) {
@@ -47,7 +43,7 @@ export default function Header({ brandCount, modelCount, tireCount }: { brandCou
 
       <div className="bg-rubber shadow-lg border-b border-white/10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-28 items-center lg:h-32">
+          <div className="flex h-32 items-center sm:h-36 lg:h-40">
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link href="/" className="block">
@@ -56,7 +52,7 @@ export default function Header({ brandCount, modelCount, tireCount }: { brandCou
                   alt="Ship.Tires — Tires Shipped Free"
                   width={400}
                   height={200}
-                  className="h-24 w-auto lg:h-28 brightness-150"
+                  className="h-28 w-auto sm:h-32 lg:h-36 brightness-150"
                   priority
                 />
               </Link>

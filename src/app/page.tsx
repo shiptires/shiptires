@@ -4,6 +4,7 @@ import TireImage from "@/components/TireImage";
 import { tireCategories } from "@/data/tire-categories";
 import { getStats, getAllBrands, getTopBrandsForType, getShowcaseModelsForType, brandSummaryToBrand, getModelsByBrand, modelSummaryToModel, toSlug } from "@/lib/db";
 import type { ShowcaseModel } from "@/lib/db/turso";
+import { sitePrice } from "@/lib/pricing";
 import { getActiveRebates } from "@/lib/rebates";
 import { getTopRankedTires } from "@/lib/ranking-helpers";
 import { getLogoUrl } from "@/lib/api-helpers";
@@ -89,66 +90,71 @@ const typeIcons: Record<string, string> = {
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const dbTimeout = <T,>(p: T | Promise<T>, fallback: T, ms = 15000): Promise<T> =>
+  const dbTimeout = <T,>(p: T | Promise<T>, fallback: T, ms = 45000): Promise<T> =>
     Promise.race([Promise.resolve(p), new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms))]);
 
-  const stats = await dbTimeout(getStats(), { brandCount: 34, modelCount: 800, tireCount: 307000 });
-  const brandRows = await dbTimeout(getAllBrands(), []);
+  const [stats, brandRows, rebates] = await Promise.all([
+    dbTimeout(getStats(), { brandCount: 34, modelCount: 800, tireCount: 307000 }),
+    dbTimeout(getAllBrands(), []),
+    dbTimeout(getActiveRebates(), []),
+  ]);
   const brands = brandRows.map(brandSummaryToBrand);
-  const rebates = await dbTimeout(getActiveRebates(), []);
 
-  // Pre-fetch top brands and showcase models for each tire category
+  // Pre-fetch top brands and showcase models for each tire category — in parallel
   const categoryBrandsMap = new Map<string, ReturnType<typeof brandSummaryToBrand>[]>();
   const categoryShowcaseMap = new Map<string, ShowcaseModel[]>();
-  for (const cat of tireCategories) {
-    const typeBrandRows = await dbTimeout(getTopBrandsForType(cat.type), []);
-    categoryBrandsMap.set(cat.type, typeBrandRows.map(brandSummaryToBrand));
-    const showcaseModels = await dbTimeout(getShowcaseModelsForType(cat.type, 2), []);
-    categoryShowcaseMap.set(cat.type, showcaseModels);
-  }
+  await Promise.all(
+    tireCategories.map(async (cat) => {
+      const [typeBrandRows, showcaseModels] = await Promise.all([
+        dbTimeout(getTopBrandsForType(cat.type), []),
+        dbTimeout(getShowcaseModelsForType(cat.type, 2), []),
+      ]);
+      categoryBrandsMap.set(cat.type, typeBrandRows.map(brandSummaryToBrand));
+      categoryShowcaseMap.set(cat.type, showcaseModels);
+    })
+  );
 
-  // Fetch featured tire models from top brands for the showcase
+  // Fetch featured tire models from top brands for the showcase — in parallel
   const showcaseBrands = ["michelin", "goodyear", "bridgestone", "continental", "cooper", "pirelli", "radar"];
-  const featuredTires: { brand: ReturnType<typeof brandSummaryToBrand>; models: ReturnType<typeof modelSummaryToModel>[] }[] = [];
-  for (const slug of showcaseBrands) {
-    const brand = brands.find((b) => b.slug === slug);
-    if (!brand) continue;
-    const modelRows = await dbTimeout(getModelsByBrand(slug), []);
-    // Filter out commercial/retread/specialty models, prefer models with prices and images
-    const consumerModels = modelRows.filter((m) => {
-      const name = m.model_name.toLowerCase();
-      return !name.includes("retread") && !name.includes("pre-mold")
-        && !name.includes("skid steer") && !name.includes("miner")
-        && !name.includes("precure") && !name.includes("recap");
-    });
-    // Prefer models with images + prices, then by tire_count
-    const sorted = [...consumerModels].sort((a, b) => {
-      const aHasImg = a.thumbnail_url ? 1 : 0;
-      const bHasImg = b.thumbnail_url ? 1 : 0;
-      if (bHasImg !== aHasImg) return bHasImg - aHasImg;
-      const aHasPrice = (a.min_price ?? 0) > 0 ? 1 : 0;
-      const bHasPrice = (b.min_price ?? 0) > 0 ? 1 : 0;
-      if (bHasPrice !== aHasPrice) return bHasPrice - aHasPrice;
-      return (b.tire_count ?? 0) - (a.tire_count ?? 0);
-    });
-    const models = sorted.slice(0, 2).map(modelSummaryToModel);
-    if (models.length > 0) {
-      featuredTires.push({ brand, models });
-    }
-  }
+  const featuredResults = await Promise.all(
+    showcaseBrands.map(async (slug) => {
+      const brand = brands.find((b) => b.slug === slug);
+      if (!brand) return null;
+      const modelRows = await dbTimeout(getModelsByBrand(slug), []);
+      const consumerModels = modelRows.filter((m) => {
+        const name = m.model_name.toLowerCase();
+        return !name.includes("retread") && !name.includes("pre-mold")
+          && !name.includes("skid steer") && !name.includes("miner")
+          && !name.includes("precure") && !name.includes("recap");
+      });
+      const sorted = [...consumerModels].sort((a, b) => {
+        const aHasImg = a.thumbnail_url ? 1 : 0;
+        const bHasImg = b.thumbnail_url ? 1 : 0;
+        if (bHasImg !== aHasImg) return bHasImg - aHasImg;
+        const aHasPrice = (a.min_price ?? 0) > 0 ? 1 : 0;
+        const bHasPrice = (b.min_price ?? 0) > 0 ? 1 : 0;
+        if (bHasPrice !== aHasPrice) return bHasPrice - aHasPrice;
+        return (b.tire_count ?? 0) - (a.tire_count ?? 0);
+      });
+      const models = sorted.slice(0, 2).map(modelSummaryToModel);
+      return models.length > 0 ? { brand, models } : null;
+    })
+  );
+  const featuredTires = featuredResults.filter((r): r is NonNullable<typeof r> => r !== null);
 
-  // Enrich top ranked tires with images and prices from DB
+  // Enrich top ranked tires with images and prices from DB — in parallel
   const topRankedRaw = getTopRankedTires().slice(0, 4);
-  const topRankedEnriched: (typeof topRankedRaw[0] & { image?: string; minPrice?: number })[] = [];
-  for (const tire of topRankedRaw) {
-    const allModelsForBrand = await dbTimeout(getModelsByBrand(tire.brandSlug), []);
-    const match = allModelsForBrand.find((m) => toSlug(m.model_name) === tire.modelSlug);
-    topRankedEnriched.push({
-      ...tire,
-      image: match?.thumbnail_url ?? undefined,
-      minPrice: match?.min_price ?? undefined,
-    });
-  }
+  const topRankedEnriched = await Promise.all(
+    topRankedRaw.map(async (tire) => {
+      const allModelsForBrand = await dbTimeout(getModelsByBrand(tire.brandSlug), []);
+      const match = allModelsForBrand.find((m) => toSlug(m.model_name) === tire.modelSlug);
+      return {
+        ...tire,
+        image: match?.thumbnail_url ?? undefined,
+        minPrice: match?.min_price ?? undefined,
+      };
+    })
+  );
 
   const brandCount = String(stats.brandCount || 34);
   const modelCount = String(stats.modelCount ? stats.modelCount.toLocaleString() + "+" : "1,000+");
@@ -514,7 +520,7 @@ export default async function HomePage() {
                   case "performance": return "/search?category=performance";
                   case "all-terrain": return `/search?terrain=${encodeURIComponent("All-Terrain (A/T)")}`;
                   case "mud-terrain": return `/search?terrain=${encodeURIComponent("Mud-Terrain (M/T)")}`;
-                  case "highway": return `/search?terrain=${encodeURIComponent("Highway Terrain (H/T)")}`;
+                  case "highway": return `/search?terrain=${encodeURIComponent("Highway Terrain(H/T)")}`;
                   case "touring": return "/search?category=touring";
                   default: return "/search";
                 }
@@ -557,7 +563,7 @@ export default async function HomePage() {
                         >
                           {m.thumbnail_url && (
                             <div className="flex-shrink-0">
-                              <Image
+                              <TireImage
                                 src={m.thumbnail_url}
                                 alt={`${m.make_name} ${m.model_name}`}
                                 width={100}
@@ -572,10 +578,10 @@ export default async function HomePage() {
                               {m.model_name}
                             </h4>
                             <div className="mt-1">
-                              <span className="text-lg font-bold text-rubber">${m.min_price}</span>
+                              <span className="text-lg font-bold text-rubber">${sitePrice(m.min_price)}</span>
                               <span className="text-xs text-ink-grey"> /tire</span>
                               {m.max_price > m.min_price && (
-                                <span className="text-xs text-ink-grey ml-1">— ${m.max_price}</span>
+                                <span className="text-xs text-ink-grey ml-1">— ${sitePrice(m.max_price)}</span>
                               )}
                             </div>
                             <div className="mt-0.5 flex items-center gap-2 text-xs text-ink-grey">
@@ -637,7 +643,7 @@ export default async function HomePage() {
                 })
                 .slice(0, 16)
                 .map((brand) => {
-                  const logo = brand.logoUrl || getLogoUrl(brand.domain);
+                  const logo = brand.logoUrl || getBrandLogo(brand.name) || getLogoUrl(brand.domain);
                   return (
                     <Link
                       key={brand.slug}
@@ -722,8 +728,17 @@ export default async function HomePage() {
 
       {/* SECTION 5.5: REBATES */}
       {rebates.length > 0 && (
-        <section className="py-14 sm:py-16 bg-label-white border-t border-ink-grey/10">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section className="relative py-14 sm:py-16 bg-label-white border-t border-ink-grey/10 overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+            <Image
+              src="/ferrari-bg.webp"
+              alt=""
+              fill
+              className="object-cover object-center opacity-[0.15]"
+              priority={false}
+            />
+          </div>
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2">Promotions</div>
             <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight mb-8">
               Current Tire Rebates
@@ -785,27 +800,12 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* SECTION 5.7: SHOP BY VEHICLE — AEO/AI Optimization */}
-      <section className="relative py-14 sm:py-16 bg-white border-t border-ink-grey/10 overflow-hidden">
-        {/* Semi-transparent Ferrari background */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <Image
-            src="/ferrari-bg.webp"
-            alt=""
-            fill
-            className="object-cover object-center opacity-[0.22]"
-            priority={false}
-          />
-        </div>
-        <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2 text-center">Shop by Vehicle</div>
-          <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight text-center">
-            Shop Tires for Your Vehicle — Ship Free
-          </h2>
-          <p className="mt-3 text-center text-ink-grey max-w-2xl mx-auto">
-            Find the right tires for your car, truck, or SUV. Enter your year, make, and model to see compatible sizes from hundreds of brands.
-          </p>
-          <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      {/* Vehicle links preserved for SEO (visually hidden) */}
+      <section className="sr-only" aria-hidden="true">
+        <div>
+          <h2>Shop Tires for Your Vehicle — Ship Free</h2>
+          <p>Find the right tires for your car, truck, or SUV.</p>
+          <div>
             {[
               "Honda", "Toyota", "Ford", "Chevrolet", "Nissan", "BMW",
               "Mercedes-Benz", "Hyundai", "Kia", "Jeep", "Ram", "GMC",
@@ -816,38 +816,63 @@ export default async function HomePage() {
             ].map((make) => (
               <Link
                 key={make}
-                href={`/vehicle-lookup?make=${encodeURIComponent(make)}`}
-                className="rounded-lg border border-ink-grey/15 bg-label-white px-4 py-3 text-sm font-bold text-rubber hover:border-safety-orange/40 hover:bg-white transition-all text-center"
+                href={`/tires/vehicle/${make.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
               >
                 Shop {make} Tires
               </Link>
             ))}
-          </div>
-          <div className="mt-6 text-center">
-            <Link
-              href="/vehicle-lookup"
-              className="inline-flex items-center gap-2 text-sm font-bold text-safety-orange hover:underline"
-            >
-              Find Tires by Year, Make & Model
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-              </svg>
-            </Link>
+            <Link href="/vehicle-lookup">Find Tires by Year, Make & Model</Link>
           </div>
         </div>
       </section>
 
-      {/* SECTION 5.8: SHIP TO YOUR CITY — Location SEO */}
+      {/* SECTION 5.8: PAYMENT METHODS */}
       <section className="py-14 sm:py-16 bg-label-white border-t border-ink-grey/10">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2 text-center">Nationwide Shipping</div>
-          <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight text-center">
-            Shop Tires Online — Ship Free to Any City
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
+          <div className="text-[10px] font-display uppercase tracking-[0.3em] text-ink-grey mb-2">Checkout</div>
+          <h2 className="font-display text-2xl sm:text-3xl text-rubber tracking-tight">
+            So Many Ways to Pay
           </h2>
-          <p className="mt-3 text-center text-ink-grey max-w-2xl mx-auto">
+          <p className="mt-3 text-ink-grey max-w-xl mx-auto">
+            We support convenient payment methods to ensure you get the tires you need today. Buy now or pay over time.
+          </p>
+          <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
+            {[
+              { name: "Affirm", color: "#4a4af4" },
+              { name: "PayPal", color: "#003087" },
+              { name: "Apple Pay", color: "#000000" },
+              { name: "Google Pay", color: "#4285F4" },
+              { name: "Afterpay", color: "#b2fce4" },
+              { name: "Cash App", color: "#00D632" },
+              { name: "Venmo", color: "#3D95CE" },
+              { name: "Klarna", color: "#FFB3C7" },
+            ].map((method) => (
+              <div
+                key={method.name}
+                className="flex items-center justify-center gap-2 rounded-lg border border-ink-grey/10 bg-white px-4 py-3 shadow-sm"
+              >
+                <span
+                  className="inline-block h-3 w-3 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: method.color }}
+                />
+                <span className="text-sm font-semibold text-rubber whitespace-nowrap">
+                  {method.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Location SEO links (visually hidden, preserved for crawlers) */}
+      <section className="sr-only" aria-hidden="true">
+        <div>
+          <div>Nationwide Shipping</div>
+          <h2>Shop Tires Online — Ship Free to Any City</h2>
+          <p>
             We ship tires free to every city in the continental US. Order online from hundreds of brands and get your tires delivered in 3-7 business days.
           </p>
-          <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <div>
             {([
               ["Los Angeles", "/locations/california/los-angeles"],
               ["New York", "/locations/new-york/new-york"],
@@ -900,13 +925,7 @@ export default async function HomePage() {
               ["Newark", "/locations/new-jersey/newark"],
               ["Boston", "/locations/massachusetts/boston"],
             ] as const).map(([city, href]) => (
-              <Link
-                key={city}
-                href={href}
-                className="rounded-full border border-ink-grey/10 bg-white px-3 py-1 text-xs text-ink-grey hover:border-safety-orange/40 hover:text-safety-orange transition-colors"
-              >
-                Ship to {city}
-              </Link>
+              <Link key={city} href={href}>Ship to {city}</Link>
             ))}
           </div>
         </div>

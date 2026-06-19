@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Link",
+            value:
+              '</.well-known/api-catalog>; rel="api-catalog", </openapi.json>; rel="service-desc"; type="application/openapi+json", </.well-known/acp.json>; rel="acp"',
+          },
         ],
       },
       {
@@ -75,6 +80,10 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "www.r2cthemes.com",
+      },
+      {
+        protocol: "https",
+        hostname: "pub-1404e52fd5554e9dac9a045b7bb89f22.r2.dev",
       },
     ],
   },

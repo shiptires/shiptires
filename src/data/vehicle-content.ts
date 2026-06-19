@@ -544,6 +544,397 @@ export const vehicleMakes: VehicleMakeContent[] = [
     popularBrands: ["Michelin", "Continental", "Bridgestone", "Goodyear", "Cooper", "Hankook"],
     faqs: [],
   },
+  {
+    slug: "jaguar",
+    name: "Jaguar",
+    intro:
+      "Jaguar combines British luxury with sporting dynamics across its sedan, SUV, and sports car range. From the athletic F-TYPE to the versatile F-PACE and all-electric I-PACE, the right tires preserve Jaguar's signature blend of performance and refinement.",
+    tireGuide:
+      "Jaguar vehicles are engineered for a balance of agile handling and ride comfort. The F-PACE and E-PACE benefit from premium all-season tires. The F-TYPE demands high-performance summer or all-season tires for spirited driving. The I-PACE performs best with EV-optimized low rolling resistance tires to maximize range while maintaining grip.",
+    popularBrands: ["Pirelli", "Continental", "Michelin", "Goodyear", "Bridgestone", "Dunlop"],
+    faqs: [
+      {
+        q: "What tires are best for my Jaguar F-PACE?",
+        a: "The Jaguar F-PACE pairs well with premium all-season tires like the Continental CrossContact LX25 or Pirelli Scorpion Verde, offering a smooth ride with confident all-weather traction.",
+      },
+      {
+        q: "Does the Jaguar I-PACE need special tires?",
+        a: "The I-PACE benefits from EV-optimized tires with low rolling resistance and reinforced sidewalls to handle the vehicle's weight. Pirelli Elect and Michelin e.Primacy are strong options.",
+      },
+    ],
+  },
+  {
+    slug: "bentley",
+    name: "Bentley",
+    intro:
+      "Bentley represents the pinnacle of luxury grand touring, combining handcrafted interiors with powerful performance. Whether you drive a Continental GT, Bentayga SUV, or Flying Spur sedan, ultra-premium tires are essential to preserve the ride quality and handling Bentley owners expect.",
+    tireGuide:
+      "Bentley vehicles require tires rated for high speeds and heavy luxury car weight. The Continental GT needs high-performance grand touring tires. The Bentayga benefits from premium SUV tires that balance ride comfort with the vehicle's substantial curb weight. Always match the factory-specified load index and speed rating for safety.",
+    popularBrands: ["Pirelli", "Continental", "Michelin", "Dunlop", "Bridgestone", "Goodyear"],
+    faqs: [
+      {
+        q: "What tires does a Bentley Continental GT use?",
+        a: "The Continental GT typically uses 275/35R21 or 275/40R20 tires. Pirelli P Zero and Continental SportContact are among the most common OE fitments.",
+      },
+      {
+        q: "Are Bentley tires expensive?",
+        a: "Bentley tires range from $250 to $600+ per tire depending on size and brand. The large rim sizes (20-22 inch) and high speed ratings contribute to the premium pricing.",
+      },
+    ],
+  },
+  {
+    slug: "maserati",
+    name: "Maserati",
+    intro:
+      "Maserati blends Italian passion with luxury grand touring performance. The Ghibli and Quattroporte sedans, Levante and Grecale SUVs, and MC20 supercar each demand tires that deliver on Maserati's promise of exhilarating driving dynamics paired with refined comfort.",
+    tireGuide:
+      "Maserati vehicles are tuned for spirited driving, so tire choice significantly impacts the experience. The Ghibli and Quattroporte benefit from performance all-season or summer tires. The Levante and Grecale need SUV tires rated for higher speeds. The MC20 requires ultra-high-performance summer tires for maximum grip.",
+    popularBrands: ["Pirelli", "Continental", "Michelin", "Bridgestone", "Goodyear", "Yokohama"],
+    faqs: [
+      {
+        q: "What tires are best for a Maserati Ghibli?",
+        a: "The Ghibli performs best with high-performance all-season tires like the Pirelli P Zero All Season Plus or Continental ExtremeContact DWS06 Plus for year-round capability, or Pirelli P Zero for summer-only performance.",
+      },
+    ],
+  },
+  {
+    slug: "rolls-royce",
+    name: "Rolls-Royce",
+    intro:
+      "Rolls-Royce is the ultimate expression of automotive luxury, with vehicles like the Phantom, Ghost, Cullinan, and all-electric Spectre offering unmatched refinement. The right tires are critical to maintaining the near-silent, magic-carpet ride quality that defines every Rolls-Royce.",
+    tireGuide:
+      "Rolls-Royce vehicles are among the heaviest luxury cars on the road, requiring tires with high load ratings and reinforced construction. Ride comfort and noise isolation are paramount. The Cullinan needs SUV tires rated for its 6,000+ pound curb weight. The Spectre benefits from EV-optimized tires that reduce road noise while supporting its electric drivetrain.",
+    popularBrands: ["Pirelli", "Continental", "Michelin", "Goodyear", "Dunlop", "Bridgestone"],
+    faqs: [
+      {
+        q: "How much do Rolls-Royce tires cost?",
+        a: "Rolls-Royce tires typically range from $350 to $700+ per tire due to the large rim sizes (20-23 inch) and specialized construction. Always use tires that meet the factory load and speed specifications.",
+      },
+    ],
+  },
+  {
+    slug: "ferrari",
+    name: "Ferrari",
+    intro:
+      "Ferrari is synonymous with racing heritage and automotive excellence. From the Roma grand tourer to the SF90 hybrid supercar and the Purosangue SUV, Ferrari vehicles demand the highest-performing tires to deliver their extraordinary speed, cornering, and braking capabilities.",
+    tireGuide:
+      "Ferrari vehicles require ultra-high-performance tires engineered for extreme speeds and lateral grip. Most Ferraris use staggered tire setups (wider rear tires). Pirelli is the primary OE supplier, but Continental and Michelin also offer compatible options. The Purosangue SUV uses performance SUV tires rated for its V12 power.",
+    popularBrands: ["Pirelli", "Michelin", "Continental", "Bridgestone", "Goodyear", "Yokohama"],
+    faqs: [
+      {
+        q: "What tires come on a Ferrari?",
+        a: "Most Ferraris come equipped with Pirelli P Zero tires, often with Ferrari-specific markings. Michelin Pilot Sport 4S and Continental SportContact 6 are also popular aftermarket choices.",
+      },
+      {
+        q: "How much do Ferrari tires cost?",
+        a: "Ferrari tires range from $300 to $800+ per tire depending on size and compound. The staggered sizing means rear tires (305-355mm width) cost more than fronts.",
+      },
+    ],
+  },
+  {
+    slug: "lamborghini",
+    name: "Lamborghini",
+    intro:
+      "Lamborghini delivers extreme performance and unmistakable design with the Huracan, Aventador successor Revuelto, and the Urus super-SUV. These vehicles push tire technology to its limits, requiring the most advanced rubber compounds and construction available.",
+    tireGuide:
+      "Lamborghini sports cars use ultra-high-performance tires with extreme grip levels. The Urus requires performance SUV tires capable of handling its 641 hp and 5,400+ lb curb weight. Staggered tire setups are standard on Lamborghini supercars, with significantly wider rear tires for traction.",
+    popularBrands: ["Pirelli", "Michelin", "Continental", "Bridgestone", "Yokohama", "Goodyear"],
+    faqs: [
+      {
+        q: "What tires does a Lamborghini Urus use?",
+        a: "The Urus uses 255/50R20 or 285/35R23 tires depending on the wheel package. Pirelli P Zero and Continental SportContact are common choices for this super-SUV.",
+      },
+    ],
+  },
+  {
+    slug: "mclaren",
+    name: "McLaren",
+    intro:
+      "McLaren applies Formula 1 engineering to every road car it builds. The 720S, GT, and Artura hybrid deliver extraordinary performance that demands tires engineered for extreme cornering forces, precise steering response, and confidence-inspiring braking.",
+    tireGuide:
+      "McLaren vehicles require ultra-high-performance tires with maximum grip and precise feedback. Most McLarens use staggered setups with wider rear tires. Pirelli P Zero Corsa and Trofeo R are popular for track use, while Pirelli P Zero and Michelin Pilot Sport 4S are ideal for street driving.",
+    popularBrands: ["Pirelli", "Michelin", "Continental", "Bridgestone", "Goodyear", "Yokohama"],
+    faqs: [
+      {
+        q: "What tires come on a McLaren?",
+        a: "McLaren typically equips its cars with Pirelli P Zero or P Zero Corsa tires. Michelin Pilot Sport Cup 2 and Continental SportContact 6 are also excellent aftermarket options.",
+      },
+    ],
+  },
+  {
+    slug: "aston-martin",
+    name: "Aston Martin",
+    intro:
+      "Aston Martin represents British grand touring at its finest, from the elegant DB12 and Vantage sports car to the DBX luxury SUV. The right tires preserve Aston Martin's balance of effortless power, precise handling, and long-distance touring comfort.",
+    tireGuide:
+      "Aston Martin grand tourers need tires that handle high speeds while delivering a refined ride. The DBX SUV requires performance tires rated for its 542+ hp while maintaining comfort. Summer performance tires are ideal for spirited driving, while performance all-season tires work well for year-round GT use.",
+    popularBrands: ["Pirelli", "Michelin", "Continental", "Bridgestone", "Dunlop", "Goodyear"],
+    faqs: [
+      {
+        q: "What tires fit an Aston Martin DBX?",
+        a: "The DBX uses 255/50R21 or 285/40R22 tires. Pirelli P Zero and Continental CrossContact are popular choices that balance performance with the comfort expected from a luxury SUV.",
+      },
+    ],
+  },
+  {
+    slug: "lotus",
+    name: "Lotus",
+    intro:
+      "Lotus is renowned for lightweight, driver-focused sports cars and has expanded into electric SUVs with the Eletre. Whether you own the mid-engine Emira or the electric Eletre hyper-SUV, precision tires unlock the full potential of Lotus engineering.",
+    tireGuide:
+      "The Lotus Emira benefits from ultra-high-performance tires that complement its lightweight chassis and mid-engine balance. The Eletre requires performance SUV tires with reinforced construction for its EV weight. Michelin Pilot Sport and Pirelli P Zero are top picks for Lotus vehicles.",
+    popularBrands: ["Michelin", "Pirelli", "Continental", "Goodyear", "Bridgestone", "Yokohama"],
+    faqs: [
+      {
+        q: "What tires are best for a Lotus Emira?",
+        a: "The Emira excels with Michelin Pilot Sport 4S or Pirelli P Zero tires, providing the maximum grip and feedback that complement Lotus's lightweight engineering philosophy.",
+      },
+    ],
+  },
+  {
+    slug: "fiat",
+    name: "Fiat",
+    intro:
+      "Fiat brings Italian charm to compact and city cars, with the iconic 500 and its electric 500e variant offering fun, efficient urban transportation. The right tires maximize your Fiat's nimble handling, fuel efficiency, and ride comfort in city driving.",
+    tireGuide:
+      "Fiat's compact vehicles use smaller tire sizes that offer a wide range of affordable options. Touring all-season tires are ideal for daily driving, while performance tires suit the sportier 500 Abarth. The 500e benefits from low rolling resistance tires to maximize electric range.",
+    popularBrands: ["Michelin", "Continental", "Pirelli", "Hankook", "Yokohama", "Kumho"],
+    faqs: [
+      {
+        q: "What size tires does a Fiat 500 use?",
+        a: "The standard Fiat 500 uses 175/65R14 or 185/55R15 tires, while the sportier Abarth trim uses 195/45R16. These smaller sizes offer a wide selection of affordable tire options.",
+      },
+    ],
+  },
+  {
+    slug: "rivian",
+    name: "Rivian",
+    intro:
+      "Rivian is redefining electric adventure vehicles with the R1T pickup truck and R1S SUV, combining zero-emission driving with genuine off-road capability. The right tires balance off-road traction, highway range, and the unique demands of heavy electric vehicles.",
+    tireGuide:
+      "Rivian vehicles are heavy EVs designed for both on- and off-road use. All-terrain tires are popular for their versatility, while highway tires maximize electric range. EV-specific tires with reinforced sidewalls and low rolling resistance are ideal for Rivian owners who prioritize range without sacrificing capability.",
+    popularBrands: ["Pirelli", "Continental", "Michelin", "BFGoodrich", "Goodyear", "Yokohama"],
+    faqs: [
+      {
+        q: "What tires are best for a Rivian R1T?",
+        a: "For mixed on/off-road use, the Pirelli Scorpion All Terrain Plus or BFGoodrich KO2 are excellent choices. For maximum highway range, Continental CrossContact LX25 or Michelin Defender LTX offer lower rolling resistance.",
+      },
+      {
+        q: "Do Rivian tires wear out faster?",
+        a: "EVs like the Rivian can cause faster tire wear due to instant torque and higher vehicle weight. Choosing tires designed for EVs and rotating them regularly helps extend tread life.",
+      },
+    ],
+  },
+  {
+    slug: "lucid",
+    name: "Lucid",
+    intro:
+      "Lucid Motors builds some of the most advanced electric vehicles on the market. The Lucid Air luxury sedan offers industry-leading range and performance, while the Gravity SUV brings that technology to a family-friendly format. EV-optimized tires are essential to maximizing range and performance.",
+    tireGuide:
+      "Lucid vehicles require EV-specific tires designed for low rolling resistance and high load capacity. The Air's aerodynamic efficiency is best preserved with properly specified tires. Low-noise tires with foam inserts are recommended to maintain the cabin's near-silent experience.",
+    popularBrands: ["Pirelli", "Continental", "Michelin", "Bridgestone", "Goodyear", "Hankook"],
+    faqs: [
+      {
+        q: "What tires does the Lucid Air use?",
+        a: "The Lucid Air uses 245/45R19 for standard models or 245/35R21 and 265/35R21 for performance trims. Pirelli P Zero Elect and Continental EcoContact 6 are popular EV-optimized choices.",
+      },
+    ],
+  },
+  {
+    slug: "polestar",
+    name: "Polestar",
+    intro:
+      "Polestar combines Scandinavian design with electric performance, producing vehicles like the Polestar 2 fastback, Polestar 3 SUV, and Polestar 4 coupe-SUV. The right tires complement Polestar's focus on sustainable, high-performance electric driving.",
+    tireGuide:
+      "Polestar vehicles benefit from EV-optimized tires with low rolling resistance to maximize range. The Polestar 2 works well with all-season or performance all-season tires. The Polestar 3 and 4 require SUV-rated tires designed for heavier electric vehicles.",
+    popularBrands: ["Continental", "Pirelli", "Michelin", "Hankook", "Bridgestone", "Goodyear"],
+    faqs: [
+      {
+        q: "What tires are recommended for Polestar 2?",
+        a: "The Polestar 2 performs well with Continental EcoContact 6 or Michelin e.Primacy for maximum range, or Pirelli P Zero Elect for a sportier feel with EV-optimized rolling resistance.",
+      },
+    ],
+  },
+  {
+    slug: "smart",
+    name: "Smart",
+    intro:
+      "Smart specializes in ultra-compact vehicles designed for city living. The Smart Fortwo and its electric EQ variant are among the smallest cars on American roads, and their unique tire sizes require careful selection to maintain handling stability and ride quality.",
+    tireGuide:
+      "Smart vehicles use small tire sizes that may have fewer available options than standard cars. Touring all-season tires provide the best all-around performance. For the EQ Fortwo, low rolling resistance tires help maximize electric range in urban driving.",
+    popularBrands: ["Continental", "Michelin", "Pirelli", "Hankook", "Kumho", "Yokohama"],
+    faqs: [
+      {
+        q: "What size tires does a Smart Fortwo use?",
+        a: "The Smart Fortwo uses 155/60R15 front and 175/55R15 rear tires in a staggered setup. Some models use 185/50R16 rear tires.",
+      },
+    ],
+  },
+  {
+    slug: "scion",
+    name: "Scion",
+    intro:
+      "Though Scion was discontinued in 2016, hundreds of thousands of Scion vehicles remain on American roads. The FR-S sports car, tC coupe, xB hatchback, and iM compact still need quality replacement tires for safe, reliable performance.",
+    tireGuide:
+      "Scion vehicles use common tire sizes that are widely available. The FR-S (now Toyota 86) benefits from performance tires, while the tC and xB work well with all-season touring tires. Most Scion tire sizes are affordable and available from many brands.",
+    popularBrands: ["Michelin", "Continental", "Bridgestone", "Hankook", "Yokohama", "Falken"],
+    faqs: [
+      {
+        q: "Can I still find tires for my Scion?",
+        a: "Yes — all Scion tire sizes remain widely available since they share sizes with other Toyota and mainstream vehicles. The FR-S uses the same tires as the Subaru BRZ and Toyota 86.",
+      },
+    ],
+  },
+  {
+    slug: "pontiac",
+    name: "Pontiac",
+    intro:
+      "Pontiac was discontinued in 2010, but many Pontiac vehicles including the G6, GTO, Grand Prix, and Firebird remain in active service. Finding quality replacement tires for these vehicles is straightforward since they share sizes with other GM models.",
+    tireGuide:
+      "Pontiac vehicles use common tire sizes shared across the GM platform family. The GTO and Firebird benefit from performance tires, while the G6 and Grand Prix work well with all-season touring tires. Most Pontiac tire sizes are affordable and widely stocked.",
+    popularBrands: ["Goodyear", "Michelin", "Bridgestone", "Cooper", "Firestone", "Hankook"],
+    faqs: [
+      {
+        q: "Can I still buy tires for my Pontiac?",
+        a: "Pontiac tire sizes remain widely available since they share platforms and sizes with other GM vehicles like the Chevrolet Camaro, Malibu, and others.",
+      },
+    ],
+  },
+  {
+    slug: "saturn",
+    name: "Saturn",
+    intro:
+      "Saturn was discontinued in 2010, but many Saturn vehicles remain on the road. The Vue, Outlook, Aura, and Ion use common tire sizes shared with other GM vehicles, making replacement tires easy to find at competitive prices.",
+    tireGuide:
+      "Saturn vehicles share platforms with other GM brands, so tire options are plentiful. The Vue and Outlook use common crossover sizes. The Aura and Ion use popular sedan sizes. All-season touring tires provide the best value and all-weather performance.",
+    popularBrands: ["Goodyear", "Cooper", "Hankook", "Michelin", "Bridgestone", "Firestone"],
+    faqs: [
+      {
+        q: "Where can I find Saturn tires?",
+        a: "Saturn tire sizes are standard automotive sizes available from all major tire brands. The Vue uses the same sizes as the Chevrolet Equinox, and the Outlook shares sizes with the GMC Acadia.",
+      },
+    ],
+  },
+  {
+    slug: "suzuki",
+    name: "Suzuki",
+    intro:
+      "Suzuki exited the US automotive market in 2012, but vehicles like the Grand Vitara, SX4, and Kizashi remain on the road. These vehicles use standard tire sizes that are readily available from major tire manufacturers.",
+    tireGuide:
+      "Suzuki vehicles use common tire sizes found on many compact cars and SUVs. The Grand Vitara benefits from all-terrain or highway tires. The SX4 and Kizashi work well with all-season touring tires. All sizes remain widely stocked and affordable.",
+    popularBrands: ["Yokohama", "Bridgestone", "Hankook", "Michelin", "Continental", "Falken"],
+    faqs: [
+      {
+        q: "Are Suzuki tires still available?",
+        a: "Yes — all Suzuki tire sizes are standard sizes used across many vehicle brands. You will have no trouble finding replacement tires from any major manufacturer.",
+      },
+    ],
+  },
+  {
+    slug: "saab",
+    name: "Saab",
+    intro:
+      "Saab production ended in 2012, but the 9-3 and 9-5 remain popular among enthusiasts for their turbocharged performance and unique Swedish design. Standard European tire sizes make finding replacements straightforward.",
+    tireGuide:
+      "Saab vehicles use common European sedan tire sizes. Performance all-season tires work well for year-round driving, while summer performance tires suit enthusiasts who want maximum grip. Winter tires are recommended for Saab owners in cold climates.",
+    popularBrands: ["Continental", "Michelin", "Pirelli", "Nokian", "Hankook", "Bridgestone"],
+    faqs: [
+      {
+        q: "What tires fit a Saab 9-3?",
+        a: "The Saab 9-3 uses 215/55R16, 225/45R17, or 235/40R18 tires depending on the trim. These are standard European sizes with wide availability from all major brands.",
+      },
+    ],
+  },
+  {
+    slug: "isuzu",
+    name: "Isuzu",
+    intro:
+      "Isuzu is known globally for rugged trucks and SUVs. The D-Max pickup and MU-X SUV are built for durability and off-road capability. All-terrain and highway tires complement Isuzu's reputation for tough, work-ready vehicles.",
+    tireGuide:
+      "Isuzu trucks and SUVs benefit from all-terrain tires that handle both paved roads and rough terrain. Highway tires provide a quieter, more fuel-efficient option for primarily on-road use. Choose load-rated tires appropriate for towing and hauling.",
+    popularBrands: ["BFGoodrich", "Falken", "Bridgestone", "Yokohama", "Cooper", "Toyo"],
+    faqs: [
+      {
+        q: "What tires are best for the Isuzu D-Max?",
+        a: "The D-Max performs well with all-terrain tires like the BFGoodrich KO2 or Falken Wildpeak AT3W for mixed use, or highway tires like the Bridgestone Dueler for mostly on-road driving.",
+      },
+    ],
+  },
+  {
+    slug: "mercury",
+    name: "Mercury",
+    intro:
+      "Mercury was discontinued by Ford in 2011, but many Mercury vehicles including the Grand Marquis, Mariner, and Milan remain in daily use. These vehicles share platforms with Ford models, ensuring wide tire availability.",
+    tireGuide:
+      "Mercury vehicles share platforms with Ford counterparts — the Grand Marquis with the Crown Victoria, the Mariner with the Escape, and the Milan with the Fusion. Tire options are plentiful and affordable. Touring all-season tires are the best choice for everyday driving.",
+    popularBrands: ["Goodyear", "Michelin", "Cooper", "Bridgestone", "Firestone", "Hankook"],
+    faqs: [
+      {
+        q: "Can I still get tires for my Mercury?",
+        a: "Yes — Mercury vehicles use the same tire sizes as their Ford platform-mates. The Grand Marquis shares sizes with the Crown Victoria, the Mariner with the Escape, and the Milan with the Fusion.",
+      },
+    ],
+  },
+  {
+    slug: "hummer",
+    name: "Hummer",
+    intro:
+      "The original Hummer H2 and H3 remain popular among off-road enthusiasts. These vehicles use large, aggressive tire sizes designed for serious off-road capability. The GMC Hummer EV is covered under the GMC brand.",
+    tireGuide:
+      "Hummer vehicles need tires built for heavy-duty use and off-road conditions. The H2 uses very large sizes like 315/70R17 that support its weight and off-road demands. The H3 uses more standard truck sizes. All-terrain and mud-terrain tires are the most popular choices.",
+    popularBrands: ["BFGoodrich", "Nitto", "Toyo", "Goodyear", "Mickey Thompson", "Falken"],
+    faqs: [
+      {
+        q: "What size tires does a Hummer H2 use?",
+        a: "The Hummer H2 uses 315/70R17 stock tires or 305/40R22 with upgraded wheels. These are large, heavy-duty sizes available from BFGoodrich, Nitto, and Toyo.",
+      },
+    ],
+  },
+  {
+    slug: "fisker",
+    name: "Fisker",
+    intro:
+      "Fisker brought modern EV design to the market with the Ocean electric SUV. While the company faced challenges, Ocean SUVs on the road still need quality replacement tires designed for electric vehicle weight and efficiency.",
+    tireGuide:
+      "The Fisker Ocean uses standard EV-compatible tire sizes. Low rolling resistance tires maximize electric range, while performance all-season tires provide better grip. Choose tires with reinforced sidewalls to handle the extra weight of the battery pack.",
+    popularBrands: ["Continental", "Michelin", "Pirelli", "Bridgestone", "Hankook", "Goodyear"],
+    faqs: [
+      {
+        q: "What tires does the Fisker Ocean use?",
+        a: "The Fisker Ocean uses 255/50R20 or 255/45R22 tires depending on the wheel package. EV-optimized tires like Continental EcoContact or Pirelli Elect are recommended.",
+      },
+    ],
+  },
+  {
+    slug: "vinfast",
+    name: "VinFast",
+    intro:
+      "VinFast is a Vietnamese automaker bringing affordable electric vehicles to the American market with the VF8 midsize SUV and VF9 full-size SUV. EV-optimized tires help maximize range and complement VinFast's electric performance.",
+    tireGuide:
+      "VinFast EVs benefit from tires designed for electric vehicles — low rolling resistance to maximize range, reinforced sidewalls for battery weight, and optimized tread patterns for quiet highway driving. All-season tires provide the best year-round versatility.",
+    popularBrands: ["Continental", "Michelin", "Hankook", "Pirelli", "Bridgestone", "Kumho"],
+    faqs: [
+      {
+        q: "What tires work for the VinFast VF8?",
+        a: "The VF8 uses 245/50R19 or 255/45R20 tires. Continental EcoContact 6, Michelin e.Primacy, and Hankook iON are EV-optimized options that maximize range.",
+      },
+    ],
+  },
+  {
+    slug: "scout",
+    name: "Scout",
+    intro:
+      "Scout Motors is reviving the iconic brand with rugged, all-electric trucks and SUVs. The Scout Terra pickup and Traveler SUV are designed for adventure and off-road capability with zero emissions. The right tires balance off-road traction with EV range efficiency.",
+    tireGuide:
+      "Scout vehicles are designed for off-road capability, so all-terrain tires are a natural fit. For maximum range on the highway, consider all-season SUV tires with lower rolling resistance. Load-rated tires are recommended to handle the heavy battery weight.",
+    popularBrands: ["BFGoodrich", "Falken", "Continental", "Michelin", "Goodyear", "Pirelli"],
+    faqs: [
+      {
+        q: "What tires will the Scout Terra use?",
+        a: "The Scout Terra is expected to use 265/70R18 tires. All-terrain options like the BFGoodrich KO2 or Falken Wildpeak AT3W are ideal for Scout's adventure-focused mission.",
+      },
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------

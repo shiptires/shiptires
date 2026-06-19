@@ -14,6 +14,7 @@ interface AddToCartButtonProps {
   speedRating: string;
   defaultQty?: number;
   image?: string;
+  variant?: "sm" | "lg";
 }
 
 export default function AddToCartButton({
@@ -27,6 +28,7 @@ export default function AddToCartButton({
   speedRating,
   defaultQty = 4,
   image,
+  variant = "sm",
 }: AddToCartButtonProps) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
@@ -62,15 +64,25 @@ export default function AddToCartButton({
     }).catch(() => {});
   };
 
+  const base = added
+    ? "bg-green-600 hover:bg-green-700"
+    : "bg-safety-orange hover:bg-safety-orange/90";
+
+  const sizeClass =
+    variant === "lg"
+      ? "w-full justify-center rounded-xl px-6 py-4 text-lg"
+      : "rounded-md px-3 py-1.5 text-xs";
+
   return (
     <button
       onClick={handleClick}
-      className={`inline-flex items-center rounded-md px-3 py-1.5 text-xs font-bold text-white transition-colors ${
-        added
-          ? "bg-green-600 hover:bg-green-700"
-          : "bg-orange hover:bg-orange-dark"
-      }`}
+      className={`inline-flex items-center gap-2 font-bold text-white transition-colors ${base} ${sizeClass}`}
     >
+      {variant === "lg" && !added && (
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+        </svg>
+      )}
       {added ? "Added!" : "Add to Cart"}
     </button>
   );

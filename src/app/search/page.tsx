@@ -72,6 +72,7 @@ export default async function SearchPage({
   const terrain = sp.terrain || "";
   const category = sp.category || "";
   const q = sp.q || "";
+  const sort = (sp.sort || "") as "" | "price-asc" | "price-desc" | "name-asc" | "sizes-desc";
   const page = parseInt(sp.page || "1") || 1;
 
   const result = await searchModels({
@@ -84,6 +85,7 @@ export default async function SearchPage({
     terrain: terrain || undefined,
     category: category || undefined,
     query: q || undefined,
+    sort: sort || undefined,
     page,
     limit: 24,
   });
@@ -110,6 +112,7 @@ export default async function SearchPage({
   if (terrain) queryParts.push(`terrain=${encodeURIComponent(terrain)}`);
   if (category) queryParts.push(`category=${encodeURIComponent(category)}`);
   if (q) queryParts.push(`q=${encodeURIComponent(q)}`);
+  if (sort) queryParts.push(`sort=${encodeURIComponent(sort)}`);
   const baseQuery = queryParts.length > 0 ? queryParts.join("&") + "&" : "";
 
   return (
@@ -236,6 +239,65 @@ export default async function SearchPage({
         </div>
       </div>
 
+      {/* Sort + Active Filters Bar */}
+      <div className="border-b border-ink-grey/10 bg-label-white">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {brand && (() => {
+              const matchedBrand = brandRows.find((b) => toSlug(b.make_name) === brand);
+              const removeParts = queryParts.filter((p) => !p.startsWith("brand=") && !p.startsWith("sort="));
+              if (sort) removeParts.push(`sort=${encodeURIComponent(sort)}`);
+              const removeHref = `/search${removeParts.length > 0 ? "?" + removeParts.join("&") : ""}`;
+              return (
+                <Link
+                  href={removeHref}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-safety-orange/10 border border-safety-orange/30 px-3 py-1 text-xs font-bold text-safety-orange hover:bg-safety-orange/20 transition-colors"
+                >
+                  {matchedBrand?.make_name || brand.toUpperCase()}
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
+                </Link>
+              );
+            })()}
+            {size && (
+              <span className="rounded-full bg-ink-grey/5 border border-ink-grey/15 px-3 py-1 text-xs font-mono text-ink-grey">
+                {size}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-ink-grey/50">Sort</label>
+            <div className="flex rounded-lg border border-ink-grey/20 overflow-hidden text-xs">
+              {([
+                { value: "", label: "Most Sizes" },
+                { value: "price-asc", label: "Price: Low" },
+                { value: "price-desc", label: "Price: High" },
+                { value: "name-asc", label: "Name: A-Z" },
+              ] as const).map((opt) => {
+                const sortParts = queryParts.filter((p) => !p.startsWith("sort=") && !p.startsWith("page="));
+                if (opt.value) sortParts.push(`sort=${opt.value}`);
+                const href = `/search${sortParts.length > 0 ? "?" + sortParts.join("&") : ""}`;
+                const isActive = (sort || "") === opt.value;
+                return (
+                  <Link
+                    key={opt.value}
+                    href={href}
+                    className={`px-3 py-1.5 font-medium transition-colors ${
+                      isActive
+                        ? "bg-rubber text-white"
+                        : "bg-white text-ink-grey hover:bg-ink-grey/5"
+                    }`}
+                  >
+                    {opt.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Results */}
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
         {result.models.length === 0 ? (
@@ -266,7 +328,7 @@ export default async function SearchPage({
                 return (
                   <Link
                     key={`${brandSlug}-${modelSlug}`}
-                    href={`/tires/${brandSlug}/${modelSlug}`}
+                    href={size ? `/tires/${brandSlug}/${modelSlug}/${size.toLowerCase().replace(/\//g, "-").replace(/\./g, "-")}` : `/tires/${brandSlug}/${modelSlug}`}
                     className="group flex flex-col rounded-xl border border-ink-grey/12 bg-white overflow-hidden transition-all hover:shadow-lg hover:border-safety-orange/30"
                   >
                     {/* Image */}

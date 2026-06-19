@@ -898,3 +898,115 @@ export function tireToEbayItem(
   return { listing, price };
 }
 
+// ── Fulfillment API (order management) ──────────────────────
+
+const FULFILLMENT_URL = `${EBAY_API}/sell/fulfillment/v1`;
+
+export interface EbayOrderLineItem {
+  lineItemId: string;
+  title: string;
+  sku: string;
+  quantity: number;
+  lineItemCost: { value: string; currency: string };
+}
+
+export interface EbayOrder {
+  orderId: string;
+  creationDate: string;
+  orderPaymentStatus: string;
+  orderFulfillmentStatus: string;
+  pricingSummary: {
+    total: { value: string; currency: string };
+  };
+  buyer: {
+    username: string;
+  };
+  fulfillmentStartInstructions?: Array<{
+    shippingStep?: {
+      shipTo?: {
+        fullName?: string;
+        contactAddress?: {
+          addressLine1?: string;
+          addressLine2?: string;
+          city?: string;
+          stateOrProvince?: string;
+          postalCode?: string;
+          countryCode?: string;
+        };
+        email?: string;
+      };
+    };
+  }>;
+  lineItems: EbayOrderLineItem[];
+}
+
+interface EbayOrdersResponse {
+  orders: EbayOrder[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
+/** Fetch paid eBay orders, paginating through all results */
+export async function fetchEbayOrders(
+  sinceDate?: string,
+  limit = 50
+): Promise<EbayOrder[]> {
+  const allOrders: EbayOrder[] = [];
+  let offset = 0;
+  const filterParts: string[] = [];
+  if (sinceDate) {
+    filterParts.push(`creationdate:[${sinceDate}..]`);
+  }
+  const filter = filterParts.length > 0 ? filterParts.join(",") : undefined;
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
+    if (filter) params.set("filter", filter);
+
+    const data = await ebayFetch<EbayOrdersResponse>(
+      `${FULFILLMENT_URL}/order?${params.toString()}`
+    );
+
+    if (data.orders?.length) {
+      allOrders.push(...data.orders);
+    }
+
+    if (!data.orders || data.orders.length < limit || allOrders.length >= data.total) {
+      break;
+    }
+    offset += limit;
+  }
+
+  return allOrders;
+}
+
+/** Fetch a single eBay order by ID */
+export async function getEbayOrder(orderId: string): Promise<EbayOrder> {
+  return ebayFetch<EbayOrder>(
+    `${FULFILLMENT_URL}/order/${encodeURIComponent(orderId)}`
+  );
+}
+
+/** Create a shipping fulfillment (mark order as shipped with tracking) */
+export async function createShippingFulfillment(
+  orderId: string,
+  fulfillment: {
+    lineItems: Array<{ lineItemId: string; quantity: number }>;
+    shippingCarrierCode: string;
+    trackingNumber: string;
+  }
+): Promise<{ fulfillmentId: string }> {
+  return ebayFetch<{ fulfillmentId: string }>(
+    `${FULFILLMENT_URL}/order/${encodeURIComponent(orderId)}/shipping_fulfillment`,
+    {
+      method: "POST",
+      body: fulfillment,
+    }
+  );
+}
+

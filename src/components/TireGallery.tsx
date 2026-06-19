@@ -12,12 +12,21 @@ const angleLabels = ["Main", "Angle", "Front", "Side", "Side 2", "Detail", "Deta
 
 export default function TireGallery({ images, alt }: TireGalleryProps) {
   const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
+  const [loadedUrls, setLoadedUrls] = useState<Set<string>>(new Set());
   const [mainIdx, setMainIdx] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
 
   const handleError = useCallback((url: string) => {
     setFailedUrls((prev) => {
+      const next = new Set(prev);
+      next.add(url);
+      return next;
+    });
+  }, []);
+
+  const handleLoad = useCallback((url: string) => {
+    setLoadedUrls((prev) => {
       const next = new Set(prev);
       next.add(url);
       return next;
@@ -65,8 +74,9 @@ export default function TireGallery({ images, alt }: TireGalleryProps) {
               alt={alt}
               width={400}
               height={400}
-              className="max-h-[350px] sm:max-h-[400px] w-auto object-contain"
+              className={`max-h-[350px] sm:max-h-[400px] w-auto object-contain transition-opacity duration-300 ${loadedUrls.has(gallery[safeMainIdx]) ? "opacity-100" : "opacity-0"}`}
               priority
+              onLoad={() => handleLoad(gallery[safeMainIdx])}
               onError={() => handleError(gallery[safeMainIdx])}
             />
             <div className="absolute bottom-3 right-3 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-[11px] text-white">
@@ -95,7 +105,8 @@ export default function TireGallery({ images, alt }: TireGalleryProps) {
                   alt={`View ${i + 1}`}
                   width={64}
                   height={64}
-                  className="h-14 w-14 object-contain"
+                  className={`h-14 w-14 object-contain transition-opacity duration-300 ${loadedUrls.has(img) ? "opacity-100" : "opacity-0"}`}
+                  onLoad={() => handleLoad(img)}
                   onError={() => handleError(img)}
                 />
               </button>
@@ -152,8 +163,9 @@ export default function TireGallery({ images, alt }: TireGalleryProps) {
               alt={`${alt} — ${angleLabels[safeLightboxIdx] || "View"}`}
               width={800}
               height={800}
-              className="max-h-[75vh] w-auto object-contain rounded-lg"
+              className={`max-h-[75vh] w-auto object-contain rounded-lg transition-opacity duration-300 ${loadedUrls.has(gallery[safeLightboxIdx]) ? "opacity-100" : "opacity-0"}`}
               priority
+              onLoad={() => handleLoad(gallery[safeLightboxIdx])}
               onError={() => handleError(gallery[safeLightboxIdx])}
             />
             {gallery.length > 1 && (
@@ -166,7 +178,7 @@ export default function TireGallery({ images, alt }: TireGalleryProps) {
                       i === safeLightboxIdx ? "border-white" : "border-white/20 hover:border-white/50"
                     }`}
                   >
-                    <Image src={img} alt="" width={56} height={56} className="h-full w-full object-cover" onError={() => handleError(img)} />
+                    <Image src={img} alt="" width={56} height={56} className={`h-full w-full object-cover transition-opacity duration-300 ${loadedUrls.has(img) ? "opacity-100" : "opacity-0"}`} onLoad={() => handleLoad(img)} onError={() => handleError(img)} />
                   </button>
                 ))}
               </div>

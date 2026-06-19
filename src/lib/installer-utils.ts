@@ -1,6 +1,7 @@
 import zipcodes from "zipcodes";
 import { states } from "@/data/locations";
 import { toLocationSlug } from "@/lib/location-seo";
+import { getSupabase } from "@/lib/supabase";
 import type { StateData, CityData } from "@/data/locations";
 
 // ---------------------------------------------------------------------------
@@ -105,6 +106,97 @@ export async function fetchNearbyInstallers(
   } catch {
     return [];
   }
+}
+
+// ---------------------------------------------------------------------------
+// Cached installer lookup (Supabase-backed)
+// ---------------------------------------------------------------------------
+
+interface CachedInstallerResult {
+  zip: string;
+  city: string;
+  state: string;
+  lat: number;
+  lng: number;
+  installers: PlaceResult[];
+  hasGoogleData: boolean;
+  fromCache: boolean;
+}
+
+/**
+ * Get installers for a zip code — checks Supabase cache first,
+ * only calls Google Places if cache is empty or expired.
+ */
+export async function getInstallersForZip(
+  zip: string
+): Promise<CachedInstallerResult | null> {
+  const location = zipcodes.lookup(zip);
+  if (!location) return null;
+
+  const { city, state, latitude: lat, longitude: lng } = location;
+
+  // 1. Check cache
+  try {
+    const sb = getSupabase();
+    const { data: cached } = await sb
+      .from("installers_cache")
+      .select("installers, result_count, fetched_at, expires_at")
+      .eq("zip", zip)
+      .single();
+
+    if (cached && new Date(cached.expires_at) > new Date()) {
+      const installers = (cached.installers as PlaceResult[]) || [];
+      return {
+        zip,
+        city,
+        state,
+        lat,
+        lng,
+        installers,
+        hasGoogleData: installers.length > 0,
+        fromCache: true,
+      };
+    }
+  } catch {
+    // Cache miss or Supabase error — continue to fetch
+  }
+
+  // 2. Fetch from Google Places
+  const installers = await fetchNearbyInstallers(lat, lng);
+
+  // 3. Save to cache (fire-and-forget, don't block response)
+  try {
+    const sb = getSupabase();
+    await sb.from("installers_cache").upsert(
+      {
+        zip,
+        city,
+        state,
+        lat,
+        lng,
+        installers: JSON.stringify(installers),
+        result_count: installers.length,
+        fetched_at: new Date().toISOString(),
+        expires_at: new Date(
+          Date.now() + 30 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+      },
+      { onConflict: "zip" }
+    );
+  } catch (e) {
+    console.error("[installers-cache] save failed:", e);
+  }
+
+  return {
+    zip,
+    city,
+    state,
+    lat,
+    lng,
+    installers,
+    hasGoogleData: installers.length > 0,
+    fromCache: false,
+  };
 }
 
 // ---------------------------------------------------------------------------

@@ -99,6 +99,7 @@ export interface SearchParams {
   query?: string;
   page?: number;
   limit?: number;
+  sort?: "price-asc" | "price-desc" | "name-asc" | "sizes-desc";
 }
 
 export interface SearchResult {

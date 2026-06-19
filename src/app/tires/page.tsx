@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getAllBrands, brandSummaryToBrand, getStats } from "@/lib/db";
 import { getLogoUrl } from "@/lib/api-helpers";
+import { getBrandLogo } from "@/lib/curated-brands";
 import BrandFilter from "@/components/BrandFilter";
 import type { Metadata } from "next";
 
@@ -98,7 +99,7 @@ export default async function TiresPage() {
           </p>
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {topBrands.map((brand) => {
-              const logo = brand.logoUrl || getLogoUrl(brand.domain);
+              const logo = brand.logoUrl || getBrandLogo(brand.name) || getLogoUrl(brand.domain);
               return (
                 <Link
                   key={brand.slug}

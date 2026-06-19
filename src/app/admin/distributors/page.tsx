@@ -31,6 +31,7 @@ interface Distributor {
   contact_name: string | null;
   default_shipping_cost: number;
   active: boolean;
+  last_synced_at: string | null;
 }
 
 interface DistributorStats {
@@ -53,6 +54,7 @@ interface InventoryItem {
   active: boolean;
   ebay_item_id: string | null;
   ebay_listed_at: string | null;
+  warehouse_quantities: Record<string, number> | null;
   updated_at: string;
 }
 
@@ -89,6 +91,13 @@ export default function DistributorsPage() {
   const [syncDryRun, setSyncDryRun] = useState(true);
   const [syncResults, setSyncResults] = useState<Array<{ size: string; status: string; ebayPrice?: number; error?: string }>>([]);
   const [showSyncResults, setShowSyncResults] = useState(false);
+
+  // SFTP sync
+  const [sftpSyncing, setSftpSyncing] = useState(false);
+  const [sftpResult, setSftpResult] = useState<{ matched: number; unmatched: number; zeroed: number; errors: string[] } | null>(null);
+
+  // Warehouse stock expansion
+  const [expandedStock, setExpandedStock] = useState<string | null>(null);
 
   // Add distributor form
   const [showAddForm, setShowAddForm] = useState(false);
@@ -357,6 +366,48 @@ export default function DistributorsPage() {
       setActionMsg({ type: "error", text: e instanceof Error ? e.message : "Sync failed" });
     } finally {
       setSyncing(false);
+    }
+  }
+
+  // ── SFTP Sync (TireHub) ───────────────────────────────────
+  async function handleSftpSync() {
+    if (!selectedDist) return;
+    setSftpSyncing(true);
+    setSftpResult(null);
+    setActionMsg(null);
+
+    try {
+      const res = await fetch("/api/admin/sftp-sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || `Sync failed (${res.status})`);
+      }
+
+      const data = await res.json();
+      setSftpResult({
+        matched: data.matched || 0,
+        unmatched: data.unmatched || 0,
+        zeroed: data.zeroed || 0,
+        errors: data.errors || [],
+      });
+
+      setActionMsg({
+        type: data.errors?.length > 0 ? "error" : "success",
+        text: `SFTP Sync: ${data.matched} matched, ${data.unmatched} unmatched, ${data.zeroed} zeroed out (${(data.duration / 1000).toFixed(1)}s)`,
+      });
+
+      // Refresh data
+      fetchDetail(selectedDist.id);
+      fetchInventory(selectedDist.id, invPage, searchQuery);
+    } catch (e) {
+      setActionMsg({ type: "error", text: e instanceof Error ? e.message : "SFTP sync failed" });
+    } finally {
+      setSftpSyncing(false);
     }
   }
 
@@ -651,6 +702,36 @@ export default function DistributorsPage() {
               {selectedDist.fax && <p>Fax: {selectedDist.fax}</p>}
               {selectedDist.email && <p>Email: <a href={`mailto:${selectedDist.email}`} className="text-safety-orange hover:underline">{selectedDist.email}</a></p>}
               <p className="mt-2 pt-2 border-t border-gray-100">Default Shipping: <span className="font-medium text-gray-900">${selectedDist.default_shipping_cost?.toFixed(2)}</span></p>
+              {selectedDist.slug === "tirehub" && (
+                <div className="mt-2 pt-2 border-t border-gray-100 space-y-2">
+                  <p>
+                    Last Synced:{" "}
+                    <span className="font-medium text-gray-900">
+                      {selectedDist.last_synced_at
+                        ? new Date(selectedDist.last_synced_at).toLocaleString("en-US", {
+                            month: "short", day: "numeric", year: "numeric",
+                            hour: "numeric", minute: "2-digit",
+                          })
+                        : "Never"}
+                    </span>
+                  </p>
+                  <button
+                    onClick={handleSftpSync}
+                    disabled={sftpSyncing}
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {sftpSyncing ? "Syncing..." : "Sync Now"}
+                  </button>
+                  {sftpResult && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {sftpResult.matched} matched, {sftpResult.unmatched} unmatched, {sftpResult.zeroed} zeroed
+                      {sftpResult.errors.length > 0 && (
+                        <span className="text-red-500"> ({sftpResult.errors.length} errors)</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -862,24 +943,50 @@ export default function DistributorsPage() {
 
                       {/* Editable Quantity */}
                       <td className="py-2 px-3 text-right text-xs">
-                        {editingCell?.id === item.id && editingCell.field === "quantity" ? (
-                          <input
-                            ref={editRef}
-                            type="number"
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onBlur={saveEdit}
-                            onKeyDown={handleEditKeyDown}
-                            className="w-16 px-1 py-0.5 border border-safety-orange rounded text-xs text-right focus:ring-safety-orange focus:border-safety-orange"
-                          />
-                        ) : (
-                          <span
-                            onClick={() => startEdit(item, "quantity")}
-                            className="cursor-pointer text-gray-700 hover:text-safety-orange hover:underline"
-                            title="Click to edit"
-                          >
-                            {item.quantity}
-                          </span>
+                        <div className="flex items-center justify-end gap-1">
+                          {editingCell?.id === item.id && editingCell.field === "quantity" ? (
+                            <input
+                              ref={editRef}
+                              type="number"
+                              value={editValue}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              onBlur={saveEdit}
+                              onKeyDown={handleEditKeyDown}
+                              className="w-16 px-1 py-0.5 border border-safety-orange rounded text-xs text-right focus:ring-safety-orange focus:border-safety-orange"
+                            />
+                          ) : (
+                            <span
+                              onClick={() => startEdit(item, "quantity")}
+                              className="cursor-pointer text-gray-700 hover:text-safety-orange hover:underline"
+                              title="Click to edit"
+                            >
+                              {item.quantity}
+                            </span>
+                          )}
+                          {item.warehouse_quantities && Object.keys(item.warehouse_quantities).length > 0 && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setExpandedStock(expandedStock === item.id ? null : item.id); }}
+                              className="text-blue-500 hover:text-blue-700 ml-0.5"
+                              title="View warehouse breakdown"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d={expandedStock === item.id ? "M19 9l-7 7-7-7" : "M9 5l7 7-7 7"} />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                        {expandedStock === item.id && item.warehouse_quantities && (
+                          <div className="mt-1 bg-gray-50 rounded p-1.5 text-left text-[10px] text-gray-600 max-h-24 overflow-y-auto">
+                            {Object.entries(item.warehouse_quantities)
+                              .filter(([, qty]) => qty > 0)
+                              .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+                              .map(([code, qty]) => (
+                                <div key={code} className="flex justify-between px-1">
+                                  <span>TLC {code}</span>
+                                  <span className="font-medium">{qty}</span>
+                                </div>
+                              ))}
+                          </div>
                         )}
                       </td>
 

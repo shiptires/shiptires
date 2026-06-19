@@ -4,7 +4,7 @@ import zipcodes from "zipcodes";
 import { getAllBrands, brandSummaryToBrand, getStats } from "@/lib/db";
 import { states } from "@/data/locations";
 import {
-  fetchNearbyInstallers,
+  getInstallersForZip,
   findStateByAbbr,
   cityToSlug,
   getZipsForCity,
@@ -69,11 +69,9 @@ export default async function InstallerZipPage({
     (c) => c.name.toLowerCase() === location.city.toLowerCase()
   );
 
-  // Fetch Google Places data (skipped at build time via SKIP_GOOGLE_PLACES env)
-  const installers = await fetchNearbyInstallers(
-    location.latitude,
-    location.longitude
-  );
+  // Fetch installers — checks Supabase cache first, falls back to Google Places
+  const cachedResult = await getInstallersForZip(zip);
+  const installers = cachedResult?.installers ?? [];
 
   // Get nearby zip codes for coverage display
   const nearbyZips = (zipcodes.radius(zip, 10) || []) as string[];

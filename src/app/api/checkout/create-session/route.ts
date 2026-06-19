@@ -1,5 +1,7 @@
 import { getStripe } from "@/lib/stripe";
 import { searchTires, toSlug } from "@/lib/db";
+import { getSitePrice } from "@/lib/pricing";
+import { calculateOrderFees } from "@/lib/tire-fees";
 import type { CartItem, ShippingAddress } from "@/lib/types";
 
 async function validateAndPriceItems(items: CartItem[]): Promise<CartItem[]> {
@@ -33,11 +35,11 @@ async function validateAndPriceItems(items: CartItem[]): Promise<CartItem[]> {
       );
     }
 
-    const price = typeof match.price_map === "string"
-      ? parseFloat(match.price_map) || 0
-      : match.price_map ?? 0;
+    // Distributor cost overrides MAP when available
+    const price = await getSitePrice(match.id, match.price_map);
 
     if (price <= 0) {
+      // Try other tires with same model/size that have pricing
       const priced = result.tires.find(
         (t) =>
           toSlug(t.model_name) === item.modelSlug &&
@@ -50,15 +52,13 @@ async function validateAndPriceItems(items: CartItem[]): Promise<CartItem[]> {
           `Price unavailable for ${item.size} ${match.make_name} ${match.model_name}. Please call (279) 238-8473 for a quote.`
         );
       }
-      const pricedValue = typeof priced.price_map === "string"
-        ? parseFloat(priced.price_map)
-        : priced.price_map ?? 0;
+      const pricedPrice = await getSitePrice(priced.id, priced.price_map);
 
       validated.push({
         ...item,
         brand: priced.make_name,
         model: priced.model_name,
-        price: pricedValue,
+        price: pricedPrice,
         loadIndex: parseInt(priced.load_rating ?? "0") || 0,
         speedRating: priced.speed_rating ?? "",
       });
@@ -95,6 +95,7 @@ export async function POST(req: Request) {
 
     const validated = await validateAndPriceItems(items);
 
+    // Tire line items
     const line_items = validated.map((item) => ({
       price_data: {
         currency: "usd",
@@ -108,8 +109,59 @@ export async function POST(req: Request) {
       quantity: item.quantity,
     }));
 
+    // Calculate fees and tax
+    const tireSubtotal = validated.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    const totalTires = validated.reduce((sum, item) => sum + item.quantity, 0);
+    const state = (shipping.state || "").toUpperCase();
+    const fees = calculateOrderFees(state, totalTires, tireSubtotal);
+
+    // Tire disposal fee line item (only if state has a fee)
+    if (fees.tireFeePerTire > 0) {
+      line_items.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: `${state} Tire Disposal Fee`,
+            description: `State tire recycling/disposal fee — $${fees.tireFeePerTire.toFixed(2)} per tire`,
+          },
+          unit_amount: Math.round(fees.tireFeePerTire * 100),
+        },
+        quantity: totalTires,
+      });
+    }
+
+    // Handling fee line item
+    line_items.push({
+      price_data: {
+        currency: "usd",
+        product_data: {
+          name: "Order Handling Fee",
+          description: "Order processing and handling",
+        },
+        unit_amount: Math.round(fees.handlingFee * 100),
+      },
+      quantity: 1,
+    });
+
+    // Sales tax line item (only if rate > 0)
+    if (fees.taxAmount > 0) {
+      line_items.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: `Sales Tax (${state})`,
+            description: `State sales tax at ${(fees.taxRate * 100).toFixed(2)}%`,
+          },
+          unit_amount: Math.round(fees.taxAmount * 100),
+        },
+        quantity: 1,
+      });
+    }
+
     const session = await getStripe().checkout.sessions.create({
-      payment_method_types: ["card"],
       mode: "payment",
       line_items,
       customer_email: shipping.email,
@@ -130,6 +182,10 @@ export async function POST(req: Request) {
           }))
         ),
         auth_user_id: auth_user_id || "",
+        tire_fee_total: fees.tireFeeTotal.toFixed(2),
+        handling_fee: fees.handlingFee.toFixed(2),
+        tax_amount: fees.taxAmount.toFixed(2),
+        tax_rate: (fees.taxRate * 100).toFixed(2),
       },
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://ship.tires"}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://ship.tires"}/cart`,

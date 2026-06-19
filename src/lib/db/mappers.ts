@@ -1,6 +1,7 @@
 import type { Brand, TireModel, TireSize, TireType } from "@/lib/types";
 import type { TireRow, BrandSummaryRow, ModelSummaryRow, TireModelDetailsRow } from "./types";
 import { toSlug } from "./sqlite";
+import { sitePrice } from "@/lib/pricing";
 import { getBrandLogo } from "../curated-brands";
 
 // ---------------------------------------------------------------------------
@@ -57,7 +58,7 @@ export function tireRowToSize(row: TireRow): TireSize {
     size,
     loadIndex: parseInt(row.load_rating ?? "0") || 0,
     speedRating: row.speed_rating ?? "",
-    price: row.price_map ?? 0,
+    price: sitePrice(row.price_map),
     tireId: row.id,
     imageUrl: resolveImage(row.local_thumbnail, row.thumbnail_url, row.image_0100_url),
     thumbnailUrl: resolveImage(row.local_thumbnail, row.thumbnail_url, row.image_0100_url),
@@ -294,7 +295,7 @@ export function modelSummaryToModel(row: ModelSummaryRow): TireModel {
     features: [],
     warranty: "",
     speedRatings: [],
-    priceRange: [row.min_price ?? 0, row.max_price ?? 0],
+    priceRange: [sitePrice(row.min_price), sitePrice(row.max_price)],
     description: `${row.model_name} — ${row.tire_count} size${row.tire_count !== 1 ? "s" : ""} available.`,
     image: row.thumbnail_url ?? undefined,
   };

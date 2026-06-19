@@ -19,6 +19,7 @@ export const tireRankings: TireRanking[] = [
         rank: 2,
         brand: "Continental",
         model: "ExtremeContact DWS 06 Plus",
+        dbModel: "Extremecontact DWS06 Plus",
         score: 9.3,
         racingConnection:
           "Features Continental's SportPlus Technology with tread compounding refined through DTM and IMSA wet-weather testing.",
@@ -35,6 +36,7 @@ export const tireRankings: TireRanking[] = [
         rank: 4,
         brand: "Pirelli",
         model: "P Zero All Season Plus 3",
+        dbModel: "Pzero AS Plus 3",
         score: 8.8,
         racingConnection:
           "Draws from Pirelli's F1 intermediate and wet tire compound library, adapting high-silica formulations for street use.",
@@ -67,6 +69,7 @@ export const tireRankings: TireRanking[] = [
         rank: 2,
         brand: "Pirelli",
         model: "P Zero Trofeo RS",
+        dbModel: "Pzero Trofeo R",
         score: 9.5,
         racingConnection:
           "Born from Pirelli's World Challenge and GT racing programs, featuring a track-optimized compound with road-legal tread depth.",
@@ -107,6 +110,7 @@ export const tireRankings: TireRanking[] = [
         rank: 1,
         brand: "BFGoodrich",
         model: "All-Terrain T/A KO2",
+        dbModel: "ALL-Terrain T/A KO2",
         score: 9.5,
         racingConnection:
           "Engineered with CoreGard sidewall technology developed through decades of Baja 1000 desert racing, where sidewall punctures end races.",
@@ -179,6 +183,7 @@ export const tireRankings: TireRanking[] = [
         rank: 4,
         brand: "Pirelli",
         model: "Cinturato P7 All Season Plus 3",
+        dbModel: "Cinturato P7 ALL Season Plus Ii",
         score: 8.8,
         racingConnection:
           "Employs Pirelli's Seal Inside puncture-protection technology adapted from run-flat systems developed for their motorsport safety programs.",
@@ -267,6 +272,7 @@ export const tireRankings: TireRanking[] = [
         rank: 3,
         brand: "Hankook",
         model: "iON evo",
+        dbModel: "Ion Evo (IK01)",
         score: 9.0,
         racingConnection:
           "Engineered as the official tire of Porsche Taycan and ABB FIA Formula E Championship, with EV-specific noise dampening and torque handling.",
@@ -275,6 +281,7 @@ export const tireRankings: TireRanking[] = [
         rank: 4,
         brand: "Pirelli",
         model: "P Zero E",
+        dbModel: "Pzero E",
         score: 8.7,
         racingConnection:
           "Carries Pirelli's Elect marking with high-load construction and low rolling resistance developed through their Jaguar I-PACE eTrophy racing series.",
@@ -299,6 +306,7 @@ export const tireRankings: TireRanking[] = [
         rank: 1,
         brand: "BFGoodrich",
         model: "All-Terrain T/A KO2",
+        dbModel: "ALL-Terrain T/A KO2",
         score: 9.5,
         racingConnection:
           "Engineered with CoreGard sidewall technology developed through decades of Baja 1000 desert racing, where sidewall punctures end races.",
@@ -354,7 +362,8 @@ export const tireRankings: TireRanking[] = [
       {
         rank: 2,
         brand: "Nexen",
-        model: "N Priz AH5",
+        model: "N'Priz AH5",
+        dbModel: "Npriz AH5",
         score: 8.7,
         racingConnection:
           "Uses Dynamic Tread Design with computer-optimized pitch sequencing technology shared across Nexen's performance tire lineup.",
@@ -363,6 +372,7 @@ export const tireRankings: TireRanking[] = [
         rank: 3,
         brand: "Hankook",
         model: "Kinergy PT",
+        dbModel: "Kinergy PT H737",
         score: 8.5,
         racingConnection:
           "Features Hankook's advanced compound technology from their DTM and Formula E racing programs, filtered into their value-tier lineup.",

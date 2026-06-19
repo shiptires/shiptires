@@ -1,11 +1,68 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { HANDLING_FEE, calculateOrderFees } from "@/lib/tire-fees";
 import type { ShippingAddress } from "@/lib/types";
+
+function OrderFeeSummary({ subtotal, totalItems, state }: { subtotal: number; totalItems: number; state: string }) {
+  const fees = useMemo(() => {
+    const s = state.trim().toUpperCase();
+    if (s.length !== 2) return null;
+    return calculateOrderFees(s, totalItems, subtotal);
+  }, [state, totalItems, subtotal]);
+
+  const tireFeePerTire = fees?.tireFeePerTire ?? 0;
+  const tireFeeTotal = fees?.tireFeeTotal ?? 0;
+  const taxRate = fees?.taxRate ?? 0;
+  const taxAmount = fees?.taxAmount ?? 0;
+  const estimatedTotal = fees ? fees.total : subtotal + HANDLING_FEE;
+  const stateUpper = state.trim().toUpperCase();
+
+  return (
+    <dl className="mt-4 space-y-3 border-t border-gray-200 pt-4">
+      <div className="flex justify-between text-sm">
+        <dt className="text-gray-500">Subtotal ({totalItems} tires)</dt>
+        <dd className="font-medium text-gray-900">${subtotal.toFixed(2)}</dd>
+      </div>
+      {tireFeePerTire > 0 && (
+        <div className="flex justify-between text-sm">
+          <dt className="text-gray-500">{stateUpper} Tire Disposal Fee</dt>
+          <dd className="font-medium text-gray-900">${tireFeeTotal.toFixed(2)}</dd>
+        </div>
+      )}
+      <div className="flex justify-between text-sm">
+        <dt className="text-gray-500">Handling Fee</dt>
+        <dd className="font-medium text-gray-900">${HANDLING_FEE.toFixed(2)}</dd>
+      </div>
+      <div className="flex justify-between text-sm">
+        <dt className="text-gray-500">Shipping</dt>
+        <dd className="font-medium text-green-600">Free</dd>
+      </div>
+      {taxRate > 0 ? (
+        <div className="flex justify-between text-sm">
+          <dt className="text-gray-500">Est. Tax ({(taxRate * 100).toFixed(2)}%)</dt>
+          <dd className="font-medium text-gray-900">${taxAmount.toFixed(2)}</dd>
+        </div>
+      ) : fees && taxRate === 0 ? (
+        <div className="flex justify-between text-sm">
+          <dt className="text-gray-500">Tax</dt>
+          <dd className="font-medium text-gray-900">$0.00</dd>
+        </div>
+      ) : null}
+      <div className="flex justify-between text-sm">
+        <dt className="text-gray-500">Estimated Delivery</dt>
+        <dd className="font-medium text-gray-900">3-7 business days</dd>
+      </div>
+      <div className="border-t border-gray-200 pt-3 flex justify-between">
+        <dt className="font-bold text-gray-900">Estimated Total</dt>
+        <dd className="font-bold text-lg text-gray-900">${estimatedTotal.toFixed(2)}</dd>
+      </div>
+    </dl>
+  );
+}
 
 export default function CheckoutPage() {
   const { items, subtotal, totalItems } = useCart();
@@ -240,12 +297,13 @@ export default function CheckoutPage() {
                 {items.map((item) => (
                   <li key={`${item.brandSlug}-${item.modelSlug}-${item.size}`} className="flex gap-3">
                     {item.image ? (
-                      <Image
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
                         src={item.image}
                         alt={`${item.brand} ${item.model}`}
                         width={56}
                         height={56}
-                        className="rounded-md object-contain bg-gray-50 flex-shrink-0"
+                        className="w-14 h-14 rounded-md object-contain bg-gray-50 flex-shrink-0"
                       />
                     ) : (
                       <div className="w-14 h-14 rounded-md bg-gray-100 flex items-center justify-center flex-shrink-0">
@@ -256,31 +314,14 @@ export default function CheckoutPage() {
                       <p className="text-sm font-medium text-gray-900 truncate">{item.brand} {item.model}</p>
                       <p className="text-xs text-gray-500">{item.size} &middot; Load: {item.loadIndex} &middot; Speed: {item.speedRating}</p>
                       <div className="mt-1 flex justify-between items-baseline">
-                        <span className="text-xs text-gray-500">&times;{item.quantity} @ ${item.price.toFixed(2)}/ea</span>
-                        <span className="text-sm font-bold text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
+                        <span className="text-xs text-gray-500">&times;{item.quantity} @ ${Number(item.price).toFixed(2)}/ea</span>
+                        <span className="text-sm font-bold text-gray-900">${(Number(item.price) * item.quantity).toFixed(2)}</span>
                       </div>
                     </div>
                   </li>
                 ))}
               </ul>
-              <dl className="mt-4 space-y-3 border-t border-gray-200 pt-4">
-                <div className="flex justify-between text-sm">
-                  <dt className="text-gray-500">Subtotal ({totalItems} tires)</dt>
-                  <dd className="font-medium text-gray-900">${subtotal.toFixed(2)}</dd>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <dt className="text-gray-500">Shipping</dt>
-                  <dd className="font-medium text-green-600">Free</dd>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <dt className="text-gray-500">Estimated Delivery</dt>
-                  <dd className="font-medium text-gray-900">3-7 business days</dd>
-                </div>
-                <div className="border-t border-gray-200 pt-3 flex justify-between">
-                  <dt className="font-bold text-gray-900">Total</dt>
-                  <dd className="font-bold text-lg text-gray-900">${subtotal.toFixed(2)}</dd>
-                </div>
-              </dl>
+              <OrderFeeSummary subtotal={subtotal} totalItems={totalItems} state={form.state} />
 
               {/* Terms & Return Policy */}
               <label className="mt-5 flex items-start gap-2 cursor-pointer">

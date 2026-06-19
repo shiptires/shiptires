@@ -7,6 +7,7 @@ import { isCuratedBrand } from "@/lib/curated-brands";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { lookupTireSizes } from "@/data/tire-sizes";
 import { getMakeContent, getModelContent, getModelsForMake, vehicleMakes } from "@/data/vehicle-content";
+import { sitePrice } from "@/lib/pricing";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -113,9 +114,10 @@ export default async function VehicleYearPage({
     }
     const g = grouped.get(key)!;
     g.tireCount++;
-    if (tire.price_map && tire.price_map > 0) {
-      g.minPrice = Math.min(g.minPrice, tire.price_map);
-      g.maxPrice = Math.max(g.maxPrice, tire.price_map);
+    const sp = sitePrice(tire.price_map);
+    if (sp > 0) {
+      g.minPrice = Math.min(g.minPrice, sp);
+      g.maxPrice = Math.max(g.maxPrice, sp);
     }
     const sizeStr = tire.width && tire.aspect_ratio && tire.rim_size
       ? `${tire.width}/${tire.aspect_ratio}R${tire.rim_size}`
@@ -299,6 +301,36 @@ export default async function VehicleYearPage({
               ))}
             </>
           )}
+
+          {/* Shop by Brand */}
+          {(() => {
+            const brandSlugs = new Map<string, string>();
+            for (const g of tireGroups) {
+              if (!brandSlugs.has(g.brandSlug)) brandSlugs.set(g.brandSlug, g.brandName);
+            }
+            const brands = [...brandSlugs.entries()]
+              .map(([slug, name]) => ({ slug, name }))
+              .sort((a, b) => a.name.localeCompare(b.name));
+            if (brands.length === 0) return null;
+            return (
+              <div className="mt-8 rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">
+                  Shop {year} {makeName} {modelName} Tires by Brand
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {brands.map((b) => (
+                    <Link
+                      key={b.slug}
+                      href={`/tires/vehicle/${make}/${model}/${year}/brand/${b.slug}`}
+                      className="rounded-full border border-gray-200 bg-gray-50 px-4 py-1.5 text-sm font-medium text-gray-700 hover:border-safety-orange hover:text-safety-orange transition-colors"
+                    >
+                      {b.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Other model years */}
           <div className="mt-8 rounded-xl bg-white border border-gray-200 p-6 shadow-sm">

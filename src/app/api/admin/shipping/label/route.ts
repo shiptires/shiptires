@@ -1,7 +1,7 @@
 import { isAdminRequest } from "@/lib/admin-auth";
 import { getSupabase } from "@/lib/supabase";
-import { createLabel, type LabelRequest } from "@/lib/shipstation";
-import { getWarehouse, DEFAULT_WAREHOUSE_ID } from "@/lib/warehouses";
+import { createShipment, type CarrierName } from "@/lib/carriers";
+import { getWarehouse, getDefaultWarehouse } from "@/lib/warehouses";
 
 export async function POST(req: Request) {
   if (!(await isAdminRequest())) {
@@ -10,16 +10,44 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { orderId, carrierCode, serviceCode, weight, dimensions, testLabel, warehouseId } = body;
+    const {
+      orderId,
+      carrier,
+      carrierCode, // legacy field — fallback
+      serviceCode,
+      weight,
+      dimensions,
+      warehouseId,
+    } = body;
 
-    if (!orderId || !carrierCode || !serviceCode || !weight) {
+    const {
+      signatureRequired,
+      notificationsEnabled,
+    } = body;
+
+    const carrierName: CarrierName = carrier || carrierCode;
+
+    if (!orderId || !carrierName || !serviceCode || !weight) {
       return Response.json(
-        { error: "orderId, carrierCode, serviceCode, and weight are required" },
+        {
+          error:
+            "orderId, carrier (or carrierCode), serviceCode, and weight are required",
+        },
         { status: 400 }
       );
     }
 
-    const warehouse = getWarehouse(warehouseId || DEFAULT_WAREHOUSE_ID);
+    const validCarriers: CarrierName[] = ["fedex", "ups", "roadie", "shipstation"];
+    if (!validCarriers.includes(carrierName)) {
+      return Response.json(
+        { error: `Unsupported carrier: ${carrierName}. Use "fedex", "ups", "roadie", or "shipstation".` },
+        { status: 400 }
+      );
+    }
+
+    const warehouse = warehouseId
+      ? await getWarehouse(warehouseId)
+      : await getDefaultWarehouse();
     if (!warehouse) {
       return Response.json({ error: "Invalid warehouse" }, { status: 400 });
     }
@@ -43,18 +71,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const labelParams: LabelRequest = {
-      carrierCode,
-      serviceCode,
-      packageCode: body.packageCode || "package",
-      shipDate: new Date().toISOString().split("T")[0],
-      weight: { value: weight.value, units: weight.units || "pounds" },
-      dimensions: dimensions
-        ? { ...dimensions, units: dimensions.units || "inches" }
-        : undefined,
+    const result = await createShipment(carrierName, serviceCode, {
       shipFrom: {
         name: warehouse.name,
+        company: warehouse.distributorName,
         street1: warehouse.street1,
+        street2: warehouse.street2,
         city: warehouse.city,
         state: warehouse.state,
         postalCode: warehouse.postalCode,
@@ -71,20 +93,39 @@ export async function POST(req: Request) {
         country: addr.country || "US",
         phone: order.customer_phone || "",
       },
-      testLabel: testLabel === true,
-    };
-
-    const result = await createLabel(labelParams);
+      packages: [
+        {
+          weight: {
+            value: weight.value,
+            units: weight.units || "pounds",
+          },
+          dimensions: dimensions
+            ? {
+                length: dimensions.length,
+                width: dimensions.width,
+                height: dimensions.height,
+                units: dimensions.units || "inches",
+              }
+            : undefined,
+        },
+      ],
+      ...(carrierName === "roadie" && {
+        roadieOptions: {
+          signatureRequired: signatureRequired ?? false,
+          notificationsEnabled: notificationsEnabled ?? true,
+        },
+      }),
+    });
 
     // Save tracking info back to order
     const { error: updateError } = await getSupabase()
       .from("tire_orders")
       .update({
         tracking_number: result.trackingNumber,
-        carrier: carrierCode,
+        carrier: carrierName,
         service_code: serviceCode,
-        shipment_cost: result.shipmentCost,
-        shipment_id: String(result.shipmentId),
+        shipment_cost: result.totalCharge,
+        shipment_id: result.shipmentId,
         shipped_at: new Date().toISOString(),
         status: "shipped",
         updated_at: new Date().toISOString(),
@@ -98,11 +139,12 @@ export async function POST(req: Request) {
     return Response.json({
       trackingNumber: result.trackingNumber,
       labelData: result.labelData,
-      shipmentCost: result.shipmentCost,
+      shipmentCost: result.totalCharge,
       shipmentId: result.shipmentId,
+      labelFormat: result.labelFormat || "pdf",
     });
   } catch (e) {
-    console.error("ShipStation label error:", e);
+    console.error("Carrier label error:", e);
     return Response.json(
       { error: e instanceof Error ? e.message : "Failed to create label" },
       { status: 500 }

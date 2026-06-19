@@ -1,4 +1,5 @@
 import { searchTires, toSlug } from "@/lib/db";
+import { sitePrice } from "@/lib/pricing";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -42,7 +43,7 @@ export async function GET(req: Request) {
         : t.name,
     load_index: parseInt(t.load_rating ?? "0") || 0,
     speed_rating: t.speed_rating ?? "",
-    price: t.price_map ?? 0,
+    price: sitePrice(t.price_map),
     warranty: t.warranty ?? "",
     features: [] as string[],
     url: `https://ship.tires/tires/${toSlug(t.make_name)}/${toSlug(t.model_name)}`,

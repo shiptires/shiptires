@@ -22,6 +22,7 @@ import {
   getTypeLabel,
   getStateClimate,
 } from "@/lib/location-seo";
+import { sitePrice } from "@/lib/pricing";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -62,7 +63,7 @@ export async function generateMetadata({
 
   const displaySize = slugToDisplaySize(sizeSlug);
   const models = new Set(tires.map((t) => t.model_name));
-  const prices = tires.map((t) => t.price_map ?? 0).filter((p) => p > 0);
+  const prices = tires.map((t) => sitePrice(t.price_map)).filter((p) => p > 0);
   const lowestPrice = prices.length > 0 ? Math.min(...prices) : 0;
 
   const vehicles = getVehiclesForSize(`${parsed.width}/${parsed.aspect}R${parsed.rim}`);
@@ -121,7 +122,7 @@ export default async function SizePage({
   }));
 
   // Prices
-  const allPrices = modelEntries.map((e) => e.sizeInfo.price).filter((p) => p > 0);
+  const allPrices = modelEntries.map((e) => sitePrice(e.sizeInfo.price)).filter((p) => p > 0);
   const lowestPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
 
   // Vehicles
@@ -134,7 +135,7 @@ export default async function SizePage({
   for (const t of allSizeTires) {
     if (t.make_name === brandRow.make_name) continue;
     const existing = otherBrandMap.get(t.make_name);
-    const price = t.price_map ?? 0;
+    const price = sitePrice(t.price_map);
     if (existing) {
       existing.count++;
       if (price > 0 && (existing.minPrice === 0 || price < existing.minPrice)) {
@@ -168,11 +169,11 @@ export default async function SizePage({
         name: `${brand.name} ${entry.model.name} ${realSize}`,
         brand: { "@type": "Brand", name: brand.name },
         category: `${getTypeLabel(entry.model.type)} Tires`,
-        ...(entry.sizeInfo.price > 0
+        ...(sitePrice(entry.sizeInfo.price) > 0
           ? {
               offers: {
                 "@type": "Offer",
-                price: entry.sizeInfo.price,
+                price: sitePrice(entry.sizeInfo.price),
                 priceCurrency: "USD",
                 availability: "https://schema.org/InStock",
                 seller: { "@type": "Organization", name: "Ship.Tires" },
@@ -285,17 +286,17 @@ export default async function SizePage({
                           <td className="py-3 pr-4 text-gray-600">{si.loadIndex || "—"}</td>
                           <td className="py-3 pr-4 text-gray-600">{si.speedRating || "—"}</td>
                           <td className="py-3 pr-4 font-bold text-gray-900">
-                            {si.price > 0 ? `$${si.price}` : "Quote"}
+                            {sitePrice(si.price) > 0 ? `$${sitePrice(si.price).toFixed(2)}` : "Quote"}
                           </td>
                           <td className="py-3 flex items-center gap-2">
-                            {si.price > 0 ? (
+                            {sitePrice(si.price) > 0 ? (
                               <AddToCartButton
                                 brand={brand.name}
                                 brandSlug={brand.slug}
                                 model={model.name}
                                 modelSlug={model.slug}
                                 size={si.size}
-                                price={si.price}
+                                price={sitePrice(si.price)}
                                 loadIndex={si.loadIndex}
                                 speedRating={si.speedRating}
                               />

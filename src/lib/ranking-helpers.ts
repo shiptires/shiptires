@@ -25,7 +25,7 @@ export function getRankingsForModel(
   const results: RankingAppearance[] = [];
   for (const cat of tireRankings) {
     for (const tire of cat.tires) {
-      if (slug(tire.brand) === brandSlug && slug(tire.model) === modelSlug) {
+      if (slug(tire.brand) === brandSlug && slug(tire.dbModel ?? tire.model) === modelSlug) {
         results.push({
           category: cat.category,
           categorySlug: cat.slug,
@@ -61,7 +61,7 @@ export function getRankingsForBrand(
           score: tire.score,
           racingConnection: tire.racingConnection,
           model: tire.model,
-          modelSlug: slug(tire.model),
+          modelSlug: slug(tire.dbModel ?? tire.model),
         });
       }
     }
@@ -92,7 +92,7 @@ export function getTopRankedTires(): TopRankedTire[] {
       brand: top.brand,
       brandSlug: slug(top.brand),
       model: top.model,
-      modelSlug: slug(top.model),
+      modelSlug: slug(top.dbModel ?? top.model),
       score: top.score,
       racingConnection: top.racingConnection,
     };

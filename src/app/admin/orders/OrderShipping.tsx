@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { WAREHOUSES, DEFAULT_WAREHOUSE_ID } from "@/lib/warehouses";
+import { DEFAULT_WAREHOUSE_ID } from "@/lib/warehouses";
 
 interface ShippingAddress {
   name?: string;
@@ -21,12 +21,42 @@ interface ShippingAddress {
 }
 
 interface RateOption {
+  carrier: string;
   carrierCode: string;
+  source: string;
   serviceCode: string;
   serviceName: string;
   shipmentCost: number;
   otherCost: number;
   totalCost: number;
+  transitDays: number | null;
+  estimatedDistance?: number;
+}
+
+interface WarehouseOption {
+  id: string;
+  distributor_name: string;
+  location_name: string;
+  postal_code: string;
+  is_default: boolean;
+  active: boolean;
+}
+
+interface TrackingInfo {
+  status: string;
+  statusDescription: string;
+  estimatedDelivery: string | null;
+  events: Array<{
+    timestamp: string;
+    description: string;
+    city: string;
+    stateOrProvince: string;
+  }>;
+  driver?: {
+    name: string;
+    phone: string;
+    vehicle?: string;
+  };
 }
 
 interface Props {
@@ -41,9 +71,18 @@ interface Props {
   shipmentCost: number | null;
   shipmentId: string | null;
   shippedAt: string | null;
+  tireId?: number;
+  orderSource?: string;
+  externalOrderId?: string;
 }
 
 type View = "form" | "rates" | "shipped";
+
+const CARRIER_LABELS: Record<string, string> = {
+  fedex: "FedEx",
+  ups: "UPS",
+  roadie: "Roadie",
+};
 
 export default function OrderShipping({
   orderId,
@@ -57,6 +96,9 @@ export default function OrderShipping({
   shipmentCost,
   shipmentId,
   shippedAt,
+  tireId,
+  orderSource,
+  externalOrderId,
 }: Props) {
   const router = useRouter();
 
@@ -64,6 +106,7 @@ export default function OrderShipping({
   const initialView: View = hasShipped ? "shipped" : "form";
 
   const [view, setView] = useState<View>(initialView);
+  const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
   const [warehouseId, setWarehouseId] = useState(DEFAULT_WAREHOUSE_ID);
   const [weight, setWeight] = useState("25");
   const [length, setLength] = useState("");
@@ -74,7 +117,67 @@ export default function OrderShipping({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [labelData, setLabelData] = useState<string | null>(null);
+  const [labelFormat, setLabelFormat] = useState<"pdf" | "png">("pdf");
   const [emailStatus, setEmailStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [tracking, setTracking] = useState<TrackingInfo | null>(null);
+  const [trackingLoading, setTrackingLoading] = useState(false);
+  const [availableSources, setAvailableSources] = useState<string[]>([]);
+  const [selectedSources, setSelectedSources] = useState<string[]>(["fedex"]);
+  const [roadieSignature, setRoadieSignature] = useState(false);
+  const [roadieNotifications, setRoadieNotifications] = useState(true);
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestion, setSuggestion] = useState<{ label: string; distance: number; stock: number } | null>(null);
+
+  // Fetch available rate sources
+  useEffect(() => {
+    fetch("/api/admin/shipping/carriers")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.sources?.length) {
+          setAvailableSources(d.sources);
+          const direct = d.sources.filter((s: string) => s !== "shipstation" && s !== "roadie");
+          if (direct.length) setSelectedSources(direct);
+          else setSelectedSources(d.sources);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch warehouses from API
+  useEffect(() => {
+    fetch("/api/admin/warehouses")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.warehouses?.length) {
+          setWarehouses(d.warehouses.filter((w: WarehouseOption) => w.active));
+          const defaultWh = d.warehouses.find((w: WarehouseOption) => w.is_default);
+          if (defaultWh) setWarehouseId(defaultWh.id);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Auto-fetch tracking info when shipped
+  useEffect(() => {
+    if (hasShipped && carrier && trackingNumber) {
+      setTrackingLoading(true);
+      fetch("/api/admin/shipping/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          carrier,
+          trackingNumber,
+          ...(carrier === "roadie" && shipmentId && { shipmentId }),
+        }),
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.status) setTracking(d);
+        })
+        .catch(() => {})
+        .finally(() => setTrackingLoading(false));
+    }
+  }, [hasShipped, carrier, trackingNumber, shipmentId]);
 
   if (!shippingAddress) {
     return <p className="text-sm text-gray-400 italic">No shipping address on file</p>;
@@ -94,6 +197,40 @@ export default function OrderShipping({
     .filter(Boolean)
     .join(", ");
 
+  const isRoadieRate = (rate: RateOption) => rate.carrier === "roadie" || rate.source === "roadie";
+
+  async function handleSuggestWarehouse() {
+    if (!tireId || !shippingAddress) return;
+    const customerZip = shippingAddress.postalCode || shippingAddress.postal_code || shippingAddress.zip;
+    if (!customerZip) return;
+
+    setSuggesting(true);
+    setSuggestion(null);
+    try {
+      const res = await fetch("/api/admin/warehouses/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerZip, tireId }),
+      });
+      const data = await res.json();
+      if (data.warehouse) {
+        setWarehouseId(data.warehouse.id);
+        setSuggestion({
+          label: data.warehouse.label || `${data.warehouse.city}, ${data.warehouse.state}`,
+          distance: data.distance,
+          stock: data.stock,
+        });
+      } else {
+        setSuggestion(null);
+        setError("No stocked warehouse found for this tire.");
+      }
+    } catch {
+      setError("Failed to find nearest warehouse");
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
   async function handleGetRates() {
     setLoading(true);
     setError("");
@@ -102,6 +239,7 @@ export default function OrderShipping({
         orderId,
         warehouseId,
         weight: { value: parseFloat(weight), units: "pounds" },
+        sources: selectedSources,
       };
       if (length && width && height) {
         body.dimensions = {
@@ -137,7 +275,7 @@ export default function OrderShipping({
       const body: Record<string, unknown> = {
         orderId,
         warehouseId,
-        carrierCode: rate.carrierCode,
+        carrier: rate.source === "shipstation" ? "shipstation" : (rate.carrier || rate.carrierCode),
         serviceCode: rate.serviceCode,
         weight: { value: parseFloat(weight), units: "pounds" },
       };
@@ -149,6 +287,11 @@ export default function OrderShipping({
           units: "inches",
         };
       }
+      // Roadie-specific options
+      if (isRoadieRate(rate)) {
+        body.signatureRequired = roadieSignature;
+        body.notificationsEnabled = roadieNotifications;
+      }
       const res = await fetch("/api/admin/shipping/label", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -158,6 +301,7 @@ export default function OrderShipping({
       if (!res.ok) throw new Error(data.error || "Failed to create label");
 
       setLabelData(data.labelData || null);
+      setLabelFormat(data.labelFormat || "pdf");
 
       // Auto-send tracking email
       try {
@@ -168,6 +312,21 @@ export default function OrderShipping({
         });
       } catch {
         // Non-critical — user can resend manually
+      }
+
+      // Push fulfillment to eBay if this is an eBay order
+      if (orderSource === "ebay" && externalOrderId && data.trackingNumber) {
+        fetch("/api/admin/ebay/orders/fulfill", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: externalOrderId,
+            trackingNumber: data.trackingNumber,
+            carrier: rate.carrier || rate.carrierCode,
+          }),
+        }).catch(() => {
+          // Non-blocking — eBay fulfillment can be retried
+        });
       }
 
       router.refresh();
@@ -186,11 +345,13 @@ export default function OrderShipping({
     for (let i = 0; i < byteChars.length; i++) {
       byteArray[i] = byteChars.charCodeAt(i);
     }
-    const blob = new Blob([byteArray], { type: "application/pdf" });
+    const mimeType = labelFormat === "png" ? "image/png" : "application/pdf";
+    const ext = labelFormat === "png" ? "png" : "pdf";
+    const blob = new Blob([byteArray], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `label-${orderId}.pdf`;
+    a.download = `label-${orderId}.${ext}`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -252,7 +413,7 @@ export default function OrderShipping({
         <div className="space-y-2">
           <div className="text-sm space-y-1">
             <p><span className="text-gray-500">Tracking:</span> <span className="font-mono font-medium">{trackingNumber}</span></p>
-            <p><span className="text-gray-500">Carrier:</span> {carrier?.toUpperCase()}</p>
+            <p><span className="text-gray-500">Carrier:</span> {CARRIER_LABELS[carrier || ""] || carrier?.toUpperCase()}</p>
             {shipmentCost != null && (
               <p><span className="text-gray-500">Cost:</span> ${shipmentCost.toFixed(2)}</p>
             )}
@@ -260,10 +421,59 @@ export default function OrderShipping({
               <p><span className="text-gray-500">Shipped:</span> {new Date(shippedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
             )}
           </div>
+
+          {/* Tracking status */}
+          {trackingLoading && (
+            <p className="text-xs text-gray-400">Loading tracking info...</p>
+          )}
+          {tracking && (
+            <div className="bg-gray-50 rounded p-3 text-sm space-y-1">
+              <p className="font-medium text-gray-900">
+                {tracking.statusDescription}
+              </p>
+              {tracking.estimatedDelivery && (
+                <p className="text-gray-500 text-xs">
+                  Est. delivery: {new Date(tracking.estimatedDelivery).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                </p>
+              )}
+              {/* Roadie driver info */}
+              {tracking.driver && (
+                <div className="text-xs text-gray-600 bg-green-50 rounded px-2 py-1.5 mt-1">
+                  <p>Driver: {tracking.driver.name}</p>
+                  {tracking.driver.phone && <p>Phone: {tracking.driver.phone}</p>}
+                  {tracking.driver.vehicle && <p>Vehicle: {tracking.driver.vehicle}</p>}
+                </div>
+              )}
+              {tracking.events.length > 0 && (
+                <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                  {tracking.events.slice(0, 5).map((evt, i) => (
+                    <p key={i} className="text-xs text-gray-500">
+                      {evt.description}
+                      {evt.city && ` — ${evt.city}, ${evt.stateOrProvince}`}
+                    </p>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Roadie barcode label inline */}
+          {carrier === "roadie" && labelData && labelFormat === "png" && (
+            <div className="mt-2">
+              <p className="text-xs text-gray-500 mb-1">Barcode Label:</p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`data:image/png;base64,${labelData}`}
+                alt="Roadie barcode label"
+                className="max-w-xs border border-gray-200 rounded"
+              />
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-2">
             {labelData && (
               <button onClick={handleDownloadLabel} className="text-xs px-3 py-1.5 bg-gray-900 text-white rounded hover:bg-gray-700 transition-colors">
-                Download Label
+                Download {carrier === "roadie" ? "Barcode" : "Label"}
               </button>
             )}
             <button
@@ -271,14 +481,14 @@ export default function OrderShipping({
               disabled={emailStatus === "sending"}
               className="text-xs px-3 py-1.5 bg-safety-orange text-white rounded hover:bg-orange-700 disabled:bg-gray-300 transition-colors"
             >
-              {emailStatus === "sending" ? "Sending..." : emailStatus === "sent" ? "Sent ✓" : "Send Tracking Email"}
+              {emailStatus === "sending" ? "Sending..." : emailStatus === "sent" ? "Sent" : "Send Tracking Email"}
             </button>
             <button
               onClick={handleVoid}
               disabled={loading}
               className="text-xs px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-300 transition-colors"
             >
-              Void Label
+              {carrier === "roadie" ? "Cancel Delivery" : "Void Label"}
             </button>
           </div>
         </div>
@@ -295,11 +505,30 @@ export default function OrderShipping({
                 onChange={(e) => setWarehouseId(e.target.value)}
                 className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white"
               >
-                {WAREHOUSES.map((w) => (
-                  <option key={w.id} value={w.id}>{w.label}</option>
-                ))}
+                {warehouses.length > 0
+                  ? warehouses.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.distributor_name} — {w.location_name}
+                      </option>
+                    ))
+                  : (
+                      <option value={DEFAULT_WAREHOUSE_ID}>Sacramento, CA</option>
+                    )
+                }
               </select>
             </label>
+            {tireId && (
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={handleSuggestWarehouse}
+                  disabled={suggesting}
+                  className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 transition-colors whitespace-nowrap"
+                >
+                  {suggesting ? "Finding..." : "Suggest Best"}
+                </button>
+              </div>
+            )}
             <label className="text-sm">
               <span className="text-gray-500 block mb-1">Weight (lbs)</span>
               <input
@@ -312,6 +541,12 @@ export default function OrderShipping({
               />
             </label>
           </div>
+          {suggestion && (
+            <div className="bg-blue-50 border border-blue-200 rounded px-3 py-2 text-xs text-blue-700">
+              Auto-selected: <span className="font-medium">{suggestion.label}</span>
+              {" "}({suggestion.distance} mi away, {suggestion.stock} in stock)
+            </div>
+          )}
           <div className="flex flex-wrap gap-3">
             <label className="text-sm">
               <span className="text-gray-500 block mb-1">L (in)</span>
@@ -344,9 +579,33 @@ export default function OrderShipping({
               />
             </label>
           </div>
+          {availableSources.length > 1 && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-gray-500">Sources:</span>
+              {availableSources.map((src) => (
+                <label key={src} className="text-xs flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedSources.includes(src)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedSources((prev) => [...prev, src]);
+                      } else {
+                        setSelectedSources((prev) => prev.filter((s) => s !== src));
+                      }
+                    }}
+                    className="accent-safety-orange"
+                  />
+                  <span className="text-gray-600">
+                    {src === "fedex" ? "FedEx Direct" : src === "ups" ? "UPS Direct" : src === "roadie" ? "Roadie" : "ShipStation"}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
           <button
             onClick={handleGetRates}
-            disabled={loading || !weight}
+            disabled={loading || !weight || selectedSources.length === 0}
             className="text-sm px-4 py-2 bg-safety-orange text-white rounded hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? "Getting Rates..." : "Get Rates"}
@@ -367,13 +626,15 @@ export default function OrderShipping({
                     <th className="py-2 px-3 text-left font-medium text-gray-500"></th>
                     <th className="py-2 px-3 text-left font-medium text-gray-500">Service</th>
                     <th className="py-2 px-3 text-left font-medium text-gray-500">Carrier</th>
+                    <th className="py-2 px-3 text-left font-medium text-gray-500">Source</th>
+                    <th className="py-2 px-3 text-right font-medium text-gray-500">Transit</th>
                     <th className="py-2 px-3 text-right font-medium text-gray-500">Cost</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rates.map((rate, i) => (
                     <tr
-                      key={`${rate.carrierCode}-${rate.serviceCode}`}
+                      key={`${rate.source}-${rate.carrier}-${rate.serviceCode}`}
                       className={`border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${selectedRate === i ? "bg-safety-orange/10" : ""}`}
                       onClick={() => setSelectedRate(i)}
                     >
@@ -387,7 +648,27 @@ export default function OrderShipping({
                         />
                       </td>
                       <td className="py-2 px-3">{rate.serviceName}</td>
-                      <td className="py-2 px-3 text-gray-500">{rate.carrierCode}</td>
+                      <td className="py-2 px-3 text-gray-500">
+                        {CARRIER_LABELS[rate.carrier || rate.carrierCode] || rate.carrierCode}
+                      </td>
+                      <td className="py-2 px-3">
+                        <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
+                          rate.source === "shipstation"
+                            ? "bg-purple-100 text-purple-700"
+                            : rate.source === "roadie"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-blue-100 text-blue-700"
+                        }`}>
+                          {rate.source === "shipstation" ? "ShipStation" : rate.source === "roadie" ? "Roadie" : "Direct"}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 text-right text-gray-500">
+                        {isRoadieRate(rate)
+                          ? "Same Day"
+                          : rate.transitDays != null
+                          ? `${rate.transitDays}d`
+                          : "—"}
+                      </td>
                       <td className="py-2 px-3 text-right font-medium">${rate.totalCost.toFixed(2)}</td>
                     </tr>
                   ))}
@@ -395,6 +676,36 @@ export default function OrderShipping({
               </table>
             </div>
           )}
+
+          {/* Roadie info box when selected */}
+          {selectedRate !== null && isRoadieRate(rates[selectedRate]) && (
+            <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm space-y-2">
+              <p className="text-green-800">
+                A local driver will pick up and deliver today. No shipping label needed — a barcode will be generated for driver verification.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <label className="flex items-center gap-1.5 text-xs text-green-700">
+                  <input
+                    type="checkbox"
+                    checked={roadieSignature}
+                    onChange={(e) => setRoadieSignature(e.target.checked)}
+                    className="accent-green-600"
+                  />
+                  Require signature
+                </label>
+                <label className="flex items-center gap-1.5 text-xs text-green-700">
+                  <input
+                    type="checkbox"
+                    checked={roadieNotifications}
+                    onChange={(e) => setRoadieNotifications(e.target.checked)}
+                    className="accent-green-600"
+                  />
+                  SMS notifications to customer
+                </label>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <button
               onClick={() => setView("form")}
@@ -407,7 +718,11 @@ export default function OrderShipping({
               disabled={loading || selectedRate === null}
               className="text-sm px-4 py-2 bg-safety-orange text-white rounded hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "Creating Label..." : "Create Label"}
+              {loading
+                ? "Creating..."
+                : selectedRate !== null && isRoadieRate(rates[selectedRate])
+                ? "Schedule Delivery"
+                : "Create Label"}
             </button>
           </div>
         </div>

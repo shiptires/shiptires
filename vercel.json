@@ -1,0 +1,13 @@
+{
+  "regions": ["pdx1"],
+  "crons": [
+    {
+      "path": "/api/cron/scrape-prices",
+      "schedule": "0 6 * * 1"
+    },
+    {
+      "path": "/api/cron/sftp-sync",
+      "schedule": "0 13 * * *"
+    }
+  ]
+}

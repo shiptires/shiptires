@@ -62,15 +62,15 @@ export default function ChatBot() {
   const inputRef = useRef<HTMLInputElement>(null);
   const { addItem } = useCart();
 
-  // Auto-open after 3s on first visit (sessionStorage)
+  // Auto-open after 3s on first-ever visit (localStorage persists across sessions)
   useEffect(() => {
     if (typeof window === "undefined") return;
     const key = "ship-tires-chatbot-opened";
-    if (!sessionStorage.getItem(key)) {
+    if (!localStorage.getItem(key)) {
       const timer = setTimeout(() => {
         setIsOpen(true);
         setAutoOpened(true);
-        sessionStorage.setItem(key, "1");
+        localStorage.setItem(key, "1");
       }, 3000);
       return () => clearTimeout(timer);
     }

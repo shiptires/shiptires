@@ -44,22 +44,58 @@ export default function SizeTable({
 
   const rimSizes = [...rimGroups.keys()].sort((a, b) => parseInt(a) - parseInt(b));
   const [activeRim, setActiveRim] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
-  // Always show sizes with prices first, then no-price sizes
-  const sortedSizes = (activeRim ? (rimGroups.get(activeRim) ?? []) : sizes)
-    .slice()
-    .sort((a, b) => {
-      if (a.price > 0 && b.price <= 0) return -1;
-      if (a.price <= 0 && b.price > 0) return 1;
-      return 0;
-    });
-  const displaySizes = sortedSizes;
+  // Filter by search or rim tab, then sort prices first
+  const searchTerm = search.trim().toLowerCase();
+  const baseSizes = searchTerm
+    ? sizes.filter((s) => s.size.toLowerCase().includes(searchTerm))
+    : activeRim
+      ? (rimGroups.get(activeRim) ?? [])
+      : sizes;
+
+  const displaySizes = baseSizes.slice().sort((a, b) => {
+    if (a.price > 0 && b.price <= 0) return -1;
+    if (a.price <= 0 && b.price > 0) return 1;
+    return 0;
+  });
   const hasUtqg = sizes.some((s) => parseUTQG(s.utqg) !== null);
 
   return (
     <div>
-      {/* Rim size tabs */}
-      {rimSizes.length > 1 && (
+      {/* Size search */}
+      <div className="mb-4">
+        <div className="relative">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search sizes (e.g. 205/50R17)..."
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setActiveRim(null); }}
+            className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-navy focus:outline-none focus:ring-1 focus:ring-navy"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+        {searchTerm && (
+          <p className="mt-1.5 text-xs text-gray-500">
+            {displaySizes.length} result{displaySizes.length !== 1 ? "s" : ""} for &ldquo;{search.trim()}&rdquo;
+          </p>
+        )}
+      </div>
+
+      {/* Rim size tabs — hidden when searching */}
+      {!searchTerm && rimSizes.length > 1 && (
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="text-xs font-medium uppercase text-gray-500 mr-1">Wheel Size:</span>
           <button

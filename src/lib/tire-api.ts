@@ -13,6 +13,30 @@ import { brands as staticBrands } from "@/data/brands";
 const API_BASE = "https://app.tireweblibrary.com/api/v1";
 
 // ---------------------------------------------------------------------------
+// Sliding-window rate limiter — 170 req/min (under 200 API limit)
+// ---------------------------------------------------------------------------
+
+const RATE_LIMIT = 170;
+const RATE_WINDOW = 60_000; // 1 minute
+const _requestTimestamps: number[] = [];
+
+async function waitForRateLimit(): Promise<void> {
+  const now = Date.now();
+  // Evict timestamps outside the window
+  while (_requestTimestamps.length > 0 && _requestTimestamps[0] <= now - RATE_WINDOW) {
+    _requestTimestamps.shift();
+  }
+  if (_requestTimestamps.length >= RATE_LIMIT) {
+    // Wait until the oldest request in the window expires
+    const waitMs = _requestTimestamps[0] + RATE_WINDOW - now + 50; // +50ms buffer
+    console.warn(`[tire-api] rate limit reached (${_requestTimestamps.length}/${RATE_LIMIT}), waiting ${waitMs}ms`);
+    await new Promise((r) => setTimeout(r, waitMs));
+    return waitForRateLimit(); // Re-check after waiting
+  }
+  _requestTimestamps.push(Date.now());
+}
+
+// ---------------------------------------------------------------------------
 // In-memory price cache — tire_size_id → MAP price, 1-hour TTL
 // ---------------------------------------------------------------------------
 const PRICE_CACHE_TTL = 60 * 60 * 1000; // 1 hour
@@ -72,33 +96,58 @@ function getApiKey(): string {
   return process.env.TIRE_API_KEY || "";
 }
 
-async function apiFetch<T>(path: string, timeout = 10000): Promise<T | null> {
+export async function apiFetch<T>(path: string, timeout = 10000): Promise<T | null> {
   const key = getApiKey();
   if (!key || key === "your-tire-web-library-api-key") {
     console.warn("[tire-api] TIRE_API_KEY not configured");
     return null;
   }
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeout);
+  const MAX_RETRIES = 3;
 
-  try {
-    const res = await fetch(`${API_BASE}${path}`, {
-      headers: { "x-api-key": key, Accept: "application/json" },
-      signal: controller.signal,
-      next: { revalidate: 300 },
-    });
-    if (!res.ok) {
-      console.warn(`[tire-api] ${path} returned ${res.status}`);
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    await waitForRateLimit();
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const res = await fetch(`${API_BASE}${path}`, {
+        headers: { "x-api-key": key, Accept: "application/json" },
+        signal: controller.signal,
+        next: { revalidate: 300 },
+      });
+
+      if (res.status === 429 && attempt < MAX_RETRIES) {
+        clearTimeout(timer);
+        const backoff = 1000 * Math.pow(2, attempt - 1); // 1s, 2s
+        console.warn(`[tire-api] ${path} returned 429, retrying in ${backoff}ms (attempt ${attempt}/${MAX_RETRIES})`);
+        await new Promise((r) => setTimeout(r, backoff));
+        continue;
+      }
+
+      if (!res.ok) {
+        console.warn(`[tire-api] ${path} returned ${res.status}`);
+        clearTimeout(timer);
+        return null;
+      }
+      const data = (await res.json()) as T;
+      clearTimeout(timer);
+      return data;
+    } catch (e) {
+      clearTimeout(timer);
+      if (attempt < MAX_RETRIES && e instanceof Error && e.name === "AbortError") {
+        const backoff = 1000 * Math.pow(2, attempt - 1);
+        console.warn(`[tire-api] ${path} timed out, retrying in ${backoff}ms (attempt ${attempt}/${MAX_RETRIES})`);
+        await new Promise((r) => setTimeout(r, backoff));
+        continue;
+      }
+      console.warn(`[tire-api] fetch failed: ${e instanceof Error ? e.message : e}`);
       return null;
     }
-    return (await res.json()) as T;
-  } catch (e) {
-    console.warn(`[tire-api] fetch failed: ${e instanceof Error ? e.message : e}`);
-    return null;
-  } finally {
-    clearTimeout(timer);
   }
+
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -520,6 +569,7 @@ export async function apiSearchTires(params: SearchParams): Promise<SearchResult
 
   if (params.season) qp.set("season", params.season);
   if (params.terrain) qp.set("terrain", params.terrain);
+  if (params.category) qp.set("category", params.category);
   if (params.size) {
     const m = params.size.match(/^(\d{2,3})\/(\d{2,3})R(\d{2,3})$/i);
     if (m) {
@@ -625,7 +675,7 @@ export async function apiGetDistinctSizesForBrand(
 // Helpers
 // ---------------------------------------------------------------------------
 
-function apiTireToRow(t: ApiTire): TireRow {
+export function apiTireToRow(t: ApiTire): TireRow {
   return {
     id: t.id,
     name: t.name,

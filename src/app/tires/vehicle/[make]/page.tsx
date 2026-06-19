@@ -5,6 +5,7 @@ import { getMakeContent, getModelsForMake, vehicleMakes } from "@/data/vehicle-c
 import { searchTires } from "@/lib/db";
 import type { TireRow } from "@/lib/db";
 import { isCuratedBrand } from "@/lib/curated-brands";
+import { sitePrice } from "@/lib/pricing";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 
 export const revalidate = 300;
@@ -50,16 +51,47 @@ export default async function VehicleMakePage({
   const makeName = content?.name ?? make.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const models = getModelsForMake(make);
 
-  // Fetch a few sample tires for this make to show images — filter to curated brands
-  const sampleResult = await searchTires({ query: makeName, limit: 50, page: 1 });
-  const sampleTires = sampleResult.tires.filter((t) => isCuratedBrand(t.make_name)).slice(0, 12);
+  // Fetch sample tires using the vehicle models' compatible sizes — these actually return tire products
+  const allSizes = new Set<string>();
+  for (const m of models) {
+    for (const size of m.sizes.slice(0, 2)) {
+      allSizes.add(size);
+    }
+  }
+  const sizeList = [...allSizes].slice(0, 6); // Cap to avoid too many searches
+  const sizeResults = await Promise.all(
+    sizeList.map((size) => {
+      const match = size.match(/(\d{2,3})\/(\d{2,3})R(\d{2,3})/i);
+      if (!match) return Promise.resolve({ tires: [] as TireRow[], total: 0, page: 1, limit: 10, totalPages: 0 });
+      return searchTires({ width: match[1], aspectRatio: match[2], rimSize: match[3], limit: 10, page: 1 });
+    })
+  );
+  // Collect all sample tires, dedup by brand+model, filter to curated brands with images
+  const sampleTireMap = new Map<string, TireRow>();
+  for (const result of sizeResults) {
+    for (const tire of result.tires) {
+      if (!isCuratedBrand(tire.make_name)) continue;
+      const key = `${tire.make_name}|${tire.model_name}`;
+      if (!sampleTireMap.has(key) && (tire.thumbnail_url || tire.image_0100_url)) {
+        sampleTireMap.set(key, tire);
+      }
+    }
+  }
+  const sampleTires = [...sampleTireMap.values()].slice(0, 16);
 
-  // Group sample tires by model for image display
-  const tiresByModel = new Map<string, TireRow[]>();
-  for (const tire of sampleTires) {
-    const key = tire.model_name;
-    if (!tiresByModel.has(key)) tiresByModel.set(key, []);
-    tiresByModel.get(key)!.push(tire);
+  // Map each vehicle size to a tire that has that size (for model card images)
+  const tireBySize = new Map<string, TireRow>();
+  for (const result of sizeResults) {
+    for (const tire of result.tires) {
+      if (!isCuratedBrand(tire.make_name)) continue;
+      if (!tire.thumbnail_url && !tire.image_0100_url) continue;
+      const sizeKey = tire.width && tire.aspect_ratio && tire.rim_size
+        ? `${tire.width}/${tire.aspect_ratio}R${tire.rim_size}`
+        : null;
+      if (sizeKey && !tireBySize.has(sizeKey)) {
+        tireBySize.set(sizeKey, tire);
+      }
+    }
   }
 
   const breadcrumb = buildBreadcrumbSchema([
@@ -180,12 +212,15 @@ export default async function VehicleMakePage({
           {models.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {models.map((m) => {
-                // Find a sample tire image for this model
-                const modelTires = sampleTires.filter(
-                  (t) => t.model_name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === m.modelSlug ||
-                    t.model_name.toLowerCase() === m.model.toLowerCase()
-                );
-                const sampleImage = modelTires[0]?.thumbnail_url ?? modelTires[0]?.image_0100_url ?? null;
+                // Find a sample tire image from a tire that fits this vehicle model's sizes
+                let sampleImage: string | null = null;
+                for (const size of m.sizes) {
+                  const match = tireBySize.get(size);
+                  if (match) {
+                    sampleImage = match.thumbnail_url ?? match.image_0100_url ?? null;
+                    if (sampleImage) break;
+                  }
+                }
 
                 return (
                   <Link
@@ -308,9 +343,9 @@ export default async function VehicleMakePage({
                         <h3 className="text-sm font-bold text-gray-900 group-hover:text-safety-orange transition-colors truncate">
                           {tire.model_name}
                         </h3>
-                        {tire.price_map && tire.price_map > 0 && (
+                        {sitePrice(tire.price_map) > 0 && (
                           <div className="mt-1">
-                            <span className="text-base font-bold text-gray-900">${tire.price_map}</span>
+                            <span className="text-base font-bold text-gray-900">${sitePrice(tire.price_map).toFixed(2)}</span>
                             <span className="text-xs text-gray-500">/tire</span>
                           </div>
                         )}

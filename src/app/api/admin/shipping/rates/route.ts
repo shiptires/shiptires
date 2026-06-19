@@ -1,7 +1,7 @@
 import { isAdminRequest } from "@/lib/admin-auth";
 import { getSupabase } from "@/lib/supabase";
-import { getRates, listCarriers, type RateRequest } from "@/lib/shipstation";
-import { getWarehouse, DEFAULT_WAREHOUSE_ID } from "@/lib/warehouses";
+import { getRatesFromAll } from "@/lib/carriers";
+import { getWarehouse, getDefaultWarehouse } from "@/lib/warehouses";
 
 export async function POST(req: Request) {
   if (!(await isAdminRequest())) {
@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { orderId, carrierCode, weight, dimensions, warehouseId } = body;
+    const { orderId, weight, dimensions, warehouseId, sources } = body;
 
     if (!orderId || !weight) {
       return Response.json(
@@ -19,7 +19,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const warehouse = getWarehouse(warehouseId || DEFAULT_WAREHOUSE_ID);
+    const warehouse = warehouseId
+      ? await getWarehouse(warehouseId)
+      : await getDefaultWarehouse();
     if (!warehouse) {
       return Response.json({ error: "Invalid warehouse" }, { status: 400 });
     }
@@ -43,56 +45,69 @@ export async function POST(req: Request) {
       );
     }
 
-    // Build the base rate request params (carrierCode added per-carrier below)
-    const baseParams = {
-      fromPostalCode: warehouse.postalCode,
-      toState: addr.state || "",
-      toCountry: addr.country || "US",
-      toPostalCode: addr.postalCode,
-      toCity: addr.city || "",
-      weight: { value: weight.value, units: weight.units || "pounds" },
-      dimensions: dimensions
-        ? { ...dimensions, units: dimensions.units || "inches" }
-        : undefined,
-      residential: true,
+    // Build full addresses for carriers that need them (Roadie)
+    const fromAddress = {
+      name: warehouse.name,
+      company: warehouse.distributorName,
+      street1: warehouse.street1,
+      street2: warehouse.street2,
+      city: warehouse.city,
+      state: warehouse.state,
+      postalCode: warehouse.postalCode,
+      country: warehouse.country,
+      phone: warehouse.phone,
     };
 
-    // If a specific carrier was requested, just get rates for that one
-    let carrierCodes: string[];
-    if (carrierCode) {
-      carrierCodes = [carrierCode];
-    } else {
-      const carriers = await listCarriers();
-      carrierCodes = carriers.map((c) => c.code);
-    }
+    const toAddress = {
+      name: order.customer_name || addr.name || "Customer",
+      street1: addr.street1 || addr.line1 || addr.address1 || "",
+      street2: addr.street2 || addr.line2 || addr.address2 || "",
+      city: addr.city || "",
+      state: addr.state || "",
+      postalCode: addr.postalCode || addr.postal_code || addr.zip || "",
+      country: addr.country || "US",
+    };
 
-    // Fetch rates from all requested carriers in parallel
-    const rateResults = await Promise.allSettled(
-      carrierCodes.map((code) =>
-        getRates({ ...baseParams, carrierCode: code })
-      )
-    );
-
-    const allRates = rateResults.flatMap((result, i) => {
-      if (result.status === "fulfilled") {
-        return result.value.map((r) => ({
-          carrierCode: carrierCodes[i],
-          serviceCode: r.serviceCode,
-          serviceName: r.serviceName,
-          shipmentCost: r.shipmentCost,
-          otherCost: r.otherCost,
-          totalCost: r.shipmentCost + r.otherCost,
-        }));
-      }
-      return [];
+    // Get rates from requested sources (FedEx, UPS, ShipStation, Roadie)
+    const { rates, errors } = await getRatesFromAll({
+      fromPostalCode: warehouse.postalCode,
+      fromState: warehouse.state,
+      toPostalCode: addr.postalCode,
+      toCity: addr.city || "",
+      toState: addr.state || "",
+      toCountry: addr.country || "US",
+      weight: { value: weight.value, units: weight.units || "pounds" },
+      dimensions: dimensions
+        ? {
+            length: dimensions.length,
+            width: dimensions.width,
+            height: dimensions.height,
+            units: dimensions.units || "inches",
+          }
+        : undefined,
+      residential: true,
+      sources: sources || undefined,
+      fromAddress,
+      toAddress,
     });
 
-    // Sort by total cost ascending
-    allRates.sort((a, b) => a.totalCost - b.totalCost);
+    // Map to response shape (compatible with existing frontend)
+    const allRates = rates.map((r) => ({
+      carrier: r.carrier,
+      carrierCode: r.carrier,
+      source: r.source,
+      serviceCode: r.serviceCode,
+      serviceName: r.serviceName,
+      totalCost: r.totalCost,
+      transitDays: r.transitDays,
+      shipmentCost: r.totalCost,
+      otherCost: 0,
+      ...(r.estimatedDistance != null && { estimatedDistance: r.estimatedDistance }),
+    }));
 
-    return Response.json({ rates: allRates });
+    return Response.json({ rates: allRates, errors: errors.length > 0 ? errors : undefined });
   } catch (e) {
-    console.error("ShipStation rates error:", e);
+    console.error("Carrier rates error:", e);
     return Response.json(
       { error: e instanceof Error ? e.message : "Failed to get rates" },
       { status: 500 }

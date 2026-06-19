@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { getSupabase } from "@/lib/supabase";
 import { searchTires, toSlug } from "@/lib/db";
+import { getSitePrice } from "@/lib/pricing";
 import type { CartItem } from "@/lib/types";
 
 interface CartCreateItem {
@@ -52,13 +53,10 @@ async function validateItems(rawItems: CartCreateItem[]): Promise<CartItem[]> {
       );
     }
 
-    // Use the best available price (skip $0 entries)
-    const price = typeof match.price_map === "string"
-      ? parseFloat(match.price_map) || 0
-      : match.price_map ?? 0;
+    // Distributor cost overrides MAP when available
+    const price = await getSitePrice(match.id, match.price_map);
 
     if (price <= 0) {
-      // Search all results for this model+size to find one with a price
       const priced = result.tires.find(
         (t) =>
           toSlug(t.model_name) === item.modelSlug &&
@@ -71,9 +69,7 @@ async function validateItems(rawItems: CartCreateItem[]): Promise<CartItem[]> {
           `Price unavailable for ${item.size} ${match.make_name} ${match.model_name}. Please call (279) 238-8473 for a quote.`
         );
       }
-      const pricedValue = typeof priced.price_map === "string"
-        ? parseFloat(priced.price_map)
-        : priced.price_map ?? 0;
+      const pricedPrice = await getSitePrice(priced.id, priced.price_map);
 
       validated.push({
         brand: priced.make_name,
@@ -81,7 +77,7 @@ async function validateItems(rawItems: CartCreateItem[]): Promise<CartItem[]> {
         model: priced.model_name,
         modelSlug: toSlug(priced.model_name),
         size: item.size,
-        price: pricedValue,
+        price: pricedPrice,
         quantity: item.quantity || 4,
         loadIndex: parseInt(priced.load_rating ?? "0") || 0,
         speedRating: priced.speed_rating ?? "",

@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { getBrandBySlug, getTiresByBrandAndSize, getDistinctSizesForBrand, brandSummaryToBrand, toSlug, getAllBrands } from "@/lib/db";
+import { sitePrice } from "@/lib/pricing";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { states } from "@/data/locations";
 
@@ -48,7 +49,7 @@ export default async function BrandSizePage({ params }: { params: Promise<{ bran
         modelName: tire.model_name,
         modelSlug: toSlug(tire.model_name),
         season: tire.season || "",
-        price: tire.price_map ?? 0,
+        price: sitePrice(tire.price_map),
         speedRating: tire.speed_rating ?? "",
         loadRating: tire.load_rating ?? "",
         imageUrl: tire.thumbnail_url ?? tire.image_0100_url ?? null,
@@ -57,8 +58,9 @@ export default async function BrandSizePage({ params }: { params: Promise<{ bran
     }
     const g = grouped.get(key)!;
     g.tireCount++;
-    if (tire.price_map && tire.price_map > 0 && (g.price === 0 || tire.price_map < g.price)) {
-      g.price = tire.price_map;
+    const sp = sitePrice(tire.price_map);
+    if (sp > 0 && (g.price === 0 || sp < g.price)) {
+      g.price = sp;
     }
   }
 

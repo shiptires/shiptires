@@ -46,6 +46,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
+  // AI agents requesting Accept: text/markdown get clean markdown
+  const accept = request.headers.get("accept") || "";
+  if (accept.includes("text/markdown")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/api/markdown";
+    url.searchParams.set("path", pathname);
+    return NextResponse.rewrite(url);
+  }
+
   // Protect /admin routes (except /admin/login)
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     const sessionCookie = request.cookies.get("admin_session")?.value;
@@ -57,8 +66,12 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // Pass pathname to layouts via request header
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+
   // Supabase session refresh — keeps auth tokens fresh on every page request
-  const response = NextResponse.next({ request });
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
   const supabase = createProxyClient(request, response);
   await supabase.auth.getUser();
 

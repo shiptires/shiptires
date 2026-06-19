@@ -1,7 +1,5 @@
 import { isAdminRequest } from "@/lib/admin-auth";
-import { getAccessToken } from "@/lib/ebay";
-
-const EBAY_API = "https://api.ebay.com";
+import { getAccessToken, getActiveListings } from "@/lib/ebay";
 
 export async function GET() {
   if (!(await isAdminRequest())) {
@@ -32,30 +30,18 @@ export async function GET() {
     });
   }
 
-  // Test auth
+  // Test auth + get active listing count via Trading API
   let authenticated = false;
   let inventoryCount = 0;
   let error: string | null = null;
 
   try {
-    const token = await getAccessToken();
+    await getAccessToken();
     authenticated = true;
 
-    // Get inventory count
-    const res = await fetch(
-      `${EBAY_API}/sell/inventory/v1/inventory_item?limit=1&offset=0`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      }
-    );
-
-    if (res.ok) {
-      const data = await res.json();
-      inventoryCount = data.total ?? 0;
-    }
+    // Use Trading API GetSellerList (same as Manage Listings tab)
+    const result = await getActiveListings(1, 1);
+    inventoryCount = result.totalEntries;
   } catch (e) {
     error = e instanceof Error ? e.message : "Authentication failed";
   }
