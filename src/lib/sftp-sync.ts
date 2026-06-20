@@ -1,8 +1,68 @@
+import SftpClient from "ssh2-sftp-client";
 import { getSupabase } from "@/lib/supabase";
 import {
   bulkUpsertInventory,
   updateDistributorSyncTime,
 } from "@/lib/distributors";
+
+// ── SFTP Download ───────────────────────────────────────────
+
+/**
+ * Connect to TireHub's SFTP server and download the inventory CSV.
+ *
+ * Env vars:
+ *   TIREHUB_SFTP_HOST     — SFTP hostname
+ *   TIREHUB_SFTP_PORT     — Port (default 22)
+ *   TIREHUB_SFTP_USER     — Username
+ *   TIREHUB_SFTP_PASSWORD — Password (or use TIREHUB_SFTP_KEY for private key)
+ *   TIREHUB_SFTP_KEY      — Private key string (optional, alternative to password)
+ *   TIREHUB_SFTP_PATH     — Remote path to CSV file (e.g., "/outgoing/TireHubInventory.csv")
+ */
+export async function downloadFromSftp(): Promise<string> {
+  const host = process.env.TIREHUB_SFTP_HOST;
+  const user = process.env.TIREHUB_SFTP_USER;
+  const remotePath = process.env.TIREHUB_SFTP_PATH || "/TireHubInventory.csv";
+
+  if (!host || !user) {
+    throw new Error("TIREHUB_SFTP_HOST and TIREHUB_SFTP_USER are required");
+  }
+
+  const sftp = new SftpClient();
+
+  try {
+    const connectConfig: SftpClient.ConnectOptions = {
+      host,
+      port: parseInt(process.env.TIREHUB_SFTP_PORT || "22"),
+      username: user,
+      readyTimeout: 30_000,
+      retries: 2,
+      retry_minTimeout: 2_000,
+    };
+
+    // Support both password and private key auth
+    if (process.env.TIREHUB_SFTP_KEY) {
+      connectConfig.privateKey = process.env.TIREHUB_SFTP_KEY;
+    } else if (process.env.TIREHUB_SFTP_PASSWORD) {
+      connectConfig.password = process.env.TIREHUB_SFTP_PASSWORD;
+    } else {
+      throw new Error("TIREHUB_SFTP_PASSWORD or TIREHUB_SFTP_KEY is required");
+    }
+
+    await sftp.connect(connectConfig);
+
+    // Download file as buffer, convert to string
+    const buffer = await sftp.get(remotePath);
+    const csvText = typeof buffer === "string" ? buffer : buffer.toString("utf-8");
+
+    if (!csvText.trim()) {
+      throw new Error(`Empty file at ${remotePath}`);
+    }
+
+    return csvText;
+  } finally {
+    await sftp.end().catch(() => {});
+  }
+}
 
 // ── Types ───────────────────────────────────────────────────
 
