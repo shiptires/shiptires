@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["better-sqlite3", "zipcodes"],
+  serverExternalPackages: ["better-sqlite3", "zipcodes", "ssh2", "ssh2-sftp-client"],
   staticPageGenerationTimeout: 600,
   async redirects() {
     return [

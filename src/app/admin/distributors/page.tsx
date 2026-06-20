@@ -99,6 +99,13 @@ export default function DistributorsPage() {
   // Warehouse stock expansion
   const [expandedStock, setExpandedStock] = useState<string | null>(null);
 
+  // API key management
+  const [generatingKey, setGeneratingKey] = useState(false);
+  const [generatedKey, setGeneratedKey] = useState<string | null>(null);
+  const [apiKeyPrefix, setApiKeyPrefix] = useState<string | null>(null);
+  const [uploadHistory, setUploadHistory] = useState<Array<{ id: string; method: string; rows_total: number; rows_matched: number; created_at: string }>>([]);
+  const [showUploadHistory, setShowUploadHistory] = useState(false);
+
   // Add distributor form
   const [showAddForm, setShowAddForm] = useState(false);
   const [formName, setFormName] = useState("");
@@ -525,6 +532,55 @@ export default function DistributorsPage() {
     }
   }
 
+  // ── Generate API Key ──────────────────────────────────────
+  async function handleGenerateApiKey() {
+    if (!selectedDist) return;
+    setGeneratingKey(true);
+    setGeneratedKey(null);
+    try {
+      const res = await fetch(`/api/admin/distributors/${selectedDist.id}/api-key`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to generate key");
+      }
+      const data = await res.json();
+      setGeneratedKey(data.apiKey);
+      setApiKeyPrefix(data.prefix);
+      setActionMsg({ type: "success", text: "API key generated. Copy it now — it won't be shown again." });
+    } catch (e) {
+      setActionMsg({ type: "error", text: e instanceof Error ? e.message : "Failed to generate key" });
+    } finally {
+      setGeneratingKey(false);
+    }
+  }
+
+  async function handleRevokeApiKey() {
+    if (!selectedDist) return;
+    try {
+      const res = await fetch(`/api/admin/distributors/${selectedDist.id}/api-key`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to revoke key");
+      setApiKeyPrefix(null);
+      setGeneratedKey(null);
+      setActionMsg({ type: "success", text: "API key revoked" });
+    } catch (e) {
+      setActionMsg({ type: "error", text: e instanceof Error ? e.message : "Failed to revoke" });
+    }
+  }
+
+  async function fetchUploadHistory(distId: string) {
+    try {
+      const res = await fetch(`/api/admin/distributors/${distId}/uploads`);
+      if (res.ok) {
+        const data = await res.json();
+        setUploadHistory(data.uploads || []);
+      }
+    } catch { /* ignore */ }
+  }
+
   // ── List View ─────────────────────────────────────────────
   if (view === "list") {
     return (
@@ -732,6 +788,51 @@ export default function DistributorsPage() {
                   )}
                 </div>
               )}
+
+              {/* API Key / Inventory Upload */}
+              <div className="mt-2 pt-2 border-t border-gray-100 space-y-2">
+                <p className="text-xs font-medium text-gray-700">Inventory Upload API</p>
+                {generatedKey ? (
+                  <div className="bg-green-50 border border-green-200 rounded p-2 space-y-1">
+                    <p className="text-[10px] text-green-700 font-medium">New API Key (copy now!):</p>
+                    <code className="block text-[10px] text-green-900 bg-green-100 rounded px-2 py-1 break-all select-all font-mono">
+                      {generatedKey}
+                    </code>
+                    <p className="text-[10px] text-green-600">This key will not be shown again.</p>
+                  </div>
+                ) : apiKeyPrefix ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-600">Key: <code className="bg-gray-100 px-1 rounded font-mono">{apiKeyPrefix}...</code></span>
+                    <button onClick={handleRevokeApiKey} className="text-[10px] text-red-500 hover:text-red-700">Revoke</button>
+                  </div>
+                ) : null}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleGenerateApiKey}
+                    disabled={generatingKey}
+                    className="px-3 py-1.5 bg-gray-700 text-white rounded text-xs font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                  >
+                    {generatingKey ? "Generating..." : generatedKey || apiKeyPrefix ? "Regenerate Key" : "Generate API Key"}
+                  </button>
+                  <button
+                    onClick={() => { setShowUploadHistory(!showUploadHistory); if (!showUploadHistory && selectedDist) fetchUploadHistory(selectedDist.id); }}
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    {showUploadHistory ? "Hide History" : "Upload History"}
+                  </button>
+                </div>
+                {showUploadHistory && uploadHistory.length > 0 && (
+                  <div className="text-[10px] text-gray-600 max-h-32 overflow-y-auto space-y-0.5">
+                    {uploadHistory.map((u) => (
+                      <div key={u.id} className="flex justify-between bg-gray-50 rounded px-2 py-1">
+                        <span>{new Date(u.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+                        <span className="uppercase text-gray-400">{u.method}</span>
+                        <span>{u.rows_matched}/{u.rows_total} matched</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
