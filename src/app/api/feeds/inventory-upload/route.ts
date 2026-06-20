@@ -133,11 +133,17 @@ export async function GET() {
         example: 'curl -X POST https://ship.tires/api/feeds/inventory-upload -H "Authorization: Bearer YOUR_KEY" -F "file=@inventory.csv"',
       },
     ],
-    requiredColumns: ["brand", "size", "cost (or price)", "quantity (or qty)"],
+    requiredColumns: ["brand", "size", "cost (or price)", "quantity (or qty — optional if warehouse columns present)"],
     optionalColumns: ["model (or pattern)", "part_number (or sku, item#)", "description"],
+    warehouseSupport: {
+      description: "If your CSV has per-warehouse/location quantity columns, they are auto-detected and stored for nearest-warehouse routing",
+      recognizedPatterns: ["TLC 100", "RDC 600", "WH 001", "DC 200", "LOC 100", "WAREHOUSE 5"],
+      note: "Any column not matching a known field with numeric data is treated as a warehouse location. Total quantity is summed from warehouse columns if no explicit 'quantity' column.",
+    },
     notes: [
       "Column names are auto-detected from the header row",
       "Common aliases are supported (e.g., 'manufacturer' for brand, 'sku' for part_number)",
+      "Per-warehouse quantity columns (TLC/RDC/WH/DC/LOC) are auto-detected and stored",
       "Rows with cost <= 0 are skipped",
       "Items not in the new upload are zeroed out (marked out of stock)",
     ],

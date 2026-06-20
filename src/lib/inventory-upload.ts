@@ -23,6 +23,7 @@ interface GenericCsvRow {
   cost: number;
   quantity: number;
   description: string;
+  warehouseQuantities: Record<string, number>;
 }
 
 // ── Column Mapping ──────────────────────────────────────────
@@ -62,6 +63,59 @@ function detectColumns(headers: string[]): Map<string, number> {
   return mapping;
 }
 
+/**
+ * Detect warehouse/location columns in the CSV headers.
+ *
+ * Recognizes patterns like:
+ *   - "TLC 100", "RDC 600" (TireHub style)
+ *   - "WH 001", "WH-Atlanta", "Warehouse 5"
+ *   - "LOC 100", "DC 200"
+ *   - Any column header that isn't a known field and isn't "Total"/"FET"/"MAP Pricing"
+ *     will be treated as a warehouse column if the first data row has a numeric value there.
+ *
+ * Returns array of { index, code } where code is the warehouse identifier.
+ */
+function detectWarehouseColumns(
+  headers: string[],
+  mappedIndices: Set<number>,
+  firstDataCols: string[]
+): Array<{ index: number; code: string }> {
+  const warehouseColumns: Array<{ index: number; code: string }> = [];
+
+  // Headers to skip even if unmapped
+  const skipHeaders = new Set(["total", "fet", "map pricing", "map", "msrp", "retail", "retail price"]);
+
+  for (let i = 0; i < headers.length; i++) {
+    // Skip already-mapped columns
+    if (mappedIndices.has(i)) continue;
+
+    const header = headers[i]?.trim() || "";
+    const headerLower = header.toLowerCase();
+
+    // Skip known non-warehouse headers
+    if (!header || skipHeaders.has(headerLower)) continue;
+
+    // Pattern 1: TLC/RDC/WH/DC/LOC + number (e.g. "TLC 100", "RDC 600", "WH 001")
+    const locationMatch = header.match(/^(?:TLC|RDC|WH|DC|LOC|WHSE|WAREHOUSE)\s*[-_]?\s*(\w+)$/i);
+    if (locationMatch) {
+      warehouseColumns.push({ index: i, code: locationMatch[1] });
+      continue;
+    }
+
+    // Pattern 2: Any unmapped column with numeric data in first row → treat as warehouse
+    if (firstDataCols[i] !== undefined) {
+      const val = firstDataCols[i].trim();
+      if (/^\d+$/.test(val)) {
+        // Use the header as the warehouse code, cleaned up
+        const code = header.replace(/[^a-zA-Z0-9_-]/g, "_").replace(/^_+|_+$/g, "") || `col_${i}`;
+        warehouseColumns.push({ index: i, code });
+      }
+    }
+  }
+
+  return warehouseColumns;
+}
+
 // ── CSV Parsing ─────────────────────────────────────────────
 
 /** Parse a single CSV line handling quoted fields with commas inside */
@@ -92,24 +146,33 @@ function parseCSVLine(line: string): string[] {
 
 /**
  * Parse a generic distributor CSV into structured rows.
- * Auto-detects column mapping from headers.
+ * Auto-detects column mapping from headers + warehouse location columns.
  */
-export function parseGenericCsv(csvText: string): { rows: GenericCsvRow[]; detectedColumns: Record<string, number>; missingColumns: string[] } {
+export function parseGenericCsv(csvText: string): { rows: GenericCsvRow[]; detectedColumns: Record<string, number>; warehouseColumnsDetected: string[]; missingColumns: string[] } {
   const lines = csvText.split("\n").map((l) => l.replace(/\r$/, ""));
-  if (lines.length < 2) return { rows: [], detectedColumns: {}, missingColumns: [] };
+  if (lines.length < 2) return { rows: [], detectedColumns: {}, warehouseColumnsDetected: [], missingColumns: [] };
 
   const headers = parseCSVLine(lines[0]);
   const mapping = detectColumns(headers);
 
   const detectedColumns: Record<string, number> = {};
-  mapping.forEach((idx, field) => { detectedColumns[field] = idx; });
+  const mappedIndices = new Set<number>();
+  mapping.forEach((idx, field) => { detectedColumns[field] = idx; mappedIndices.add(idx); });
 
-  // Check required columns
-  const required = ["brand", "size", "cost", "quantity"];
+  // Detect warehouse columns using first data row for type inference
+  const firstDataLine = lines.find((l, i) => i > 0 && l.trim());
+  const firstDataCols = firstDataLine ? parseCSVLine(firstDataLine) : [];
+  const warehouseColumns = detectWarehouseColumns(headers, mappedIndices, firstDataCols);
+  const warehouseColumnsDetected = warehouseColumns.map((wc) => `${headers[wc.index]?.trim()} → ${wc.code}`);
+
+  // If we have warehouse columns, quantity becomes optional (we can sum warehouses)
+  const required = warehouseColumns.length > 0
+    ? ["brand", "size", "cost"]
+    : ["brand", "size", "cost", "quantity"];
   const missingColumns = required.filter((f) => !mapping.has(f));
 
   if (missingColumns.length > 0) {
-    return { rows: [], detectedColumns, missingColumns };
+    return { rows: [], detectedColumns, warehouseColumnsDetected, missingColumns };
   }
 
   const rows: GenericCsvRow[] = [];
@@ -123,7 +186,21 @@ export function parseGenericCsv(csvText: string): { rows: GenericCsvRow[]; detec
     const cost = parseFloat(cols[mapping.get("cost")!]) || 0;
     if (cost <= 0) continue;
 
-    const quantity = parseInt(cols[mapping.get("quantity")!]) || 0;
+    // Parse warehouse quantities
+    const warehouseQuantities: Record<string, number> = {};
+    let warehouseTotal = 0;
+    for (const wc of warehouseColumns) {
+      const qty = parseInt(cols[wc.index]) || 0;
+      if (qty > 0) {
+        warehouseQuantities[wc.code] = qty;
+        warehouseTotal += qty;
+      }
+    }
+
+    // Use explicit quantity column if present, otherwise sum warehouse quantities
+    const quantity = mapping.has("quantity")
+      ? (parseInt(cols[mapping.get("quantity")!]) || warehouseTotal)
+      : warehouseTotal;
 
     rows.push({
       brand: cols[mapping.get("brand")!]?.trim() || "",
@@ -133,10 +210,11 @@ export function parseGenericCsv(csvText: string): { rows: GenericCsvRow[]; detec
       cost,
       quantity,
       description: mapping.has("description") ? (cols[mapping.get("description")!]?.trim() || "") : "",
+      warehouseQuantities,
     });
   }
 
-  return { rows, detectedColumns, missingColumns };
+  return { rows, detectedColumns, warehouseColumnsDetected, missingColumns };
 }
 
 // ── Tire Matching ───────────────────────────────────────────
@@ -193,7 +271,7 @@ export async function processInventoryUpload(
   const errors: string[] = [];
 
   // 1. Parse CSV
-  const { rows, detectedColumns, missingColumns } = parseGenericCsv(csvText);
+  const { rows, detectedColumns, warehouseColumnsDetected, missingColumns } = parseGenericCsv(csvText);
 
   if (missingColumns.length > 0) {
     return {
@@ -204,6 +282,10 @@ export async function processInventoryUpload(
       errors: [`Missing required columns: ${missingColumns.join(", ")}. Detected columns: ${JSON.stringify(detectedColumns)}`],
       duration: Date.now() - startTime,
     };
+  }
+
+  if (warehouseColumnsDetected.length > 0) {
+    errors.push(`Detected ${warehouseColumnsDetected.length} warehouse columns: ${warehouseColumnsDetected.join(", ")}`);
   }
 
   if (rows.length === 0) {
@@ -235,6 +317,7 @@ export async function processInventoryUpload(
     brand: string;
     model: string;
     size: string;
+    warehouse_quantities?: Record<string, number>;
   }> = [];
 
   for (const row of rows) {
@@ -258,6 +341,9 @@ export async function processInventoryUpload(
       brand: row.brand,
       model: row.model || "",
       size: row.size,
+      warehouse_quantities: Object.keys(row.warehouseQuantities).length > 0
+        ? row.warehouseQuantities
+        : undefined,
     });
   }
 
