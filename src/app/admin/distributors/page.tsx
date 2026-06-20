@@ -128,6 +128,7 @@ export default function DistributorsPage() {
   const [itemCost, setItemCost] = useState("");
   const [itemQty, setItemQty] = useState("4");
   const [itemPartNum, setItemPartNum] = useState("");
+  const [itemWarehouse, setItemWarehouse] = useState("");
   const [itemSaving, setItemSaving] = useState(false);
   const [itemError, setItemError] = useState<string | null>(null);
   const [itemSuccess, setItemSuccess] = useState<string | null>(null);
@@ -486,6 +487,11 @@ export default function DistributorsPage() {
         return;
       }
 
+      const warehouseQuantities: Record<string, number> = {};
+      if (itemWarehouse.trim()) {
+        warehouseQuantities[itemWarehouse.trim()] = parseInt(itemQty) || 4;
+      }
+
       const res = await fetch(`/api/admin/distributors/${selectedDist.id}/inventory`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -497,6 +503,7 @@ export default function DistributorsPage() {
           brand: itemBrand.trim(),
           model: itemModel.trim(),
           size: itemSize.trim(),
+          warehouse_quantities: Object.keys(warehouseQuantities).length > 0 ? warehouseQuantities : undefined,
         }),
       });
       if (!res.ok) {
@@ -504,10 +511,11 @@ export default function DistributorsPage() {
         throw new Error(data.error);
       }
 
-      setItemSuccess(`Added: ${itemBrand} ${itemModel} ${itemSize} (Tire ID: ${result.tireId})`);
+      setItemSuccess(`Added: ${itemBrand} ${itemModel} ${itemSize} @ ${itemWarehouse || "no location"} (Tire ID: ${result.tireId})`);
       setItemSize("");
       setItemCost("");
       setItemPartNum("");
+      setItemWarehouse("");
       fetchInventory(selectedDist.id, invPage, searchQuery);
       fetchDetail(selectedDist.id);
     } catch (e) {
@@ -879,7 +887,7 @@ export default function DistributorsPage() {
 
         {showAddItem && (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-3">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Brand</label>
                 <input type="text" value={itemBrand} onChange={(e) => setItemBrand(e.target.value)} placeholder="BFGoodrich" className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange" />
@@ -899,6 +907,10 @@ export default function DistributorsPage() {
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Qty</label>
                 <input type="number" value={itemQty} onChange={(e) => setItemQty(e.target.value)} min={0} className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Location</label>
+                <input type="text" value={itemWarehouse} onChange={(e) => setItemWarehouse(e.target.value)} placeholder="TLC 100" className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-safety-orange focus:border-safety-orange" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Part#</label>
@@ -994,6 +1006,7 @@ export default function DistributorsPage() {
                     <th className="py-2.5 px-3 text-right font-medium text-gray-500">Site Price</th>
                     <th className="py-2.5 px-3 text-right font-medium text-gray-500">eBay Price</th>
                     <th className="py-2.5 px-3 text-right font-medium text-gray-500">Qty</th>
+                    <th className="py-2.5 px-3 text-center font-medium text-gray-500">Locations</th>
                     <th className="py-2.5 px-3 text-left font-medium text-gray-500">Part#</th>
                     <th className="py-2.5 px-3 text-center font-medium text-gray-500">Tire ID</th>
                     <th className="py-2.5 px-3 text-center font-medium text-gray-500">eBay</th>
@@ -1044,49 +1057,56 @@ export default function DistributorsPage() {
 
                       {/* Editable Quantity */}
                       <td className="py-2 px-3 text-right text-xs">
-                        <div className="flex items-center justify-end gap-1">
-                          {editingCell?.id === item.id && editingCell.field === "quantity" ? (
-                            <input
-                              ref={editRef}
-                              type="number"
-                              value={editValue}
-                              onChange={(e) => setEditValue(e.target.value)}
-                              onBlur={saveEdit}
-                              onKeyDown={handleEditKeyDown}
-                              className="w-16 px-1 py-0.5 border border-safety-orange rounded text-xs text-right focus:ring-safety-orange focus:border-safety-orange"
-                            />
-                          ) : (
-                            <span
-                              onClick={() => startEdit(item, "quantity")}
-                              className="cursor-pointer text-gray-700 hover:text-safety-orange hover:underline"
-                              title="Click to edit"
-                            >
-                              {item.quantity}
-                            </span>
-                          )}
-                          {item.warehouse_quantities && Object.keys(item.warehouse_quantities).length > 0 && (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setExpandedStock(expandedStock === item.id ? null : item.id); }}
-                              className="text-blue-500 hover:text-blue-700 ml-0.5"
-                              title="View warehouse breakdown"
-                            >
-                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d={expandedStock === item.id ? "M19 9l-7 7-7-7" : "M9 5l7 7-7 7"} />
-                              </svg>
-                            </button>
-                          )}
-                        </div>
+                        {editingCell?.id === item.id && editingCell.field === "quantity" ? (
+                          <input
+                            ref={editRef}
+                            type="number"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={saveEdit}
+                            onKeyDown={handleEditKeyDown}
+                            className="w-16 px-1 py-0.5 border border-safety-orange rounded text-xs text-right focus:ring-safety-orange focus:border-safety-orange"
+                          />
+                        ) : (
+                          <span
+                            onClick={() => startEdit(item, "quantity")}
+                            className="cursor-pointer text-gray-700 hover:text-safety-orange hover:underline"
+                            title="Click to edit"
+                          >
+                            {item.quantity}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Warehouse Locations */}
+                      <td className="py-2 px-3 text-center text-xs relative">
+                        {item.warehouse_quantities && Object.keys(item.warehouse_quantities).filter((k) => (item.warehouse_quantities as Record<string, number>)[k] > 0).length > 0 ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setExpandedStock(expandedStock === item.id ? null : item.id); }}
+                            className="text-blue-600 hover:text-blue-800 font-medium"
+                            title="View warehouse breakdown"
+                          >
+                            {Object.values(item.warehouse_quantities).filter((q) => q > 0).length} loc
+                          </button>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                         {expandedStock === item.id && item.warehouse_quantities && (
-                          <div className="mt-1 bg-gray-50 rounded p-1.5 text-left text-[10px] text-gray-600 max-h-24 overflow-y-auto">
+                          <div className="absolute z-10 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 text-left text-xs text-gray-700 max-h-48 overflow-y-auto min-w-[160px]">
+                            <p className="font-semibold text-gray-900 mb-1.5 border-b border-gray-100 pb-1">Warehouse Stock</p>
                             {Object.entries(item.warehouse_quantities)
                               .filter(([, qty]) => qty > 0)
                               .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
                               .map(([code, qty]) => (
-                                <div key={code} className="flex justify-between px-1">
-                                  <span>TLC {code}</span>
-                                  <span className="font-medium">{qty}</span>
+                                <div key={code} className="flex justify-between py-0.5 px-1">
+                                  <span className="text-gray-600">{code}</span>
+                                  <span className="font-medium text-gray-900">{qty}</span>
                                 </div>
                               ))}
+                            <div className="flex justify-between py-0.5 px-1 mt-1 border-t border-gray-100 pt-1 font-semibold">
+                              <span>Total</span>
+                              <span>{Object.values(item.warehouse_quantities).reduce((s, q) => s + q, 0)}</span>
+                            </div>
                           </div>
                         )}
                       </td>
