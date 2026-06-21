@@ -54,7 +54,7 @@ async function safeExecute(stmt: any, _timeoutMs?: number) {
   if (TURSO_FORCE_DISABLED) return emptyResult;
 
   const db = getDb();
-  const timeoutMs = _timeoutMs ?? (IS_BUILD ? 30_000 : 5_000);
+  const timeoutMs = _timeoutMs ?? (IS_BUILD ? 30_000 : 15_000);
   try {
     const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error("DB_TIMEOUT")), timeoutMs));
     return await Promise.race([db.execute(stmt), timeout]);
