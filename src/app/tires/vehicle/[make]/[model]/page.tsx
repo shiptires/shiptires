@@ -8,6 +8,7 @@ import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { lookupTireSizes } from "@/data/tire-sizes";
 import { getMakeContent, getModelContent, getModelsForMake } from "@/data/vehicle-content";
 import { sitePrice } from "@/lib/pricing";
+import { getVehicleImage } from "@/lib/vehicle-image";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
@@ -24,8 +25,8 @@ export async function generateMetadata({
   const sizeText = sizes.slice(0, 3).join(", ");
 
   return {
-    title: `Shop ${makeName} ${modelName} Tires — ${sizeText} | Ship Free`,
-    description: `Find the best tires for your ${makeName} ${modelName}. Popular sizes: ${sizeText}. Compare brands like Michelin, Bridgestone, Goodyear. Free shipping on every order at Ship.Tires.`,
+    title: `${makeName} ${modelName} Tires | ${sizeText} | Free Shipping`,
+    description: `Buy tires for your ${makeName} ${modelName}. Popular sizes: ${sizeText}. Compare brands like Michelin, Bridgestone, Goodyear. Free shipping on every order at Ship.Tires.`,
     alternates: { canonical: `https://ship.tires/tires/vehicle/${make}/${model}` },
   };
 }
@@ -51,6 +52,9 @@ export default async function VehicleTiresPage({
   const { make, model } = await params;
   const makeName = decodeURIComponent(make).replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const modelName = decodeURIComponent(model).replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+  // Fetch vehicle photo from Wikipedia
+  const vehicleImage = await getVehicleImage(makeName, modelName);
 
   // Look up compatible tire sizes
   const compatibleSizes = lookupTireSizes(makeName, modelName);
@@ -109,12 +113,9 @@ export default async function VehicleTiresPage({
     if (sizeStr && !g.sizes.includes(sizeStr)) g.sizes.push(sizeStr);
   }
 
-  const tireGroups = [...grouped.values()].sort((a, b) => {
-    if (a.minPrice === Infinity && b.minPrice === Infinity) return a.brandName.localeCompare(b.brandName);
-    if (a.minPrice === Infinity) return 1;
-    if (b.minPrice === Infinity) return -1;
-    return a.minPrice - b.minPrice;
-  });
+  const tireGroups = [...grouped.values()]
+    .filter((g) => g.imageUrl && g.minPrice !== Infinity)
+    .sort((a, b) => a.minPrice - b.minPrice);
 
   // Group by season/type for category sections
   const bySeason = new Map<string, GroupedTire[]>();
@@ -140,7 +141,7 @@ export default async function VehicleTiresPage({
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     name: `Tires for ${makeName} ${modelName}`,
-    description: `Shop tires for your ${makeName} ${modelName}. ${tireGroups.length} tire options across ${compatibleSizes.length} sizes. Free shipping.`,
+    description: `Buy tires for your ${makeName} ${modelName}. ${tireGroups.length} tire options across ${compatibleSizes.length} sizes. Free shipping.`,
     url: `https://ship.tires/tires/vehicle/${make}/${model}`,
     about: {
       "@type": "Vehicle",
@@ -148,6 +149,18 @@ export default async function VehicleTiresPage({
       model: modelName,
     },
   };
+
+  // FAQ schema from vehicle content data
+  const faqItems = makeContent?.faqs ?? [];
+  const faqSchema = faqItems.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  } : null;
 
   return (
     <>
@@ -159,6 +172,12 @@ export default async function VehicleTiresPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
       />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
 
       <div className="bg-gray-50 min-h-screen">
         {/* Header */}
@@ -173,24 +192,39 @@ export default async function VehicleTiresPage({
               <span>/</span>
               <span className="text-gray-300">{modelName}</span>
             </div>
-            <h1 className="mt-4 text-3xl font-bold sm:text-4xl lg:text-5xl">
-              Find Tires for Your {makeName} {modelName}
-            </h1>
-            <p className="mt-2 text-lg text-gray-300">
-              {tireGroups.length} tire options across {compatibleSizes.length} compatible sizes — Free shipping
-            </p>
+            <div className="mt-4 flex items-center justify-between gap-8">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-3xl font-bold sm:text-4xl lg:text-5xl">
+                  Find Tires for Your {makeName} {modelName}
+                </h1>
+                <p className="mt-2 text-lg text-gray-300">
+                  {tireGroups.length} tire options across {compatibleSizes.length} compatible sizes — Free shipping
+                </p>
 
-            {/* Compatible sizes — clickable */}
-            <div className="mt-4 flex flex-wrap gap-2">
-              {compatibleSizes.map((size) => (
-                <Link
-                  key={size}
-                  href={`/tires/size/${size.toLowerCase().replace(/\//g, "-")}`}
-                  className="inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-sm font-mono font-semibold text-white hover:bg-safety-orange transition-colors"
-                >
-                  {size}
-                </Link>
-              ))}
+                {/* Compatible sizes — clickable */}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {compatibleSizes.map((size) => (
+                    <Link
+                      key={size}
+                      href={`/tires/size/${size.toLowerCase().replace(/\//g, "-")}`}
+                      className="inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-sm font-mono font-semibold text-white hover:bg-safety-orange transition-colors"
+                    >
+                      {size}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              {vehicleImage && (
+                <div className="hidden md:block flex-shrink-0">
+                  <Image
+                    src={vehicleImage}
+                    alt={`${makeName} ${modelName}`}
+                    width={280}
+                    height={180}
+                    className="object-contain opacity-90"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -381,6 +415,28 @@ export default async function VehicleTiresPage({
                   >
                     {makeName} {m.model}
                   </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* FAQ */}
+          {faqItems.length > 0 && (
+            <div className="mt-8 rounded-xl bg-white border border-gray-200 p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Frequently Asked Questions — {makeName} {modelName} Tires
+              </h2>
+              <div className="space-y-3">
+                {faqItems.map((item) => (
+                  <details key={item.q} className="group rounded-lg border border-gray-200 bg-white">
+                    <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-sm font-bold text-gray-900">
+                      {item.q}
+                      <svg className="h-4 w-4 flex-shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                      </svg>
+                    </summary>
+                    <div className="px-5 pb-4 text-sm text-gray-600 leading-relaxed">{item.a}</div>
+                  </details>
                 ))}
               </div>
             </div>

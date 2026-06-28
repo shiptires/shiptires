@@ -12,7 +12,7 @@ import type { Metadata } from "next";
 
 export const revalidate = 300;
 
-const SUPPORTED_YEARS = Array.from({ length: 12 }, (_, i) => String(2015 + i)); // 2015-2026
+const SUPPORTED_YEARS = Array.from({ length: 17 }, (_, i) => String(2010 + i)); // 2010-2026
 
 export async function generateMetadata({
   params,
@@ -127,12 +127,9 @@ export default async function VehicleYearBrandPage({
     if (sizeStr && !g.sizes.includes(sizeStr)) g.sizes.push(sizeStr);
   }
 
-  const tireGroups = [...grouped.values()].sort((a, b) => {
-    if (a.minPrice === Infinity && b.minPrice === Infinity) return a.modelName.localeCompare(b.modelName);
-    if (a.minPrice === Infinity) return 1;
-    if (b.minPrice === Infinity) return -1;
-    return a.minPrice - b.minPrice;
-  });
+  const tireGroups = [...grouped.values()]
+    .filter((g) => g.imageUrl && g.minPrice !== Infinity)
+    .sort((a, b) => a.minPrice - b.minPrice);
 
   // Group by season
   const bySeason = new Map<string, GroupedTire[]>();

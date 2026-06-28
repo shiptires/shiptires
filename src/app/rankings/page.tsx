@@ -308,8 +308,8 @@ export default async function RankingsPage() {
                   </div>
 
                   {/* tire image */}
+                  {info?.image && (
                   <div className="hidden sm:flex h-16 w-16 shrink-0 items-center justify-center">
-                    {info?.image ? (
                       <TireImage
                         src={info.image}
                         alt={`${tire.brand} ${tire.model}`}
@@ -317,14 +317,8 @@ export default async function RankingsPage() {
                         height={64}
                         className="h-14 w-14 object-contain"
                       />
-                    ) : (
-                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
-                        <svg className="h-7 w-7 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={0.5} stroke="currentColor">
-                          <circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="3" />
-                        </svg>
-                      </div>
-                    )}
                   </div>
+                  )}
 
                   {/* tire info */}
                   <div className="flex-1 min-w-0">
