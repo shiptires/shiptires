@@ -18,6 +18,7 @@ import { getBrandAuthority } from "@/data/brand-authority";
 import BrandModelGrid from "@/components/BrandModelGrid";
 import BrandModelPicker from "@/components/BrandModelPicker";
 import BrandSizeLookup from "@/components/BrandSizeLookup";
+import BrandPopularSizes from "@/components/BrandPopularSizes";
 import VehicleLookup from "@/components/VehicleLookup";
 import type { Metadata } from "next";
 
@@ -35,8 +36,8 @@ export async function generateMetadata({
   const models = await getModelsByBrand(brandSlug);
 
   return {
-    title: `Shop ${brandRow.make_name} Tires — ${models.length} Models, Ship Free`,
-    description: `Shop ${brandRow.make_name} tires online and ship free. ${models.length} models, ${brandRow.tire_count} sizes available. Find ${brandRow.make_name} tires for Honda, Toyota, Ford, Chevrolet, BMW & all vehicles. Free shipping to Los Angeles, New York, Houston, Chicago & nationwide.`,
+    title: `Buy ${brandRow.make_name} Tires Online | ${models.length} Models | Free Shipping`,
+    description: `Buy ${brandRow.make_name} tires online — compare ${models.length} models and ${brandRow.tire_count} sizes. Free shipping on every order. Find the best ${brandRow.make_name} tire for your vehicle at Ship.Tires.`,
     alternates: {
       canonical: `https://ship.tires/tires/${brandSlug}`,
       types: { "text/plain": `https://ship.tires/tires/${brandSlug}/llm.txt` },
@@ -62,8 +63,12 @@ export default async function BrandPage({
     getActiveRebates().catch(() => []),
   ]);
   // Sort by tire_count descending — popular models first, not alphabetical
-  const sortedRows = [...modelRows].sort((a, b) => (b.tire_count ?? 0) - (a.tire_count ?? 0));
-  const models = sortedRows.map(modelSummaryToModel);
+  const sortedRows = [...modelRows]
+    .filter((r) => !/retread/i.test(r.model_name))
+    .sort((a, b) => (b.tire_count ?? 0) - (a.tire_count ?? 0));
+  const allModels = sortedRows.map(modelSummaryToModel);
+  // Only show models with real pricing (page stays alive for SEO)
+  const models = allModels.filter((m) => m.priceRange[0] > 0 && m.image);
   const brandRebates = getRebatesForBrand(allRebates, brandRow.make_name);
 
   const logoUrl = brand.logoUrl || getBrandLogo(brandRow.make_name) || getLogoUrl(brand.domain);
@@ -262,31 +267,11 @@ export default async function BrandPage({
 
         {/* Popular Sizes */}
         {popularSizes.length > 0 && (
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Popular {brand.name} Sizes
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Most common tire sizes available from {brand.name}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {popularSizes.map((s) => {
-                const display = `${s.width}/${s.aspect_ratio}R${s.rim_size}`;
-                return (
-                  <Link
-                    key={display}
-                    href={`/tires/${brand.slug}/size/${s.width}-${s.aspect_ratio}r${s.rim_size}`.toLowerCase()}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-mono font-medium text-gray-900 shadow-sm hover:shadow-md hover:border-blue transition-all"
-                  >
-                    {display}
-                    <span className="text-xs text-gray-400">
-                      ({s.count})
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
+          <BrandPopularSizes
+            sizes={popularSizes}
+            brandSlug={brand.slug}
+            brandName={brand.name}
+          />
         )}
 
         {/* Models Grid */}

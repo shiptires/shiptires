@@ -23,6 +23,7 @@ import TireCard from "@/components/TireCard";
 import AddToCartButton from "@/components/AddToCartButton";
 import SizeTable from "@/components/SizeTable";
 import TireGallery from "@/components/TireGallery";
+import PaymentIcons from "@/components/PaymentIcons";
 import type { Metadata } from "next";
 
 // Deduplicate getModelBySlug between generateMetadata and component
@@ -55,14 +56,22 @@ export async function generateMetadata({
 
   const baseModel = tiresToModel(data.model, data.tires, data.brand, data.modelDetails);
   const distPricing = await applyDistributorPricing(baseModel.sizes);
-  const model = { ...baseModel, sizes: distPricing.sizes, priceRange: distPricing.priceRange };
+  const pricedSizes = distPricing.sizes.filter((s) => s.price > 0);
+  const model = { ...baseModel, sizes: pricedSizes, priceRange: distPricing.priceRange };
   const hasPrice = model.priceRange[0] > 0;
 
+  const fullName = `${data.brand} ${model.name}`;
+  const titleBase = hasPrice
+    ? `${fullName} Tires | From $${model.priceRange[0]} | Free Shipping`
+    : `${fullName} Tires | ${model.sizes.length} Sizes | Free Shipping`;
+  // Truncate to 60 chars for SERP display
+  const title = titleBase.length > 60 ? titleBase.slice(0, 57) + "..." : titleBase;
+
   return {
-    title: `Shop ${data.brand} ${model.name} Tires — Prices, Sizes & Ship Free`,
+    title,
     description: hasPrice
-      ? `Shop ${data.brand} ${model.name} tires from $${model.priceRange[0]}. ${model.sizes.length} sizes available. Ship free to your door or installer.${model.warranty ? ` ${model.warranty} warranty.` : ""} Fits Honda, Toyota, Ford, BMW & more.`
-      : `Shop ${data.brand} ${model.name} tires — ${model.sizes.length} sizes available. Ship free. Request a quote for pricing. Fits Honda, Toyota, Ford, BMW & more.`,
+      ? `Buy ${fullName} tires from $${model.priceRange[0]}/tire. ${model.sizes.length} sizes available. Free shipping to your door or installer.${model.warranty ? ` ${model.warranty} warranty.` : ""} Fits Honda, Toyota, Ford, BMW & more.`
+      : `Buy ${fullName} tires — ${model.sizes.length} sizes available. Free shipping. Request a quote for pricing. Fits Honda, Toyota, Ford, BMW & more.`,
     alternates: {
       canonical: `https://ship.tires/tires/${brandSlug}/${modelSlug}`,
       types: { "text/plain": `https://ship.tires/tires/${brandSlug}/${modelSlug}/llm.txt` },
@@ -84,7 +93,9 @@ export default async function ModelPage({
 
   // Apply distributor pricing — always takes priority over MAP-based pricing
   const distPricing = await applyDistributorPricing(baseModel.sizes);
-  const model = { ...baseModel, sizes: distPricing.sizes, priceRange: distPricing.priceRange };
+  // Filter to only sizes with real pricing for public display (page stays alive for SEO)
+  const pricedSizes = distPricing.sizes.filter((s) => s.price > 0);
+  const model = { ...baseModel, sizes: pricedSizes, priceRange: distPricing.priceRange };
 
   const [brandRow, allModels] = await Promise.all([
     getBrandBySlug(brandSlug),
@@ -94,8 +105,9 @@ export default async function ModelPage({
   const logoUrl = brand?.logoUrl || getLogoUrl(brand?.domain || "");
   const relatedModels = allModels
     .filter((m) => toSlug(m.model_name) !== modelSlug)
-    .slice(0, 3)
-    .map(modelSummaryToModel);
+    .map(modelSummaryToModel)
+    .filter((m) => m.image)
+    .slice(0, 3);
 
   const hasPrice = model.priceRange[0] > 0;
 
@@ -127,6 +139,42 @@ export default async function ModelPage({
         { "@type": "PropertyValue", name: "UTQG Temperature", value: representativeUtqg.temperature },
       ]
     : [];
+
+  // Auto-generated FAQ items
+  const faqItems: { q: string; a: string }[] = [];
+  if (hasPrice) {
+    faqItems.push({
+      q: `How much do ${data.brand} ${model.name} tires cost?`,
+      a: `${data.brand} ${model.name} tires start at $${model.priceRange[0].toFixed(2)} per tire${model.priceRange[1] > model.priceRange[0] ? ` (up to $${model.priceRange[1].toFixed(2)} depending on size)` : ""}. A set of 4 starts at $${(model.priceRange[0] * 4).toFixed(2)} with free shipping included on every order at Ship.Tires.`,
+    });
+  }
+  if (model.sizes.length > 0) {
+    const sizeList = model.sizes.slice(0, 6).map((s) => s.size).join(", ");
+    faqItems.push({
+      q: `What sizes does the ${data.brand} ${model.name} come in?`,
+      a: `The ${data.brand} ${model.name} is available in ${model.sizes.length} sizes including ${sizeList}${model.sizes.length > 6 ? " and more" : ""}. All sizes ship free at Ship.Tires.`,
+    });
+  }
+  faqItems.push({
+    q: `Does Ship.Tires offer free shipping on ${data.brand} ${model.name} tires?`,
+    a: `Yes. Every ${data.brand} ${model.name} tire ships free to anywhere in the continental US — to your door or directly to your installer. No minimum order required.`,
+  });
+  if (model.warranty) {
+    faqItems.push({
+      q: `What warranty do ${data.brand} ${model.name} tires have?`,
+      a: `The ${data.brand} ${model.name} comes with a ${model.warranty} manufacturer warranty. Check individual size listings for specific warranty details.`,
+    });
+  }
+
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
+    })),
+  };
 
   const productSchema = {
     "@context": "https://schema.org",
@@ -181,6 +229,12 @@ export default async function ModelPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
       />
+      {faqItems.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
 
       <div className="bg-gray-50 min-h-screen">
         {/* Breadcrumb */}
@@ -277,14 +331,14 @@ export default async function ModelPage({
                     <div>
                       <div className="flex items-baseline gap-2">
                         <span className="text-sm text-gray-500">Starting at</span>
-                        <span className="text-4xl font-bold text-gray-900">${model.priceRange[0]}</span>
+                        <span className="text-4xl font-bold text-gray-900">${model.priceRange[0].toFixed(2)}</span>
                         <span className="text-lg text-gray-500">/tire</span>
                       </div>
                       {model.priceRange[1] > model.priceRange[0] && (
-                        <p className="mt-1 text-sm text-gray-500">Up to ${model.priceRange[1]} depending on size</p>
+                        <p className="mt-1 text-sm text-gray-500">Up to ${model.priceRange[1].toFixed(2)} depending on size</p>
                       )}
                       <p className="mt-1 text-sm font-medium text-green-600">
-                        Set of 4 from ${model.priceRange[0] * 4} — Free shipping included
+                        Set of 4 from ${(model.priceRange[0] * 4).toFixed(2)} — Free shipping included
                       </p>
                     </div>
                   ) : (
@@ -351,25 +405,17 @@ export default async function ModelPage({
                 )}
 
                 {/* CTA buttons */}
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <div className="mt-6 flex flex-col gap-4">
                   <a
                     href="#sizes"
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-safety-orange px-6 py-3.5 text-base font-bold text-white hover:bg-safety-orange/90 transition-colors"
+                    className="flex items-center justify-center gap-2 rounded-xl bg-safety-orange px-6 py-3.5 text-base font-bold text-white hover:bg-safety-orange/90 transition-colors"
                   >
                     Select Your Size
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
                     </svg>
                   </a>
-                  <a
-                    href="tel:+12792388473"
-                    className="flex items-center justify-center gap-2 rounded-xl border-2 border-gray-300 px-6 py-3.5 text-base font-bold text-gray-700 hover:border-gray-400 hover:bg-gray-50 transition-colors"
-                  >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
-                    </svg>
-                    Call (279) 238-TIRE
-                  </a>
+                  <PaymentIcons compact />
                 </div>
               </div>
             </div>
@@ -383,24 +429,18 @@ export default async function ModelPage({
               <h2 className="text-lg font-bold text-gray-900 mb-4">Popular Sizes</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 {popularSizes.map((size) => (
-                  <div key={`${size.size}-${size.tireId}`} className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-center hover:border-safety-orange/40 transition-colors">
+                  <Link
+                    key={`${size.size}-${size.tireId}`}
+                    href={`/tires/${brandSlug}/${modelSlug}/${size.size.toLowerCase().replace(/\//g, "-").replace(/\./g, "-")}`}
+                    className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-center hover:border-safety-orange/40 hover:shadow-md transition-all block"
+                  >
                     <div className="font-mono text-sm font-bold text-gray-900">{size.size}</div>
-                    <div className="mt-1 text-lg font-bold text-gray-900">${size.price}</div>
+                    <div className="mt-1 text-lg font-bold text-gray-900">${size.price.toFixed(2)}</div>
                     <div className="text-xs text-gray-500">/tire</div>
-                    <div className="mt-2">
-                      <AddToCartButton
-                        brand={data.brand}
-                        brandSlug={brandSlug}
-                        model={model.name}
-                        modelSlug={model.slug}
-                        size={size.size}
-                        price={size.price}
-                        loadIndex={size.loadIndex}
-                        speedRating={size.speedRating}
-                        image={model.image}
-                      />
+                    <div className="mt-2 text-xs font-bold text-safety-orange">
+                      Shop Size &rarr;
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -541,6 +581,28 @@ export default async function ModelPage({
                       </div>
                     );
                   })()}
+                </div>
+              )}
+
+              {/* FAQ */}
+              {faqItems.length > 0 && (
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">
+                    Frequently Asked Questions
+                  </h2>
+                  <div className="space-y-3">
+                    {faqItems.map((item) => (
+                      <details key={item.q} className="group rounded-lg border border-gray-200 bg-white">
+                        <summary className="flex cursor-pointer items-center justify-between px-5 py-4 text-sm font-bold text-gray-900">
+                          {item.q}
+                          <svg className="h-4 w-4 flex-shrink-0 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                          </svg>
+                        </summary>
+                        <div className="px-5 pb-4 text-sm text-gray-600 leading-relaxed">{item.a}</div>
+                      </details>
+                    ))}
+                  </div>
                 </div>
               )}
 
