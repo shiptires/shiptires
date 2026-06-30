@@ -148,19 +148,18 @@ export default async function HomePage() {
 
   // Build all priced candidates for a tier, sorted by price ascending
   function tierCandidates(tires: TireRow[]): VehicleTier[] {
-    return tires
-      .map((t) => {
-        const dist = distMap.get(t.id);
-        if (!dist) return null;
-        const shipping = getShippingByWeight(t.weight ? parseFloat(t.weight) : null);
-        const price = sitePriceFromCost(dist.cost, shipping);
-        if (price <= 0) return null;
-        const image = resolveImage(t.local_angle, t.local_side, t.local_thumbnail, t.angle_image_url, t.side_image_url, t.thumbnail_url, t.image_0100_url);
-        if (!image) return null;
-        return { tire: t, price, image };
-      })
-      .filter((c): c is VehicleTier => c !== null)
-      .sort((a, b) => a.price - b.price);
+    const candidates: VehicleTier[] = [];
+    for (const t of tires) {
+      const dist = distMap.get(t.id);
+      if (!dist) continue;
+      const shipping = getShippingByWeight(t.weight ? parseFloat(t.weight) : null);
+      const price = sitePriceFromCost(dist.cost, shipping);
+      if (price <= 0) continue;
+      const image = resolveImage(t.local_angle, t.local_side, t.local_thumbnail, t.angle_image_url, t.side_image_url, t.thumbnail_url, t.image_0100_url);
+      if (!image) continue;
+      candidates.push({ tire: t, price, image });
+    }
+    return candidates.sort((a, b) => a.price - b.price);
   }
 
   const vehicleCards: VehicleCard[] = await Promise.all(
