@@ -12,7 +12,7 @@ import { vehicleMakes, getModelsForMake } from "@/data/vehicle-content";
 import { findState, findCity, getStateClimate } from "@/lib/location-seo";
 import type { Metadata } from "next";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export function generateStaticParams() {
   const params: { state: string; city: string; make: string; model: string }[] = [];

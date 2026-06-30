@@ -24,7 +24,7 @@ import BrandPopularSizes from "@/components/BrandPopularSizes";
 import VehicleLookup from "@/components/VehicleLookup";
 import type { Metadata } from "next";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export async function generateStaticParams() {
   const brands = await getAllBrands();

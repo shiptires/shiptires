@@ -7,7 +7,7 @@ import { findState, findCity } from "@/lib/location-seo";
 import { sitePrice } from "@/lib/pricing";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 function parseSizeSlug(slug: string) {
   const match = slug.match(/^(\d{2,3})-(\d{2,3})r(\d{2,3}(?:\.\d)?)$/i);

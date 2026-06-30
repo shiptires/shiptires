@@ -9,7 +9,7 @@ import { lookupTireSizes } from "@/data/tire-sizes";
 import { getMakeContent } from "@/data/vehicle-content";
 import { sitePrice } from "@/lib/pricing";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {

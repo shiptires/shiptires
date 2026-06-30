@@ -29,7 +29,7 @@ import type { Metadata } from "next";
 // Deduplicate getModelBySlug between generateMetadata and component
 const cachedGetModelBySlug = cache(getModelBySlug);
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export const dynamicParams = true;
 

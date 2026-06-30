@@ -6,7 +6,7 @@ import { getAllBrands, brandSummaryToBrand, getStats } from "@/lib/db";
 import { toLocationSlug, getStateClimate } from "@/lib/location-seo";
 import type { Metadata } from "next";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 
 

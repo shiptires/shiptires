@@ -116,7 +116,7 @@ const itemListSchemas = tireRankings.map((cat) => ({
   })),
 }));
 
-export const revalidate = 300; // 5 minutes
+export const revalidate = 3600; // 5 minutes
 
 // Pre-fetch image + price data for all ranked tires
 async function getRankingTireData() {

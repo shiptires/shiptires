@@ -15,7 +15,7 @@ import {
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import type { Metadata } from "next";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export async function generateMetadata({
   params,

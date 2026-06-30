@@ -5,7 +5,7 @@ import { sitePrice, formatPrice } from "@/lib/pricing";
 import { detectVehicle, parseFlexibleSize, parseRimSize } from "@/lib/vehicle-detection";
 import type { Metadata } from "next";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Search Tires — Filter by Size, Brand & Type | Ship.Tires",

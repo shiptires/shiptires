@@ -13,7 +13,7 @@ import {
 import type { PlaceResult } from "@/lib/installer-utils";
 import type { Metadata } from "next";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 type Params = { state: string; city: string; zip: string };
 

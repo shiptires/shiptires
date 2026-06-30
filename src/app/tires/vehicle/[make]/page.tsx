@@ -7,8 +7,9 @@ import type { TireRow } from "@/lib/db";
 import { isCuratedBrand } from "@/lib/curated-brands";
 import { sitePrice } from "@/lib/pricing";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
+import { getVehicleImage } from "@/lib/vehicle-image";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 // Generate all vehicle make pages at build time
 export function generateStaticParams() {
@@ -92,6 +93,15 @@ export default async function VehicleMakePage({
         tireBySize.set(sizeKey, tire);
       }
     }
+  }
+
+  // Fetch vehicle images for each model from Wikipedia
+  const vehicleImages = new Map<string, string | null>();
+  const imageResults = await Promise.all(
+    models.map((m) => getVehicleImage(makeName, m.model))
+  );
+  for (let i = 0; i < models.length; i++) {
+    vehicleImages.set(models[i].modelSlug, imageResults[i]);
   }
 
   const breadcrumb = buildBreadcrumbSchema([
@@ -212,15 +222,7 @@ export default async function VehicleMakePage({
           {models.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {models.map((m) => {
-                // Find a sample tire image from a tire that fits this vehicle model's sizes
-                let sampleImage: string | null = null;
-                for (const size of m.sizes) {
-                  const match = tireBySize.get(size);
-                  if (match) {
-                    sampleImage = match.thumbnail_url ?? match.image_0100_url ?? null;
-                    if (sampleImage) break;
-                  }
-                }
+                const vehicleImg = vehicleImages.get(m.modelSlug);
 
                 return (
                   <Link
@@ -228,15 +230,15 @@ export default async function VehicleMakePage({
                     href={`/tires/vehicle/${make}/${m.modelSlug}`}
                     className="group flex items-start gap-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-safety-orange"
                   >
-                    {/* Tire image */}
+                    {/* Vehicle image */}
                     <div className="flex-shrink-0 w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
-                      {sampleImage ? (
+                      {vehicleImg ? (
                         <Image
-                          src={sampleImage}
-                          alt={`${makeName} ${m.model} tire`}
+                          src={vehicleImg}
+                          alt={`${makeName} ${m.model}`}
                           width={64}
                           height={64}
-                          className="object-contain"
+                          className="object-cover"
                         />
                       ) : (
                         <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

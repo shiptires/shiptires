@@ -8,11 +8,12 @@ import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { lookupTireSizes } from "@/data/tire-sizes";
 import { getMakeContent, getModelContent, getModelsForMake, vehicleMakes } from "@/data/vehicle-content";
 import { sitePrice } from "@/lib/pricing";
+import { getVehicleImage } from "@/lib/vehicle-image";
 import type { Metadata } from "next";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
-const SUPPORTED_YEARS = Array.from({ length: 12 }, (_, i) => String(2015 + i)); // 2015-2026
+const SUPPORTED_YEARS = Array.from({ length: 17 }, (_, i) => String(2010 + i)); // 2010-2026
 
 export async function generateStaticParams() {
   const params: { make: string; model: string; year: string }[] = [];
@@ -73,6 +74,9 @@ export default async function VehicleYearPage({
   const makeName = decodeURIComponent(make).replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const modelName = decodeURIComponent(model).replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
+  // Fetch vehicle photo from Wikipedia
+  const vehicleImage = await getVehicleImage(makeName, modelName);
+
   const compatibleSizes = lookupTireSizes(makeName, modelName);
   if (!compatibleSizes || compatibleSizes.length === 0) notFound();
 
@@ -125,12 +129,10 @@ export default async function VehicleYearPage({
     if (sizeStr && !g.sizes.includes(sizeStr)) g.sizes.push(sizeStr);
   }
 
-  const tireGroups = [...grouped.values()].sort((a, b) => {
-    if (a.minPrice === Infinity && b.minPrice === Infinity) return a.brandName.localeCompare(b.brandName);
-    if (a.minPrice === Infinity) return 1;
-    if (b.minPrice === Infinity) return -1;
-    return a.minPrice - b.minPrice;
-  });
+  // Only show models with real pricing (hide no-price items from public display)
+  const tireGroups = [...grouped.values()]
+    .filter((g) => g.minPrice !== Infinity)
+    .sort((a, b) => a.minPrice - b.minPrice);
 
   const bySeason = new Map<string, GroupedTire[]>();
   for (const g of tireGroups) {
@@ -191,23 +193,38 @@ export default async function VehicleYearPage({
               <span>/</span>
               <span className="text-gray-300">{year}</span>
             </div>
-            <h1 className="mt-4 text-3xl font-bold sm:text-4xl lg:text-5xl">
-              {year} {makeName} {modelName} Tires
-            </h1>
-            <p className="mt-2 text-lg text-gray-300">
-              {tireGroups.length} tire options across {compatibleSizes.length} compatible sizes — Free shipping
-            </p>
+            <div className="mt-4 flex items-center justify-between gap-8">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-3xl font-bold sm:text-4xl lg:text-5xl">
+                  {year} {makeName} {modelName} Tires
+                </h1>
+                <p className="mt-2 text-lg text-gray-300">
+                  {tireGroups.length} tire options across {compatibleSizes.length} compatible sizes — Free shipping
+                </p>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              {compatibleSizes.map((size) => (
-                <Link
-                  key={size}
-                  href={`/tires/size/${size.toLowerCase().replace(/\//g, "-")}`}
-                  className="inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-sm font-mono font-semibold text-white hover:bg-safety-orange transition-colors"
-                >
-                  {size}
-                </Link>
-              ))}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {compatibleSizes.map((size) => (
+                    <Link
+                      key={size}
+                      href={`/tires/size/${size.toLowerCase().replace(/\//g, "-")}`}
+                      className="inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-sm font-mono font-semibold text-white hover:bg-safety-orange transition-colors"
+                    >
+                      {size}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              {vehicleImage && (
+                <div className="hidden md:block flex-shrink-0">
+                  <Image
+                    src={vehicleImage}
+                    alt={`${year} ${makeName} ${modelName}`}
+                    width={280}
+                    height={180}
+                    className="object-contain opacity-90"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

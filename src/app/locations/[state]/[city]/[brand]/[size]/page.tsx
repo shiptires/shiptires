@@ -25,7 +25,7 @@ import {
 import { sitePrice } from "@/lib/pricing";
 import type { Metadata } from "next";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 export const dynamicParams = true;
 
 function parseSizeSlug(sizeSlug: string): { width: string; aspect: string; rim: string } | null {

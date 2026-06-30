@@ -89,7 +89,7 @@ const typeIcons: Record<string, string> = {
   touring: "M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12",
 };
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export default async function HomePage() {
   const dbTimeout = <T,>(p: T | Promise<T>, fallback: T, ms = 45000): Promise<T> =>
@@ -187,41 +187,43 @@ export default async function HomePage() {
       const mc = tierCandidates(midTires);
       const pc = tierCandidates(premiumTires);
 
-      // Budget: cheapest available
-      const budgetPick = bc[0];
+      // Budget: prefer RADAR/ARROYO (known value brands with good images), else cheapest
+      let budgetPick: VehicleTier | undefined;
+      if (bc.length > 0) {
+        const preferred = bc.find(c =>
+          ["RADAR", "ARROYO", "ADVANTA", "KENDA"].includes(c.tire.make_name.toUpperCase())
+        );
+        budgetPick = preferred || bc[0];
+      }
 
-      // Premium: 75th percentile (representative premium price, not the cheapest)
-      let premiumPick = pc.length > 0
-        ? pc[Math.min(Math.floor(pc.length * 0.75), pc.length - 1)]
-        : undefined;
+      // Premium: most expensive (premium should clearly cost more than mid)
+      let premiumPick = pc.length > 0 ? pc[pc.length - 1] : undefined;
 
-      // Mid: find candidate between budget and premium prices (closest to midpoint)
+      // Mid: pick one whose price falls between budget and premium
       let midPick: VehicleTier | undefined;
       if (mc.length > 0) {
-        if (budgetPick && premiumPick) {
-          const between = mc.filter(c => c.price > budgetPick.price && c.price < premiumPick!.price);
+        if (budgetPick && premiumPick && premiumPick.price > budgetPick.price) {
+          const between = mc.filter(c => c.price > budgetPick!.price && c.price < premiumPick!.price);
           if (between.length > 0) {
             const midTarget = (budgetPick.price + premiumPick.price) / 2;
             midPick = between.reduce((best, c) =>
               Math.abs(c.price - midTarget) < Math.abs(best.price - midTarget) ? c : best
             );
           } else {
-            // No mid fits between — pick median mid-range tire
-            midPick = mc[Math.floor(mc.length / 2)];
-            // Ensure premium > mid: find a premium candidate above mid price
-            if (premiumPick && midPick && premiumPick.price <= midPick.price) {
-              const aboveMid = pc.filter(c => c.price > midPick!.price);
-              premiumPick = aboveMid.length > 0 ? aboveMid[0] : pc[pc.length - 1];
-            }
+            midPick = mc[0]; // cheapest mid-range
           }
         } else {
-          midPick = mc[Math.floor(mc.length / 2)];
+          midPick = mc[0];
         }
       }
 
-      // Final guard: if premium still <= mid, use the most expensive premium available
+      // Enforce budget < mid < premium
       if (midPick && premiumPick && premiumPick.price <= midPick.price) {
-        premiumPick = pc[pc.length - 1];
+        const aboveMid = pc.filter(c => c.price > midPick!.price);
+        if (aboveMid.length > 0) premiumPick = aboveMid[aboveMid.length - 1];
+      }
+      if (budgetPick && midPick && budgetPick.price >= midPick.price) {
+        budgetPick = bc[0]; // fall back to absolute cheapest
       }
 
       return {

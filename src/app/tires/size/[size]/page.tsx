@@ -8,7 +8,7 @@ import { getVehiclesForSize } from "@/data/tire-sizes";
 import type { TireRow } from "@/lib/db";
 import type { Metadata } from "next";
 
-export const revalidate = 300;
+export const revalidate = 3600;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
