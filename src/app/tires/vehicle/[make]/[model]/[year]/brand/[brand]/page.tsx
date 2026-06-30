@@ -11,6 +11,11 @@ import { sitePrice } from "@/lib/pricing";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  return [];
+}
 
 const SUPPORTED_YEARS = Array.from({ length: 17 }, (_, i) => String(2010 + i)); // 2010-2026
 

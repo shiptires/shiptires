@@ -31,8 +31,12 @@ const cachedGetModelBySlug = cache(getModelBySlug);
 
 export const revalidate = 300;
 
-// Static params removed — 16K+ model pages are rendered on-demand with ISR (revalidate = 300)
 export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  // 16K+ model pages — pre-render none, render on-demand with ISR (revalidate = 300)
+  return [];
+}
 
 const typeLabels: Record<string, string> = {
   "all-season": "All-Season",

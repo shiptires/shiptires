@@ -8,6 +8,11 @@ import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { states } from "@/data/locations";
 
 export const revalidate = 300;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  return [];
+}
 
 function parseSizeSlug(slug: string) {
   const match = slug.match(/^(\d{2,3})-(\d{2,3})r(\d{2,3}(?:\.\d)?)$/i);
@@ -40,9 +45,10 @@ export default async function BrandSizePage({ params }: { params: Promise<{ bran
   const allSizes = await getDistinctSizesForBrand(brandSlug);
   const allBrandRows = await getAllBrands();
 
-  // Group tires by model
+  // Group tires by model (exclude retreads — not consumer products)
   const grouped = new Map<string, { modelName: string; modelSlug: string; season: string; price: number; speedRating: string; loadRating: string; imageUrl: string | null; tireCount: number }>();
   for (const tire of tires) {
+    if (/retread/i.test(tire.model_name) || /retread/i.test(tire.name ?? "")) continue;
     const key = tire.model_name;
     if (!grouped.has(key)) {
       grouped.set(key, {
@@ -64,12 +70,10 @@ export default async function BrandSizePage({ params }: { params: Promise<{ bran
     }
   }
 
-  const models = [...grouped.values()].sort((a, b) => {
-    if (a.price === 0 && b.price === 0) return a.modelName.localeCompare(b.modelName);
-    if (a.price === 0) return 1;
-    if (b.price === 0) return -1;
-    return a.price - b.price;
-  });
+  // Only show models with real pricing (hide no-price items from public display)
+  const models = [...grouped.values()]
+    .filter((m) => m.price > 0)
+    .sort((a, b) => a.price - b.price);
 
   // Top 20 cities for cross-links
   const topCities = states

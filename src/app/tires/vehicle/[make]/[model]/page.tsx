@@ -12,6 +12,11 @@ import { getVehicleImage } from "@/lib/vehicle-image";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({
   params,

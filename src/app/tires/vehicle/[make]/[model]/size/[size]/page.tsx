@@ -10,6 +10,11 @@ import { getMakeContent } from "@/data/vehicle-content";
 import { sitePrice } from "@/lib/pricing";
 
 export const revalidate = 300;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  return [];
+}
 
 function parseSizeSlug(slug: string) {
   const match = slug.match(/^(\d{2,3})-(\d{2,3})r(\d{2,3}(?:\.\d)?)$/i);

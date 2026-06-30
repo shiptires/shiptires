@@ -2,12 +2,14 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  getAllBrands,
   getBrandBySlug,
   getModelsByBrand,
   getDistinctSizesForBrand,
   getManufacturer,
   brandSummaryToBrand,
   modelSummaryToModel,
+  toSlug,
 } from "@/lib/db";
 import { getLogoUrl } from "@/lib/api-helpers";
 import { getBrandLogo } from "@/lib/curated-brands";
@@ -23,6 +25,11 @@ import VehicleLookup from "@/components/VehicleLookup";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
+
+export async function generateStaticParams() {
+  const brands = await getAllBrands();
+  return brands.map((b) => ({ brand: toSlug(b.make_name) }));
+}
 
 export async function generateMetadata({
   params,

@@ -29,6 +29,12 @@ import MetaPixelViewContent from "@/components/MetaPixelViewContent";
 import type { Metadata } from "next";
 
 export const revalidate = 300;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  // Too many brand/model/size combos — render on-demand with ISR (revalidate = 300)
+  return [];
+}
 
 const typeLabels: Record<string, string> = {
   "all-season": "All-Season",
