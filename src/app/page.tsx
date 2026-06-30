@@ -146,20 +146,21 @@ export default async function HomePage() {
     budget?: VehicleTier; mid?: VehicleTier; premium?: VehicleTier;
   };
 
-  function pickBest(tires: TireRow[]): TireRow | undefined {
-    // Prefer tires with the most image sources (local R2 > remote), then lowest price
-    return [...tires].sort((a, b) => {
-      const imgCount = (t: TireRow) => [
-        t.local_thumbnail, t.local_angle, t.local_front, t.local_side,
-        t.thumbnail_url, t.angle_image_url, t.front_image_url, t.side_image_url,
-      ].filter((v) => v && v !== "FAILED").length;
-      const diff = imgCount(b) - imgCount(a);
-      if (diff !== 0) return diff;
-      // Sort by distributor cost (cheapest first)
-      const aCost = distMap.get(a.id)?.cost ?? Infinity;
-      const bCost = distMap.get(b.id)?.cost ?? Infinity;
-      return aCost - bCost;
-    })[0];
+  // Build all priced candidates for a tier, sorted by price ascending
+  function tierCandidates(tires: TireRow[]): VehicleTier[] {
+    return tires
+      .map((t) => {
+        const dist = distMap.get(t.id);
+        if (!dist) return null;
+        const shipping = getShippingByWeight(t.weight ? parseFloat(t.weight) : null);
+        const price = sitePriceFromCost(dist.cost, shipping);
+        if (price <= 0) return null;
+        const image = resolveImage(t.local_angle, t.local_side, t.local_thumbnail, t.angle_image_url, t.side_image_url, t.thumbnail_url, t.image_0100_url);
+        if (!image) return null;
+        return { tire: t, price, image };
+      })
+      .filter((c): c is VehicleTier => c !== null)
+      .sort((a, b) => a.price - b.price);
   }
 
   const vehicleCards: VehicleCard[] = await Promise.all(
@@ -182,23 +183,53 @@ export default async function HomePage() {
         else budgetTires.push(t);
       }
 
-      const toTier = (t: TireRow | undefined): VehicleTier | undefined => {
-        if (!t) return undefined;
-        const dist = distMap.get(t.id);
-        if (!dist) return undefined;
-        const shipping = getShippingByWeight(t.weight ? parseFloat(t.weight) : null);
-        const price = sitePriceFromCost(dist.cost, shipping);
-        if (price <= 0) return undefined;
-        const image = resolveImage(t.local_angle, t.local_side, t.local_thumbnail, t.angle_image_url, t.side_image_url, t.thumbnail_url, t.image_0100_url);
-        if (!image) return undefined;
-        return { tire: t, price, image };
-      };
+      // Compute all priced candidates per tier (sorted cheapest → most expensive)
+      const bc = tierCandidates(budgetTires);
+      const mc = tierCandidates(midTires);
+      const pc = tierCandidates(premiumTires);
+
+      // Budget: cheapest available
+      const budgetPick = bc[0];
+
+      // Premium: 75th percentile (representative premium price, not the cheapest)
+      let premiumPick = pc.length > 0
+        ? pc[Math.min(Math.floor(pc.length * 0.75), pc.length - 1)]
+        : undefined;
+
+      // Mid: find candidate between budget and premium prices (closest to midpoint)
+      let midPick: VehicleTier | undefined;
+      if (mc.length > 0) {
+        if (budgetPick && premiumPick) {
+          const between = mc.filter(c => c.price > budgetPick.price && c.price < premiumPick!.price);
+          if (between.length > 0) {
+            const midTarget = (budgetPick.price + premiumPick.price) / 2;
+            midPick = between.reduce((best, c) =>
+              Math.abs(c.price - midTarget) < Math.abs(best.price - midTarget) ? c : best
+            );
+          } else {
+            // No mid fits between — pick median mid-range tire
+            midPick = mc[Math.floor(mc.length / 2)];
+            // Ensure premium > mid: find a premium candidate above mid price
+            if (premiumPick && midPick && premiumPick.price <= midPick.price) {
+              const aboveMid = pc.filter(c => c.price > midPick!.price);
+              premiumPick = aboveMid.length > 0 ? aboveMid[0] : pc[pc.length - 1];
+            }
+          }
+        } else {
+          midPick = mc[Math.floor(mc.length / 2)];
+        }
+      }
+
+      // Final guard: if premium still <= mid, use the most expensive premium available
+      if (midPick && premiumPick && premiumPick.price <= midPick.price) {
+        premiumPick = pc[pc.length - 1];
+      }
 
       return {
         ...v,
-        budget: toTier(pickBest(budgetTires)),
-        mid: toTier(pickBest(midTires)),
-        premium: toTier(pickBest(premiumTires)),
+        budget: budgetPick,
+        mid: midPick,
+        premium: premiumPick,
       };
     })
   );

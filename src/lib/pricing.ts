@@ -109,8 +109,9 @@ export async function getSitePrice(
     if (source) {
       const shipping = getShippingByWeight(weightLbs);
       const distPrice = sitePriceFromCost(source.cost, shipping);
-      // Sanity check: skip if distributor price is less than 50% of MAP price
-      if (mapBased > 0 && distPrice < mapBased * 0.5) {
+      // Sanity check: skip if distributor price is less than 20% of MAP price
+      // (price_map is TireWebLibrary's catalog price, often inflated vs real wholesale — 50% was too aggressive)
+      if (mapBased > 0 && distPrice < mapBased * 0.2) {
         console.warn(
           `[pricing] Skipping suspicious distributor price for tire ${tireId}: $${distPrice} vs MAP-based $${mapBased}`
         );
@@ -165,7 +166,7 @@ export async function getSitePriceBatch(
     if (dist) {
       const shipping = getShippingByWeight(t.weight);
       const distPrice = sitePriceFromCost(dist.cost, shipping);
-      if (mapBased <= 0 || distPrice >= mapBased * 0.5) {
+      if (mapBased <= 0 || distPrice >= mapBased * 0.2) {
         result.set(t.id, distPrice);
         continue;
       }
@@ -205,8 +206,8 @@ export async function getSitePriceForLocation(
     const locSource = await getCheapestSourceByLocation(tireId, customerZip, weightLbs);
     if (locSource) {
       const distPrice = sitePriceFromCost(locSource.cost, locSource.shippingEstimate);
-      // Sanity check: skip if price is less than 50% of MAP price
-      if (mapBased > 0 && distPrice < mapBased * 0.5) {
+      // Sanity check: skip if price is less than 20% of MAP price
+      if (mapBased > 0 && distPrice < mapBased * 0.2) {
         console.warn(
           `[pricing] Skipping suspicious location price for tire ${tireId}: $${distPrice} vs MAP-based $${mapBased}`
         );
@@ -282,7 +283,7 @@ export async function applyDistributorPricing(
       // Use weight-based shipping instead of distributor default
       const shipping = getShippingByWeight(s.weight);
       const distPrice = sitePriceFromCost(dist.cost, shipping);
-      if (s.price > 0 && distPrice < s.price * 0.5) {
+      if (s.price > 0 && distPrice < s.price * 0.2) {
         console.warn(
           `[pricing] Skipping suspicious distributor price for tire ${s.tireId} (${s.size}): $${distPrice} vs MAP-based $${s.price}`
         );
