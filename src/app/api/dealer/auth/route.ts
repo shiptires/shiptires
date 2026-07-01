@@ -41,8 +41,9 @@ export async function POST(req: Request) {
     });
 
     return Response.json({ success: true });
-  } catch {
-    return Response.json({ error: "Invalid request" }, { status: 400 });
+  } catch (err) {
+    console.error("Dealer auth error:", err);
+    return Response.json({ error: err instanceof Error ? err.message : "Invalid request" }, { status: 400 });
   }
 }
 
