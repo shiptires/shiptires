@@ -32,7 +32,7 @@ export default function DealerPage() {
                 </svg>
               </div>
               <h3 className="font-semibold text-gray-900">Wholesale Pricing</h3>
-              <p className="mt-2 text-sm text-gray-600">Distributor cost + 10% markup. No retail markups, no hidden fees.</p>
+              <p className="mt-2 text-sm text-gray-600">Distributor cost pricing. No retail markups, no hidden fees.</p>
             </div>
             <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
               <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-4">
