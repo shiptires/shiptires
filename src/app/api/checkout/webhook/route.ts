@@ -159,12 +159,95 @@ export async function POST(req: Request) {
       ? JSON.parse(session.metadata.items_json)
       : [];
 
+    // ── Dealer order branch ──
+    if (session.metadata?.is_dealer_order === "true") {
+      const dealerId = session.metadata.dealer_id;
+      const total = (session.amount_total || 0) / 100;
+
+      try {
+        await getSupabase().from("dealer_orders").insert({
+          dealer_id: dealerId,
+          stripe_session_id: session.id,
+          items,
+          total,
+          status: "paid",
+        });
+      } catch {
+        console.error("Failed to store dealer order in Supabase");
+      }
+
+      // Send dealer confirmation email
+      try {
+        // Look up dealer email
+        const { data: dealer } = await getSupabase()
+          .from("dealers")
+          .select("email, business_name, contact_name")
+          .eq("id", dealerId)
+          .single();
+
+        if (dealer?.email) {
+          const itemList = items
+            .map((i) => `${i.brand} ${i.model} (${i.size}) x${i.qty} — $${(i.price * i.qty).toFixed(2)}`)
+            .join("<br/>");
+
+          await getResend().emails.send({
+            from: "Ship.Tires <orders@ship.tires>",
+            to: dealer.email,
+            subject: "Dealer Order Confirmation — Ship.Tires",
+            html: `
+              <h2>Dealer Order Confirmed</h2>
+              <p>Hi ${dealer.contact_name || dealer.business_name},</p>
+              <p>Your wholesale order has been received and is being processed.</p>
+              <h3>Order Details</h3>
+              <p>${itemList}</p>
+              <p><strong>Total: $${total.toFixed(2)}</strong></p>
+              <hr/>
+              <p>Track your orders at <a href="https://ship.tires/dealer/dashboard/orders">ship.tires/dealer/dashboard/orders</a></p>
+              <p>Questions? Contact us at <a href="mailto:info@ship.tires">info@ship.tires</a> or call (279) 238-8473.</p>
+            `,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to send dealer confirmation email", err);
+      }
+
+      // Send admin notification for dealer order
+      try {
+        const itemList = items
+          .map((i) => `${i.brand} ${i.model} (${i.size}) x${i.qty} — $${(i.price * i.qty).toFixed(2)}`)
+          .join("<br/>");
+
+        await getResend().emails.send({
+          from: "Ship.Tires <orders@ship.tires>",
+          to: ["farhad@ship.tires", "info@ship.tires"],
+          subject: `New Dealer Order — $${total.toFixed(2)}`,
+          html: `
+            <div style="font-family:Arial,sans-serif;">
+              <h2 style="color:#FF5C00;">New Dealer Order Received</h2>
+              <p><strong>Dealer ID:</strong> ${dealerId}</p>
+              <h3>Items</h3>
+              <p>${itemList}</p>
+              <p style="font-size:18px;font-weight:bold;">Total: $${total.toFixed(2)}</p>
+              <p><a href="https://ship.tires/admin/orders" style="display:inline-block;padding:12px 24px;background:#FF5C00;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">View in Admin</a></p>
+            </div>
+          `,
+        });
+      } catch (err) {
+        console.error("Failed to send admin dealer order notification", err);
+      }
+
+      return new Response("OK", { status: 200 });
+    }
+
+    // ── Consumer order (existing flow) ──
     const shipping = session.metadata?.shipping_address
       ? JSON.parse(session.metadata.shipping_address)
       : null;
 
     // Store order in Supabase (unified tire_orders table)
     const authUserId = session.metadata?.auth_user_id || null;
+    const fulfillmentWarehouseId = session.metadata?.fulfillment_warehouse_id || null;
+    const fulfillmentLocationCode = session.metadata?.fulfillment_location_code || null;
     try {
       await getSupabase().from("tire_orders").insert({
         stripe_session_id: session.id,
@@ -176,16 +259,18 @@ export async function POST(req: Request) {
         total: (session.amount_total || 0) / 100,
         status: "paid",
         auth_user_id: authUserId || null,
+        fulfillment_warehouse_id: fulfillmentWarehouseId || null,
+        fulfillment_location_code: fulfillmentLocationCode || null,
       });
     } catch {
       // Log but don't fail the webhook
       console.error("Failed to store order in Supabase");
     }
 
-    // Send confirmation email
+    // Send confirmation email to customer
+    const total = (session.amount_total || 0) / 100;
     try {
       if (session.customer_email) {
-        const total = (session.amount_total || 0) / 100;
         const html = buildOrderConfirmationHtml(
           items,
           total,
@@ -199,8 +284,69 @@ export async function POST(req: Request) {
           html,
         });
       }
-    } catch {
-      console.error("Failed to send confirmation email");
+    } catch (err) {
+      console.error("Failed to send customer confirmation email", err);
+    }
+
+    // Send admin notification email
+    try {
+      const customerName = session.metadata?.customer_name || "Unknown";
+      const customerEmail = session.customer_email || "N/A";
+      const customerPhone = session.metadata?.customer_phone || "N/A";
+      const shippingAddr = shipping
+        ? `${shipping.address1}${shipping.address2 ? ", " + shipping.address2 : ""}, ${shipping.city}, ${shipping.state} ${shipping.zip}`
+        : "N/A";
+
+      const itemRows = items
+        .map(
+          (i) =>
+            `<tr>
+              <td style="padding:8px 12px;border-bottom:1px solid #eee;">${i.brand} ${i.model}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #eee;">${i.size}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:center;">${i.qty}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid #eee;text-align:right;">$${(i.price * i.qty).toFixed(2)}</td>
+            </tr>`
+        )
+        .join("");
+
+      const adminHtml = `
+        <div style="font-family:Arial,sans-serif;max-width:600px;">
+          <h2 style="color:#FF5C00;margin-bottom:4px;">New Order Received!</h2>
+          <p style="color:#555;margin-top:0;">Stripe Session: ${session.id}</p>
+
+          <h3 style="margin-bottom:8px;">Customer</h3>
+          <p style="margin:2px 0;"><strong>Name:</strong> ${customerName}</p>
+          <p style="margin:2px 0;"><strong>Email:</strong> ${customerEmail}</p>
+          <p style="margin:2px 0;"><strong>Phone:</strong> ${customerPhone}</p>
+          <p style="margin:2px 0;"><strong>Ship to:</strong> ${shippingAddr}</p>
+
+          <h3 style="margin-bottom:8px;">Items</h3>
+          <table style="width:100%;border-collapse:collapse;border:1px solid #ddd;">
+            <tr style="background:#f5f5f5;">
+              <th style="padding:8px 12px;text-align:left;">Tire</th>
+              <th style="padding:8px 12px;text-align:left;">Size</th>
+              <th style="padding:8px 12px;text-align:center;">Qty</th>
+              <th style="padding:8px 12px;text-align:right;">Price</th>
+            </tr>
+            ${itemRows}
+          </table>
+
+          <p style="font-size:18px;font-weight:bold;margin-top:16px;">Total: $${total.toFixed(2)}</p>
+
+          <p style="margin-top:24px;">
+            <a href="https://ship.tires/admin/orders" style="display:inline-block;padding:12px 24px;background:#FF5C00;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">View in Admin</a>
+          </p>
+        </div>
+      `;
+
+      await getResend().emails.send({
+        from: "Ship.Tires <orders@ship.tires>",
+        to: ["farhad@ship.tires", "info@ship.tires"],
+        subject: `New Order — ${customerName} — $${total.toFixed(2)}`,
+        html: adminHtml,
+      });
+    } catch (err) {
+      console.error("Failed to send admin notification email", err);
     }
   }
 

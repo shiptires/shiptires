@@ -19,6 +19,29 @@ const topBrands = [
   { name: "Cooper", href: "/tires/cooper" },
 ];
 
+const tireSizes = [
+  { name: '14" Tires', href: "/search?rimSize=14" },
+  { name: '15" Tires', href: "/search?rimSize=15" },
+  { name: '16" Tires', href: "/search?rimSize=16" },
+  { name: '17" Tires', href: "/search?rimSize=17" },
+  { name: '18" Tires', href: "/search?rimSize=18" },
+  { name: '19" Tires', href: "/search?rimSize=19" },
+  { name: '20" Tires', href: "/search?rimSize=20" },
+  { name: '21" Tires', href: "/search?rimSize=21" },
+  { name: '22" Tires', href: "/search?rimSize=22" },
+];
+
+const vehicles = [
+  { name: "Honda Civic", href: "/tires/vehicle/honda/civic" },
+  { name: "Toyota Camry", href: "/tires/vehicle/toyota/camry" },
+  { name: "Ford F-150", href: "/tires/vehicle/ford/f-150" },
+  { name: "Toyota RAV4", href: "/tires/vehicle/toyota/rav4" },
+  { name: "Honda CR-V", href: "/tires/vehicle/honda/cr-v" },
+  { name: "Chevrolet Silverado", href: "/tires/vehicle/chevrolet/silverado" },
+  { name: "Tesla Model 3", href: "/tires/vehicle/tesla/model-3" },
+  { name: "BMW 3 Series", href: "/tires/vehicle/bmw/3-series" },
+];
+
 const companyLinks = [
   { name: "About Us", href: "/about" },
   { name: "Shipping Info", href: "/shipping" },
@@ -29,6 +52,7 @@ const companyLinks = [
   { name: "Blog", href: "/blog" },
   { name: "FAQ", href: "/faq" },
   { name: "Contact", href: "/contact" },
+  { name: "Dealer Program", href: "/dealer" },
   { name: "Privacy Policy", href: "/privacy-policy" },
 ];
 
@@ -39,7 +63,7 @@ export default function Footer() {
       <div className="h-px bg-white/10" />
 
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-6">
           {/* Company Info */}
           <div>
             <Link href="/" className="inline-block">
@@ -52,7 +76,7 @@ export default function Footer() {
               />
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-white/60">
-              Tires shipped free nationwide. 34 curated brands delivered
+              Tires shipped free nationwide. Top brands delivered
               to your door or local installer.
             </p>
             <div className="mt-4 flex items-center gap-2 text-sm font-mono text-kraft">
@@ -89,6 +113,38 @@ export default function Footer() {
                 <li key={brand.name}>
                   <Link href={brand.href} className="text-sm text-white/60 transition-colors hover:text-white">
                     {brand.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Tire Sizes */}
+          <div>
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-kraft mb-4 font-display">
+              Tire Sizes
+            </h3>
+            <ul className="space-y-2">
+              {tireSizes.map((link) => (
+                <li key={link.name}>
+                  <Link href={link.href} className="text-sm text-white/60 transition-colors hover:text-white">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Vehicles */}
+          <div>
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-kraft mb-4 font-display">
+              Vehicles
+            </h3>
+            <ul className="space-y-2">
+              {vehicles.map((link) => (
+                <li key={link.name}>
+                  <Link href={link.href} className="text-sm text-white/60 transition-colors hover:text-white">
+                    {link.name}
                   </Link>
                 </li>
               ))}
@@ -202,11 +258,6 @@ export default function Footer() {
                 </Link>
               ))}
             </div>
-          </div>
-          <div className="mt-4 text-center text-xs text-white/30">
-            <a href="https://sigmaagents.ai" target="_blank" rel="noopener noreferrer" className="hover:text-white/50 transition-colors">
-              Powered by Sigma Agents
-            </a>
           </div>
         </div>
       </div>
