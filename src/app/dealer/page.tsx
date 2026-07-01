@@ -16,7 +16,7 @@ export default function DealerPage() {
             Dealer Program
           </h1>
           <p className="mt-6 text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            Ship.Tires is your wholesale tire distribution partner. We white-label inventory from Express Tire across 9 warehouse locations, offering competitive wholesale pricing with fast nationwide shipping. Apply for a dealer account to access B2B pricing and streamlined ordering.
+            Ship.Tires is your wholesale tire distribution partner. With 9 warehouse locations nationwide, we offer competitive wholesale pricing and fast shipping. Apply for a dealer account to access B2B pricing and streamlined ordering.
           </p>
         </div>
       </section>
