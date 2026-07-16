@@ -54,6 +54,7 @@ const companyLinks = [
   { name: "Contact", href: "/contact" },
   { name: "Dealer Program", href: "/dealer" },
   { name: "Privacy Policy", href: "/privacy-policy" },
+  { name: "Terms of Service", href: "/terms" },
 ];
 
 export default function Footer() {

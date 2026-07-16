@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
           <p className="text-xs font-bold uppercase tracking-widest text-orange">Legal</p>
           <h1 className="mt-2 text-3xl font-black sm:text-4xl tracking-tight">Privacy Policy</h1>
           <p className="mt-3 text-lg text-gray-400">
-            Last updated: June 2025
+            Last updated: July 2026
           </p>
         </div>
       </div>
@@ -46,7 +46,7 @@ export default function PrivacyPolicyPage() {
               <li>Email address</li>
               <li>Phone number</li>
               <li>Shipping and billing address</li>
-              <li>Payment information (processed securely by Stripe — we do not store card numbers)</li>
+              <li>Payment information (processed securely via Plaid ACH bank transfer — we do not store bank credentials)</li>
               <li>Vehicle information (year, make, model) for tire recommendations</li>
             </ul>
 
@@ -82,7 +82,7 @@ export default function PrivacyPolicyPage() {
               We do not sell your personal information. We may share your information with:
             </p>
             <ul className="mt-2 list-disc pl-6 space-y-1 text-gray-600">
-              <li><strong>Payment processors</strong> (Stripe) to securely process transactions</li>
+              <li><strong>Payment processors</strong> (Plaid) to securely process ACH bank transfers</li>
               <li><strong>Shipping carriers</strong> to deliver your tires</li>
               <li><strong>Email service providers</strong> to send order confirmations and updates</li>
               <li><strong>Analytics providers</strong> to understand website usage and improve our services</li>
@@ -105,7 +105,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-xl font-black text-gray-900">6. Data Security</h2>
             <p className="mt-3 text-gray-600 leading-relaxed">
               We implement industry-standard security measures to protect your personal information,
-              including HTTPS encryption, secure payment processing through Stripe (PCI DSS compliant),
+              including HTTPS encryption, secure payment processing through Plaid (SOC 2 Type II certified),
               and access controls on our systems. However, no method of electronic transmission or
               storage is 100% secure, and we cannot guarantee absolute security.
             </p>
