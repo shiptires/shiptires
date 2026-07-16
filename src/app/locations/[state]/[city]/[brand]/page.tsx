@@ -55,7 +55,7 @@ export default async function CityBrandPage({
 
   const brand = brandSummaryToBrand(brandRow);
   const modelRows = await getModelsByBrand(brandSlug);
-  const models = modelRows.map(modelSummaryToModel).filter((m) => m.image && m.priceRange[0] > 0);
+  const models = modelRows.map(modelSummaryToModel).filter((m) => m.image);
   const climate = getStateClimate(stateSlug);
 
   // Priority brands in explicit order for cross-linking

@@ -449,11 +449,11 @@ export default async function SearchPage({
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {result.models.filter((m) => m.min_price != null && m.min_price > 0 && !/retread/i.test(m.model_name) && resolveImage(m.thumbnail_url)).map((m) => {
+              {result.models.filter((m) => !/retread/i.test(m.model_name) && resolveImage(m.thumbnail_url)).map((m) => {
                 const brandSlug = toSlug(m.make_name);
                 const modelSlug = toSlug(m.model_name);
                 const tireType = mapType(m.season, m.terrain, m.category);
-                const hasPrice = true;
+                const hasPrice = m.min_price != null && m.min_price > 0;
                 const speeds = m.speed_ratings?.split(",").filter(Boolean).slice(0, 3) ?? [];
                 const sizeSlug = (size || compositeSize || "").toLowerCase().replace(/\//g, "-").replace(/\./g, "-");
 
