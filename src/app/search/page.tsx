@@ -449,7 +449,7 @@ export default async function SearchPage({
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {result.models.filter((m) => !/retread/i.test(m.model_name) && resolveImage(m.thumbnail_url)).map((m) => {
+              {result.models.filter((m) => !/retread/i.test(m.model_name)).map((m) => {
                 const brandSlug = toSlug(m.make_name);
                 const modelSlug = toSlug(m.model_name);
                 const tireType = mapType(m.season, m.terrain, m.category);
