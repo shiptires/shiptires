@@ -7,7 +7,7 @@ import { isCuratedBrand } from "@/lib/curated-brands";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { lookupTireSizes } from "@/data/tire-sizes";
 import { getMakeContent } from "@/data/vehicle-content";
-import { sitePrice } from "@/lib/pricing";
+import { getSitePriceBatch } from "@/lib/pricing";
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -87,10 +87,22 @@ export default async function VehicleSizePage({
   // Filter to curated brands
   const curatedTires = result.tires.filter((t) => isCuratedBrand(t.make_name));
 
+  // Get real pricing from distributor/competitor pipeline
+  const priceMap = await getSitePriceBatch(
+    curatedTires.filter((t) => t.id).map((t) => ({
+      id: t.id,
+      brand: t.make_name,
+      model: t.model_name,
+      weight: t.weight ? parseFloat(t.weight) || null : null,
+      rimSize: t.rim_size ? parseInt(t.rim_size) || null : null,
+    }))
+  );
+
   // Group by brand + model
   const grouped = new Map<string, GroupedModel>();
   for (const tire of curatedTires) {
     const key = `${tire.make_name}|||${tire.model_name}`;
+    const tirePrice = priceMap.get(tire.id) ?? 0;
     if (!grouped.has(key)) {
       grouped.set(key, {
         brandName: tire.make_name,
@@ -98,7 +110,7 @@ export default async function VehicleSizePage({
         modelName: tire.model_name,
         modelSlug: toSlug(tire.model_name),
         season: tire.season || "",
-        price: sitePrice(tire.price_map),
+        price: tirePrice,
         speedRating: tire.speed_rating ?? "",
         loadRating: tire.load_rating ?? "",
         imageUrl: tire.thumbnail_url ?? tire.image_0100_url ?? null,
@@ -107,9 +119,8 @@ export default async function VehicleSizePage({
     }
     const g = grouped.get(key)!;
     g.tireCount++;
-    const sp = sitePrice(tire.price_map);
-    if (sp > 0 && (g.price === 0 || sp < g.price)) {
-      g.price = sp;
+    if (tirePrice > 0 && (g.price === 0 || tirePrice < g.price)) {
+      g.price = tirePrice;
     }
   }
 

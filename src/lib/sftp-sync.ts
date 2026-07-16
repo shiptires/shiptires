@@ -317,6 +317,10 @@ export async function syncTireHubInventory(
     brand: string;
     model: string;
     size: string;
+    manufacturer?: string;
+    description?: string;
+    fet?: number;
+    map_pricing?: number;
     warehouse_quantities: Record<string, number>;
   }> = [];
 
@@ -350,6 +354,10 @@ export async function syncTireHubInventory(
       brand: row.brand,
       model: row.pattern,
       size: row.size,
+      manufacturer: row.manufacturer || undefined,
+      description: row.description || undefined,
+      fet: row.fet || undefined,
+      map_pricing: row.mapPricing || undefined,
       warehouse_quantities: row.warehouseQuantities,
     });
   }

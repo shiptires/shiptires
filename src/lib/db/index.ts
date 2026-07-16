@@ -27,6 +27,8 @@ export {
   getTiresForFeed,
   toSlug,
   getBrandSlugMap,
+  getTireLookupMaps,
+  findPricingAnomalies,
 } from "./turso";
 
 export {
@@ -34,6 +36,7 @@ export {
   tiresToModel,
   brandSummaryToBrand,
   modelSummaryToModel,
+  resolveImage,
 } from "./mappers";
 
 export type {

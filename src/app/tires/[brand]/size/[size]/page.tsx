@@ -3,8 +3,9 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
 import { getBrandBySlug, getTiresByBrandAndSize, getDistinctSizesForBrand, brandSummaryToBrand, toSlug, getAllBrands } from "@/lib/db";
-import { sitePrice } from "@/lib/pricing";
+import { resolveImage } from "@/lib/db/mappers";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
+import { getSitePriceBatch } from "@/lib/pricing";
 import { states } from "@/data/locations";
 
 export const revalidate = 3600;
@@ -45,35 +46,50 @@ export default async function BrandSizePage({ params }: { params: Promise<{ bran
   const allSizes = await getDistinctSizesForBrand(brandSlug);
   const allBrandRows = await getAllBrands();
 
+  // Get real pricing from distributor/competitor pipeline
+  const priceMap = await getSitePriceBatch(
+    tires.filter((t) => t.id).map((t) => ({
+      id: t.id,
+      brand: t.make_name,
+      model: t.model_name,
+      weight: t.weight ? parseFloat(t.weight) || null : null,
+      rimSize: t.rim_size ? parseInt(t.rim_size) || null : null,
+    }))
+  );
+
   // Group tires by model (exclude retreads — not consumer products)
-  const grouped = new Map<string, { modelName: string; modelSlug: string; season: string; price: number; speedRating: string; loadRating: string; imageUrl: string | null; tireCount: number }>();
+  const grouped = new Map<string, { modelName: string; modelSlug: string; season: string; price: number; speedRating: string; loadRating: string; imageUrl: string | undefined; tireCount: number }>();
   for (const tire of tires) {
     if (/retread/i.test(tire.model_name) || /retread/i.test(tire.name ?? "")) continue;
     const key = tire.model_name;
+    const tirePrice = priceMap.get(tire.id) ?? 0;
     if (!grouped.has(key)) {
       grouped.set(key, {
         modelName: tire.model_name,
         modelSlug: toSlug(tire.model_name),
         season: tire.season || "",
-        price: sitePrice(tire.price_map),
+        price: tirePrice,
         speedRating: tire.speed_rating ?? "",
         loadRating: tire.load_rating ?? "",
-        imageUrl: tire.thumbnail_url ?? tire.image_0100_url ?? null,
+        imageUrl: resolveImage(tire.local_thumbnail, tire.thumbnail_url, tire.image_0100_url),
         tireCount: 0,
       });
     }
     const g = grouped.get(key)!;
     g.tireCount++;
-    const sp = sitePrice(tire.price_map);
-    if (sp > 0 && (g.price === 0 || sp < g.price)) {
-      g.price = sp;
+    if (tirePrice > 0 && (g.price === 0 || tirePrice < g.price)) {
+      g.price = tirePrice;
     }
   }
 
-  // Only show models with real pricing (hide no-price items from public display)
+  // Show all models, priced first then unpriced
   const models = [...grouped.values()]
-    .filter((m) => m.price > 0)
-    .sort((a, b) => a.price - b.price);
+    .sort((a, b) => {
+      if (a.price > 0 && b.price <= 0) return -1;
+      if (a.price <= 0 && b.price > 0) return 1;
+      if (a.price > 0 && b.price > 0) return a.price - b.price;
+      return a.modelName.localeCompare(b.modelName);
+    });
 
   // Top 20 cities for cross-links
   const topCities = states

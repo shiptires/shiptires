@@ -53,23 +53,24 @@ async function validateItems(rawItems: CartCreateItem[]): Promise<CartItem[]> {
       );
     }
 
-    // Distributor cost overrides MAP when available
-    const price = await getSitePrice(match.id, match.price_map);
+    // All pricing from Express Tire / competitors — never TireWeb MAP
+    const price = await getSitePrice(match.id, match.make_name, match.model_name, parseFloat(match.weight ?? "") || null);
 
     if (price <= 0) {
-      const priced = result.tires.find(
-        (t) =>
-          toSlug(t.model_name) === item.modelSlug &&
-          (typeof t.price_map === "string"
-            ? parseFloat(t.price_map) > 0
-            : (t.price_map ?? 0) > 0)
-      );
-      if (!priced) {
+      // Try other tire records with same model/size that might be in distributor inventory
+      let pricedPrice = 0;
+      let priced = match;
+      for (const t of result.tires) {
+        if (t.id === match.id) continue;
+        if (toSlug(t.model_name) !== item.modelSlug) continue;
+        const p = await getSitePrice(t.id, t.make_name, t.model_name, parseFloat(t.weight ?? "") || null);
+        if (p > 0) { pricedPrice = p; priced = t; break; }
+      }
+      if (pricedPrice <= 0) {
         throw new Error(
           `Price unavailable for ${item.size} ${match.make_name} ${match.model_name}. Please call (279) 238-8473 for a quote.`
         );
       }
-      const pricedPrice = await getSitePrice(priced.id, priced.price_map);
 
       validated.push({
         brand: priced.make_name,

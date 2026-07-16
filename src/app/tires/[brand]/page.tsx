@@ -74,7 +74,7 @@ export default async function BrandPage({
     .filter((r) => !/retread/i.test(r.model_name))
     .sort((a, b) => (b.tire_count ?? 0) - (a.tire_count ?? 0));
   const allModels = sortedRows.map(modelSummaryToModel);
-  // Only show models with real pricing (page stays alive for SEO)
+  // Only show models with pricing and an image
   const models = allModels.filter((m) => m.priceRange[0] > 0 && m.image);
   const brandRebates = getRebatesForBrand(allRebates, brandRow.make_name);
 

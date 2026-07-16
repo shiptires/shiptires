@@ -1,5 +1,5 @@
 import { getSupabase } from "@/lib/supabase";
-import { processInventoryUpload, logUpload } from "@/lib/inventory-upload";
+import { processInventoryUpload, processSingleWarehouseUpload, logUpload } from "@/lib/inventory-upload";
 
 export const maxDuration = 300;
 
@@ -91,17 +91,35 @@ export async function POST(req: Request) {
     return Response.json({ error: "Empty CSV content" }, { status: 400 });
   }
 
-  // 3. Process the upload
-  try {
-    const result = await processInventoryUpload(csvText, distributor.id);
+  // 3. Check for warehouse parameter
+  const url = new URL(req.url);
+  const warehouseCode = url.searchParams.get("warehouse")?.toUpperCase() ||
+    req.headers.get("x-warehouse-code")?.toUpperCase();
 
-    // 4. Log the upload
+  // 4. Process the upload
+  try {
+    let result;
+    if (warehouseCode) {
+      // Per-warehouse upload: merge into location_costs and warehouse_quantities
+      result = await processSingleWarehouseUpload(csvText, distributor.id, warehouseCode);
+    } else {
+      // Standard full-inventory upload
+      result = await processInventoryUpload(csvText, distributor.id);
+    }
+
+    // 5. Log the upload
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
                req.headers.get("x-real-ip") ||
                "unknown";
-    await logUpload(distributor.id, result, "api", undefined, ip);
+    const filename = warehouseCode ? `warehouse-${warehouseCode}` : undefined;
+    await logUpload(distributor.id, result, "api", filename, ip);
 
-    return Response.json({ ok: true, distributor: distributor.name, ...result });
+    return Response.json({
+      ok: true,
+      distributor: distributor.name,
+      ...(warehouseCode && { warehouse: warehouseCode }),
+      ...result,
+    });
   } catch (e) {
     console.error(`[inventory-upload] Upload failed for ${distributor.slug}:`, e);
     return Response.json(
@@ -135,6 +153,12 @@ export async function GET() {
     ],
     requiredColumns: ["brand", "size", "cost (or price)", "quantity (or qty — optional if warehouse columns present)"],
     optionalColumns: ["model (or pattern)", "part_number (or sku, item#)", "description"],
+    perWarehouseUpload: {
+      description: "Upload a single warehouse's inventory using the ?warehouse=CODE query parameter. This merges costs and quantities into per-warehouse data instead of overwriting everything.",
+      example: 'curl -X POST "https://ship.tires/api/feeds/inventory-upload?warehouse=AZ" -H "Authorization: Bearer YOUR_KEY" -H "Content-Type: text/csv" --data-binary @ShipTiresAZ.csv',
+      note: "cost is stored in location_costs[CODE], quantity in warehouse_quantities[CODE]. Main cost = MIN of all warehouse costs, total quantity = SUM of all warehouse quantities.",
+      alternativeHeader: "You can also pass the warehouse code via the X-Warehouse-Code header.",
+    },
     warehouseSupport: {
       description: "If your CSV has per-warehouse/location quantity columns, they are auto-detected and stored for nearest-warehouse routing",
       recognizedPatterns: ["TLC 100", "RDC 600", "WH 001", "DC 200", "LOC 100", "WAREHOUSE 5"],
@@ -144,6 +168,7 @@ export async function GET() {
       "Column names are auto-detected from the header row",
       "Common aliases are supported (e.g., 'manufacturer' for brand, 'sku' for part_number)",
       "Per-warehouse quantity columns (TLC/RDC/WH/DC/LOC) are auto-detected and stored",
+      "Use ?warehouse=CODE to upload per-warehouse data with different costs",
       "Rows with cost <= 0 are skipped",
       "Items not in the new upload are zeroed out (marked out of stock)",
     ],

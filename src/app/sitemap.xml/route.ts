@@ -1,5 +1,6 @@
 import { wrapSitemapIndex, sitemapResponse } from "@/lib/sitemap-xml";
 import { states } from "@/data/locations";
+import { vehicleMakes } from "@/data/vehicle-content";
 
 const BASE = "https://ship.tires";
 
@@ -10,9 +11,16 @@ export async function GET() {
     { loc: `${BASE}/sitemaps/brands.xml`, lastmod: now },
     { loc: `${BASE}/sitemaps/products.xml`, lastmod: now },
     { loc: `${BASE}/sitemaps/sizes.xml`, lastmod: now },
-    { loc: `${BASE}/sitemaps/vehicles.xml`, lastmod: now },
     { loc: `${BASE}/sitemaps/llm.xml`, lastmod: now },
   ];
+
+  // Per-make vehicle sitemaps
+  for (const make of vehicleMakes) {
+    sitemaps.push({
+      loc: `${BASE}/sitemaps/vehicles/${make.slug}`,
+      lastmod: now,
+    });
+  }
 
   // Per-state location sitemaps
   for (const state of states) {

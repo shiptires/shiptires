@@ -17,7 +17,8 @@ import { getVehiclesForSize } from "@/data/tire-sizes";
 import { getLogoUrl } from "@/lib/api-helpers";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { parseUTQG, treadwearLabel } from "@/lib/utqg";
-import { getSitePrice, getSitePriceBatch } from "@/lib/pricing";
+import { getSitePrice } from "@/lib/pricing";
+import { resolveImage } from "@/lib/db/mappers";
 import CartSidebar from "@/components/CartSidebar";
 import AddToCartButton from "@/components/AddToCartButton";
 import QuantityPicker from "@/components/QuantityPicker";
@@ -98,7 +99,10 @@ function buildSize(tire: {
   if (tire.width && tire.aspect_ratio && tire.rim_size) {
     return `${tire.width}/${tire.aspect_ratio}R${tire.rim_size}`;
   }
-  if (tire.width && tire.rim_size) {
+  if (tire.width && tire.rim_size && !tire.aspect_ratio) {
+    // Flotation/LT sizes — extract full size from tire name (e.g. "35X12.50R20LT")
+    const flotMatch = tire.name.match(/(\d{2,3}[Xx]\d{1,2}(?:\.\d{1,2})?R\d{2}(?:LT)?)/i);
+    if (flotMatch) return flotMatch[1].toUpperCase();
     return `${tire.width}R${tire.rim_size}`;
   }
   return tire.name;
@@ -144,6 +148,7 @@ const resolveTire = cache(_resolveTire);
 const cachedGetModelBySlug = cache(getModelBySlug);
 const cachedGetSitePrice = cache(getSitePrice);
 
+
 export async function generateMetadata({
   params,
 }: {
@@ -157,7 +162,7 @@ export async function generateMetadata({
   const { tire } = result;
   const size = buildSize(tire);
   const sizeSlug = toSizeSlug(tire) || param;
-  const price = await cachedGetSitePrice(tire.id, tire.price_map);
+  const price = await cachedGetSitePrice(tire.id, tire.make_name, tire.model_name);
 
   return {
     title: `${tire.make_name} ${tire.model_name} ${size} Tire — $${price > 0 ? price.toFixed(2) : "Call"} | Free Shipping`,
@@ -215,7 +220,7 @@ export default async function TireSizePage({
     : Promise.resolve([] as TireRow[]);
 
   const [price, sameSizeTires] = await Promise.all([
-    cachedGetSitePrice(tire.id, tire.price_map),
+    cachedGetSitePrice(tire.id, tire.make_name, tire.model_name),
     altPromise,
   ]);
 
@@ -259,27 +264,19 @@ export default async function TireSizePage({
   const relatedSizes =
     model?.sizes.filter((s) => s.tireId !== tire.id && s.price > 0).slice(0, 8) ?? [];
 
-  // Alternative tires in the same size from other brands — batch pricing (2 queries total)
+  // Alternative tires in the same size from other brands — use price_map for speed
   let alternatives: { brand: string; brandSlug: string; model: string; modelSlug: string; price: number; image: string | null }[] = [];
   {
     const seen = new Set<string>();
-    const altCandidates: TireRow[] = [];
     for (const alt of sameSizeTires) {
+      if (alternatives.length >= 6) break;
       const key = `${toSlug(alt.make_name)}-${toSlug(alt.model_name)}`;
       if (seen.has(key)) continue;
       if (toSlug(alt.make_name) === brandSlug && toSlug(alt.model_name) === modelSlug) continue;
       seen.add(key);
-      altCandidates.push(alt);
-    }
-    // Single batch call instead of N individual getSitePrice calls
-    const altPriceMap = await getSitePriceBatch(
-      altCandidates.map((alt) => ({ id: alt.id, price_map: alt.price_map, weight: alt.weight ? parseFloat(alt.weight) || null : null }))
-    );
-    for (const alt of altCandidates) {
-      if (alternatives.length >= 6) break;
-      const altPrice = altPriceMap.get(alt.id) ?? 0;
+      const altPrice = alt.price_map ? Number(alt.price_map) : 0;
       if (altPrice <= 0) continue;
-      const altImage = alt.thumbnail_url || alt.angle_image_url || null;
+      const altImage = resolveImage(alt.local_thumbnail, alt.thumbnail_url, alt.image_0100_url);
       if (!altImage) continue;
       alternatives.push({
         brand: alt.make_name,
@@ -287,7 +284,7 @@ export default async function TireSizePage({
         model: alt.model_name,
         modelSlug: toSlug(alt.model_name),
         price: altPrice,
-        image: alt.thumbnail_url || alt.angle_image_url || null,
+        image: altImage,
       });
     }
     alternatives.sort((a, b) => a.price - b.price);

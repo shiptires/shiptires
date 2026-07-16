@@ -14,8 +14,9 @@ export async function GET(
     const limit = parseInt(url.searchParams.get("limit") || "50");
     const offset = parseInt(url.searchParams.get("offset") || "0");
     const search = url.searchParams.get("search") || undefined;
+    const brand = url.searchParams.get("brand") || undefined;
 
-    const result = await getInventory(id, { limit, offset, search });
+    const result = await getInventory(id, { limit, offset, search, brand });
     return Response.json(result);
   } catch (e) {
     return Response.json(
@@ -52,6 +53,10 @@ export async function POST(
       brand: body.brand,
       model: body.model,
       size: body.size,
+      manufacturer: body.manufacturer,
+      description: body.description,
+      fet: body.fet,
+      map_pricing: body.map_pricing,
     });
 
     return Response.json({ item }, { status: 201 });

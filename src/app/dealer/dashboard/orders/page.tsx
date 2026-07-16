@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 
 interface DealerOrder {
   id: string;
-  stripe_session_id: string;
+  payment_id: string | null;
+  stripe_session_id?: string;
   items: Array<{ brand: string; model: string; size: string; qty: number; price: number }>;
   total: number;
   status: string;
@@ -32,11 +33,14 @@ export default function DealerOrdersPage() {
   }, []);
 
   const statusColors: Record<string, string> = {
+    pending_payment: "bg-amber-100 text-amber-700",
     paid: "bg-green-100 text-green-700",
     processing: "bg-yellow-100 text-yellow-700",
     shipped: "bg-blue-100 text-blue-700",
     delivered: "bg-gray-100 text-gray-700",
     cancelled: "bg-red-100 text-red-700",
+    returned: "bg-red-100 text-red-700",
+    payment_failed: "bg-red-100 text-red-700",
   };
 
   return (

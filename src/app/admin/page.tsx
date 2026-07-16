@@ -11,7 +11,7 @@ async function getStats() {
     supabase.from("tire_orders").select("id", { count: "exact", head: true }),
     supabase.from("tire_orders").select("subtotal"),
     supabase.from("tire_customers").select("id", { count: "exact", head: true }),
-    supabase.from("tire_inventory").select("id", { count: "exact", head: true }).eq("active", true),
+    supabase.from("distributor_inventory").select("id", { count: "exact", head: true }).gt("quantity", 0),
   ]);
 
   const revenue = (revenueRes.data || []).reduce(

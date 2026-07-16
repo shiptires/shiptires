@@ -5,7 +5,7 @@ import { getMakeContent, getModelsForMake, vehicleMakes } from "@/data/vehicle-c
 import { searchTires } from "@/lib/db";
 import type { TireRow } from "@/lib/db";
 import { isCuratedBrand } from "@/lib/curated-brands";
-import { sitePrice } from "@/lib/pricing";
+import { getSitePriceBatch } from "@/lib/pricing";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { getVehicleImage } from "@/lib/vehicle-image";
 
@@ -79,6 +79,17 @@ export default async function VehicleMakePage({
     }
   }
   const sampleTires = [...sampleTireMap.values()].slice(0, 16);
+
+  // Get real pricing from distributor/competitor pipeline for sample tires
+  const priceMap = await getSitePriceBatch(
+    sampleTires.filter((t) => t.id).map((t) => ({
+      id: t.id,
+      brand: t.make_name,
+      model: t.model_name,
+      weight: t.weight ? parseFloat(t.weight) || null : null,
+      rimSize: t.rim_size ? parseInt(t.rim_size) || null : null,
+    }))
+  );
 
   // Map each vehicle size to a tire that has that size (for model card images)
   const tireBySize = new Map<string, TireRow>();
@@ -345,9 +356,9 @@ export default async function VehicleMakePage({
                         <h3 className="text-sm font-bold text-gray-900 group-hover:text-safety-orange transition-colors truncate">
                           {tire.model_name}
                         </h3>
-                        {sitePrice(tire.price_map) > 0 && (
+                        {(priceMap.get(tire.id) ?? 0) > 0 && (
                           <div className="mt-1">
-                            <span className="text-base font-bold text-gray-900">${sitePrice(tire.price_map).toFixed(2)}</span>
+                            <span className="text-base font-bold text-gray-900">${(priceMap.get(tire.id) ?? 0).toFixed(2)}</span>
                             <span className="text-xs text-gray-500">/tire</span>
                           </div>
                         )}

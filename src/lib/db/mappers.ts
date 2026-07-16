@@ -1,7 +1,7 @@
 import type { Brand, TireModel, TireSize, TireType } from "@/lib/types";
 import type { TireRow, BrandSummaryRow, ModelSummaryRow, TireModelDetailsRow } from "./types";
 import { toSlug } from "./sqlite";
-import { sitePrice } from "@/lib/pricing";
+// sitePrice import removed — all pricing now comes from Express Tire / competitors, not TireWeb MAP
 import { getBrandLogo } from "../curated-brands";
 
 // ---------------------------------------------------------------------------
@@ -51,14 +51,22 @@ export function tireRowToSize(row: TireRow): TireSize {
   const width = row.width ?? "";
   const aspect = row.aspect_ratio ?? "";
   const rim = row.rim_size ?? "";
-  const size =
-    width && aspect && rim ? `${width}/${aspect}R${rim}` : row.name;
+  let size: string;
+  if (width && aspect && rim) {
+    size = `${width}/${aspect}R${rim}`;
+  } else if (width && rim && !aspect) {
+    // Flotation/LT sizes — extract full size from tire name (e.g. "35X12.50R20LT")
+    const flotMatch = row.name?.match(/(\d{2,3}[Xx]\d{1,2}(?:\.\d{1,2})?R\d{2}(?:LT)?)/i);
+    size = flotMatch ? flotMatch[1].toUpperCase() : `${width}R${rim}`;
+  } else {
+    size = row.name;
+  }
 
   return {
     size,
     loadIndex: parseInt(row.load_rating ?? "0") || 0,
     speedRating: row.speed_rating ?? "",
-    price: sitePrice(row.price_map),
+    price: 0, // overridden by distributor/competitor pricing in getSitePrice/applyDistributorPricing
     tireId: row.id,
     imageUrl: resolveImage(row.local_thumbnail, row.thumbnail_url, row.image_0100_url),
     thumbnailUrl: resolveImage(row.local_thumbnail, row.thumbnail_url, row.image_0100_url),
@@ -70,13 +78,14 @@ export function tireRowToSize(row: TireRow): TireSize {
   };
 }
 
-/** Collect all unique image URLs for a model from a representative tire row. */
+/** Collect all unique image URLs for a model from a representative tire row.
+ *  Side profile is first (best visual for product pages), then angle, front, thumbnail, etc. */
 function collectModelImages(row: TireRow): string[] {
   const candidates = [
-    resolveImage(row.local_thumbnail, row.thumbnail_url),
+    resolveImage(row.local_side, row.side_image_url),
     resolveImage(row.local_angle, row.angle_image_url),
     resolveImage(row.local_front, row.front_image_url),
-    resolveImage(row.local_side, row.side_image_url),
+    resolveImage(row.local_thumbnail, row.thumbnail_url),
     resolveImage(row.local_side2, row.side2_image_url),
     resolveImage(null, row.image_0100_url),
     resolveImage(null, row.image_0200_url),
@@ -96,10 +105,13 @@ function collectModelImages(row: TireRow): string[] {
 
 const R2_BASE = "https://pub-1404e52fd5554e9dac9a045b7bb89f22.r2.dev";
 
-/** Resolve image URL: local paths → R2 URL, remote URLs pass through. */
-function resolveImage(...sources: (string | null | undefined)[]): string | undefined {
+/** Resolve image URL: local paths → R2 URL, remote URLs pass through.
+ *  Skips known-dead external hosts (GCS autosync bucket was decommissioned). */
+export function resolveImage(...sources: (string | null | undefined)[]): string | undefined {
   for (const src of sources) {
     if (!src || src === "FAILED") continue;
+    // Skip decommissioned Google Cloud Storage bucket — files no longer exist
+    if (src.includes("storage.googleapis.com/autosync_tires")) continue;
     // Local path from sync (e.g. "images/tires/abc.webp") → R2 URL
     if (src.startsWith("images/") || src.startsWith("images\\")) {
       // Strip "images/" prefix: "images/tires/abc.webp" → "tires/abc.webp"
@@ -131,7 +143,21 @@ export function tiresToModel(
   brandName?: string,
   modelDetails?: TireModelDetailsRow
 ): TireModel {
-  const sizes = tires.map(tireRowToSize);
+  const allSizes = tires.map(tireRowToSize);
+
+  // Deduplicate: same size + load + speed = same product; keep best price
+  const sizeMap = new Map<string, TireSize>();
+  for (const s of allSizes) {
+    const key = `${s.size}|${s.loadIndex}|${s.speedRating}`;
+    const existing = sizeMap.get(key);
+    if (!existing) {
+      sizeMap.set(key, s);
+    } else if (s.price > 0 && (existing.price <= 0 || s.price < existing.price)) {
+      sizeMap.set(key, s);
+    }
+  }
+  const sizes = [...sizeMap.values()];
+
   const pricesWithValue = sizes.map((s) => s.price).filter((p) => p > 0);
   const minPrice =
     pricesWithValue.length > 0 ? Math.min(...pricesWithValue) : 0;
@@ -154,8 +180,26 @@ export function tiresToModel(
   const typeLabel = typeLabels[type];
   if (typeLabel) features.push(`${typeLabel} Tire`);
 
-  // Find the best tire row for images — prefer one that actually has image URLs
-  const imageRow = tires.find((t) => t.thumbnail_url || t.image_0100_url || t.local_thumbnail) ?? first;
+  // Find the best tire row for images — prefer one with the most image angles
+  const imageRow = tires.reduce((best, t) => {
+    const count = [
+      t.side_image_url || t.local_side,
+      t.angle_image_url || t.local_angle,
+      t.front_image_url || t.local_front,
+      t.thumbnail_url || t.local_thumbnail,
+      t.side2_image_url || t.local_side2,
+      t.image_0100_url,
+    ].filter((v) => v && v !== "FAILED").length;
+    const bestCount = [
+      best.side_image_url || best.local_side,
+      best.angle_image_url || best.local_angle,
+      best.front_image_url || best.local_front,
+      best.thumbnail_url || best.local_thumbnail,
+      best.side2_image_url || best.local_side2,
+      best.image_0100_url,
+    ].filter((v) => v && v !== "FAILED").length;
+    return count > bestCount ? t : best;
+  }, first);
 
   const image = resolveImage(imageRow.local_thumbnail, imageRow.thumbnail_url, imageRow.image_0100_url);
 
@@ -295,9 +339,9 @@ export function modelSummaryToModel(row: ModelSummaryRow): TireModel {
     features: [],
     warranty: "",
     speedRatings: [],
-    priceRange: [sitePrice(row.min_price), sitePrice(row.max_price)],
+    priceRange: [Number(row.min_price) || 0, Number(row.max_price) || 0],
     description: `${row.model_name} — ${row.tire_count} size${row.tire_count !== 1 ? "s" : ""} available.`,
-    image: row.thumbnail_url ?? undefined,
+    image: resolveImage(row.thumbnail_url),
   };
 }
 

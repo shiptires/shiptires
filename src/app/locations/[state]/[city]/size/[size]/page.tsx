@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { states } from "@/data/locations";
 import { getAllBrands, brandSummaryToBrand, getTiresBySize, toSlug } from "@/lib/db";
 import { findState, findCity } from "@/lib/location-seo";
-import { sitePrice } from "@/lib/pricing";
+import { getSitePriceBatch } from "@/lib/pricing";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 
 export const revalidate = 3600;
@@ -42,10 +42,22 @@ export default async function CitySizePage({ params }: { params: Promise<{ state
   const allBrandRows = await getAllBrands();
   const brands = allBrandRows.map(brandSummaryToBrand);
 
+  // Get real pricing from distributor/competitor pipeline
+  const priceMap = await getSitePriceBatch(
+    tires.filter((t) => t.id).map((t) => ({
+      id: t.id,
+      brand: t.make_name,
+      model: t.model_name,
+      weight: t.weight ? parseFloat(t.weight) || null : null,
+      rimSize: t.rim_size ? parseInt(t.rim_size) || null : null,
+    }))
+  );
+
   // Group tires by brand+model
   const grouped = new Map<string, { brandName: string; brandSlug: string; modelName: string; modelSlug: string; season: string; price: number; speedRating: string; loadRating: string; tireCount: number }>();
   for (const tire of tires) {
     const key = `${tire.make_name}|||${tire.model_name}`;
+    const tirePrice = priceMap.get(tire.id) ?? 0;
     if (!grouped.has(key)) {
       grouped.set(key, {
         brandName: tire.make_name,
@@ -53,7 +65,7 @@ export default async function CitySizePage({ params }: { params: Promise<{ state
         modelName: tire.model_name,
         modelSlug: toSlug(tire.model_name),
         season: tire.season || "",
-        price: sitePrice(tire.price_map),
+        price: tirePrice,
         speedRating: tire.speed_rating ?? "",
         loadRating: tire.load_rating ?? "",
         tireCount: 0,
@@ -61,9 +73,8 @@ export default async function CitySizePage({ params }: { params: Promise<{ state
     }
     const g = grouped.get(key)!;
     g.tireCount++;
-    const sp = sitePrice(tire.price_map);
-    if (sp > 0 && (g.price === 0 || sp < g.price)) {
-      g.price = sp;
+    if (tirePrice > 0 && (g.price === 0 || tirePrice < g.price)) {
+      g.price = tirePrice;
     }
   }
 

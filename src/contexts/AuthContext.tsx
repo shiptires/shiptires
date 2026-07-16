@@ -53,17 +53,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const supabase = createClient();
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    const { data } = await supabase
-      .from("customer_profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
+  const fetchProfile = useCallback(async (userId: string, authUser?: User) => {
+    try {
+      const { data } = await supabase
+        .from("customer_profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
 
-    if (data) {
-      setProfile(data as CustomerProfile);
+      if (data) {
+        setProfile(data as CustomerProfile);
+        return;
+      }
+    } catch {
+      // DB row doesn't exist or query failed — fall through
     }
-  }, [supabase]);
+
+    // No DB profile — build a default from auth metadata so pages don't hang
+    const u = authUser ?? user;
+    if (u) {
+      setProfile({
+        id: u.id,
+        email: u.email || "",
+        full_name: u.user_metadata?.full_name || u.user_metadata?.name || "",
+        phone: "",
+        avatar_url: u.user_metadata?.avatar_url || "",
+        vehicles: [],
+        saved_addresses: [],
+      });
+    }
+  }, [supabase, user]);
 
   const refreshProfile = useCallback(async () => {
     if (user) {
@@ -78,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          await fetchProfile(session.user.id, session.user);
         } else {
           setProfile(null);
         }
@@ -93,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        fetchProfile(session.user.id);
+        fetchProfile(session.user.id, session.user);
       }
 
       setLoading(false);

@@ -10,14 +10,30 @@ const BROWSE_URL = `${EBAY_API}/buy/browse/v1`;
 const EBAY_MOTORS_SITE_ID = "100";
 const EBAY_CATEGORY_ID = "179680"; // eBay Motors > Tires
 const LISTING_QUANTITY = 50;
-const MAP_MARKUP = 1.15; // 15% above MAP fallback
-
 // ── eBay marketplace fees ───────────────────────────────────
-// Final Value Fee (~13.25%) + misc buffer (3%) = 16.25% total
-// Formula: base_price / (1 - total_fee_rate) so seller nets the base after eBay takes fees
-const EBAY_FVF_RATE = 0.1325; // eBay final value fee
-const EBAY_MISC_RATE = 0.03;  // misc (payment processing, buffer)
-const EBAY_TOTAL_FEE = EBAY_FVF_RATE + EBAY_MISC_RATE; // 0.1625
+// eBay charges FVF on the TOTAL including sales tax collected.
+// Final Value Fee (~13.25%) applies to item price + shipping + tax.
+// Average US sales tax ~7.5% → FVF on tax = 13.25% × 7.5% ≈ 0.994%
+// Misc 2% covers payment processing + buffer.
+// Tiered margin: cost ≤ $50 → $10, cost $51-$200 → $15, cost > $200 → $20 net profit.
+const EBAY_FVF_RATE = 0.1325;       // eBay final value fee
+const EBAY_FVF_TAX_RATE = 0.009938; // FVF on avg sales tax (13.25% × 7.5%)
+const EBAY_MISC_RATE = 0.02;        // payment processing + buffer
+const EBAY_SHIPPING_FVF = 1.1325;   // shipping × (1 + FVF) since FVF applies to shipping too
+const EBAY_PRICE_FACTOR = 1 - EBAY_FVF_RATE - EBAY_FVF_TAX_RATE - EBAY_MISC_RATE; // ~0.8376
+// Tiered margin: cheap ($10), mid ($15), expensive ($20)
+const MARGIN_LOW = 10;              // cost ≤ $50
+const MARGIN_MID = 15;              // cost $51-$200
+const MARGIN_HIGH = 20;             // cost > $200
+const MARGIN_THRESHOLD_LOW = 50;    // low tier ceiling
+const MARGIN_THRESHOLD_HIGH = 200;  // mid tier ceiling
+
+/** Get margin based on distributor cost tier */
+export function getDesiredMargin(cost: number): number {
+  if (cost <= MARGIN_THRESHOLD_LOW) return MARGIN_LOW;
+  if (cost <= MARGIN_THRESHOLD_HIGH) return MARGIN_MID;
+  return MARGIN_HIGH;
+}
 
 // ── OAuth token cache ───────────────────────────────────────
 let _cachedToken: { token: string; expiresAt: number } | null = null;
@@ -154,6 +170,7 @@ async function tradingApiCall(
       "X-EBAY-API-SITEID": EBAY_MOTORS_SITE_ID,
     },
     body: xml,
+    signal: AbortSignal.timeout(30_000), // 30s timeout per eBay call
   });
   const text = await res.text();
   const parsed = parseTradingResponse(text);
@@ -221,6 +238,10 @@ function buildAddItemXml(
     <PictureDetails>
 ${(item.imageUrls.length > 0 ? item.imageUrls : [item.imageUrl]).map((url) => `      <PictureURL>${escapeXml(url)}</PictureURL>`).join("\n")}
     </PictureDetails>
+    <ProductListingDetails>
+      <IncludeeBayProductDetails>false</IncludeeBayProductDetails>
+      <IncludeStockPhotoURL>false</IncludeStockPhotoURL>
+    </ProductListingDetails>
     <ItemSpecifics>
 ${specificsXml}
     </ItemSpecifics>
@@ -285,30 +306,23 @@ export async function getActiveListings(
   entriesPerPage = 50
 ): Promise<GetActiveListingsResult> {
   const token = await getAccessToken();
+  // Use GetMyeBaySelling — designed to list seller's active items
   const xml = `<?xml version="1.0" encoding="utf-8"?>
-<GetSellerListRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+<GetMyeBaySellingRequest xmlns="urn:ebay:apis:eBLBaseComponents">
   <RequesterCredentials>
     <eBayAuthToken>${token}</eBayAuthToken>
   </RequesterCredentials>
   <ErrorLanguage>en_US</ErrorLanguage>
-  <ActiveList>true</ActiveList>
-  <EndTimeFrom>${new Date().toISOString()}</EndTimeFrom>
-  <EndTimeTo>${new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString()}</EndTimeTo>
-  <GranularityLevel>Fine</GranularityLevel>
-  <Pagination>
-    <EntriesPerPage>${entriesPerPage}</EntriesPerPage>
-    <PageNumber>${page}</PageNumber>
-  </Pagination>
-  <OutputSelector>ItemID</OutputSelector>
-  <OutputSelector>SKU</OutputSelector>
-  <OutputSelector>Title</OutputSelector>
-  <OutputSelector>SellingStatus</OutputSelector>
-  <OutputSelector>Quantity</OutputSelector>
-  <OutputSelector>PictureDetails</OutputSelector>
-  <OutputSelector>PaginationResult</OutputSelector>
-</GetSellerListRequest>`;
+  <ActiveList>
+    <Sort>TimeLeft</Sort>
+    <Pagination>
+      <EntriesPerPage>${entriesPerPage}</EntriesPerPage>
+      <PageNumber>${page}</PageNumber>
+    </Pagination>
+  </ActiveList>
+</GetMyeBaySellingRequest>`;
 
-  const result = await tradingApiCall("GetSellerList", xml);
+  const result = await tradingApiCall("GetMyeBaySelling", xml);
 
   if (result.ack === "Failure") {
     const realErrors = result.errors.filter((e) => e.severity === "Error");
@@ -319,25 +333,52 @@ export async function getActiveListings(
 
   // Parse items from XML
   const items: EbayActiveItem[] = [];
-  const itemRegex = /<Item>([\s\S]*?)<\/Item>/g;
+  const rawXml = result.rawXml;
+
+  // eBay GetSellerList can wrap items in:
+  //   <ItemArray><Item>...</Item></ItemArray>
+  //   OR <ActiveList><ItemArray><Item>...</Item></ItemArray></ActiveList>
+  // Scope to whatever contains items, then extract all ItemID values
+  const arrayMatch = rawXml.match(/<ItemArray>([\s\S]*?)<\/ItemArray>/);
+  const itemArrayXml = arrayMatch ? arrayMatch[1] : rawXml;
+
+  // Use a robust approach: find all <Item>...</Item> blocks
+  // The key insight: eBay items don't nest <Item> inside <Item>,
+  // so we can safely use a regex that matches from <Item> to the next </Item>
+  const itemRegex = /<Item\b[^>]*>([\s\S]*?)<\/Item>/g;
   let match: RegExpExecArray | null;
-  while ((match = itemRegex.exec(result.rawXml)) !== null) {
+  while ((match = itemRegex.exec(itemArrayXml)) !== null) {
     const block = match[1];
     const itemId = block.match(/<ItemID>(\d+)<\/ItemID>/)?.[1] || "";
+    if (!itemId) continue;
+
     const sku = unescapeXml(block.match(/<SKU>([\s\S]*?)<\/SKU>/)?.[1] || "");
     const title = unescapeXml(block.match(/<Title>([\s\S]*?)<\/Title>/)?.[1] || "");
     const priceStr = block.match(/<CurrentPrice[^>]*>([\d.]+)<\/CurrentPrice>/)?.[1];
     const quantity = parseInt(block.match(/<Quantity>(\d+)<\/Quantity>/)?.[1] || "0");
     const imageUrl = block.match(/<PictureURL>([\s\S]*?)<\/PictureURL>/)?.[1] || "";
 
-    if (itemId) {
+    items.push({
+      itemId,
+      sku,
+      title,
+      price: priceStr ? parseFloat(priceStr) : 0,
+      quantity,
+      imageUrl,
+    });
+  }
+
+  // Fallback: if regex didn't match but we know items exist, extract ItemIDs directly
+  if (items.length === 0) {
+    const idMatches = itemArrayXml.matchAll(/<ItemID>(\d+)<\/ItemID>/g);
+    for (const m of idMatches) {
       items.push({
-        itemId,
-        sku,
-        title,
-        price: priceStr ? parseFloat(priceStr) : 0,
-        quantity,
-        imageUrl,
+        itemId: m[1],
+        sku: "",
+        title: "",
+        price: 0,
+        quantity: 0,
+        imageUrl: "",
       });
     }
   }
@@ -351,6 +392,52 @@ export async function getActiveListings(
   );
 
   return { items, totalPages, totalEntries };
+}
+
+/** Debug version — returns raw XML snippet for diagnosing parsing issues */
+export async function getActiveListingsDebug(
+  page = 1,
+  entriesPerPage = 5
+): Promise<{ rawXmlSnippet: string; totalEntries: number; itemsFound: number; hasItemArray: boolean; firstItemBlock: string | null }> {
+  const token = await getAccessToken();
+  const xml = `<?xml version="1.0" encoding="utf-8"?>
+<GetMyeBaySellingRequest xmlns="urn:ebay:apis:eBLBaseComponents">
+  <RequesterCredentials>
+    <eBayAuthToken>${token}</eBayAuthToken>
+  </RequesterCredentials>
+  <ErrorLanguage>en_US</ErrorLanguage>
+  <ActiveList>
+    <Sort>TimeLeft</Sort>
+    <Pagination>
+      <EntriesPerPage>${entriesPerPage}</EntriesPerPage>
+      <PageNumber>${page}</PageNumber>
+    </Pagination>
+  </ActiveList>
+</GetMyeBaySellingRequest>`;
+
+  const result = await tradingApiCall("GetMyeBaySelling", xml);
+  const rawXml = result.rawXml;
+
+  const totalEntries = parseInt(
+    rawXml.match(/<TotalNumberOfEntries>(\d+)<\/TotalNumberOfEntries>/)?.[1] || "0"
+  );
+  const hasItemArray = rawXml.includes("<ItemArray>");
+
+  // Find first <Item> block
+  let firstItemBlock: string | null = null;
+  const firstItem = rawXml.match(/<Item>([\s\S]*?)<\/Item>/);
+  if (firstItem) firstItemBlock = firstItem[0].slice(0, 500);
+
+  // Find all ItemIDs anywhere
+  const allItemIds = rawXml.match(/<ItemID>\d+<\/ItemID>/g) || [];
+
+  return {
+    rawXmlSnippet: rawXml.slice(0, 3000),
+    totalEntries,
+    itemsFound: allItemIds.length,
+    hasItemArray,
+    firstItemBlock,
+  };
 }
 
 // ── Trading API — EndFixedPriceItem ─────────────────────────
@@ -419,6 +506,10 @@ export async function revisePrice(
   <Item>
     <ItemID>${itemId}</ItemID>
     <StartPrice currencyID="USD">${newPrice.toFixed(2)}</StartPrice>
+    <ProductListingDetails>
+      <IncludeeBayProductDetails>false</IncludeeBayProductDetails>
+      <IncludeStockPhotoURL>false</IncludeStockPhotoURL>
+    </ProductListingDetails>
   </Item>
 </ReviseFixedPriceItemRequest>`;
 
@@ -454,6 +545,10 @@ export async function reviseItemWithImages(
   <Item>
     <ItemID>${itemId}</ItemID>
     <StartPrice currencyID="USD">${newPrice.toFixed(2)}</StartPrice>
+    <ProductListingDetails>
+      <IncludeeBayProductDetails>false</IncludeeBayProductDetails>
+      <IncludeStockPhotoURL>false</IncludeStockPhotoURL>
+    </ProductListingDetails>
 ${pictureXml}
   </Item>
 </ReviseFixedPriceItemRequest>`;
@@ -732,53 +827,42 @@ function buildEbayDescription(tire: TireRow): string {
   return lines.join("\n");
 }
 
-/** Calculate the base (site) price for a tire — MAP * markup or competitive */
-export function calculateBasePrice(tire: TireRow, competitivePrice: number | null): number {
-  const mapPrice = tire.price_map ?? 0;
-  const fallback = mapPrice * MAP_MARKUP;
-
-  if (competitivePrice !== null && competitivePrice > 0) {
-    // Match lowest competitor minus a penny, but don't go below MAP
-    const competitive = competitivePrice - 0.01;
-    if (competitive >= mapPrice) {
-      return Math.min(competitive, fallback);
-    }
-    // Competitor is below MAP — use MAP + markup
-    return fallback;
-  }
-
-  return fallback;
-}
-
 /**
- * Calculate the site display price for a tire.
- * This is the eBay price minus eBay fees — i.e. the base price the seller nets.
- * Site buyers don't pay eBay fees, so the site price = base price (MAP * markup).
+ * Calculate the site display price for a tire from distributor cost.
+ * Uses the same cost-based formula as eBay but without eBay fee grossup.
  */
 export function calculateSitePrice(tire: TireRow): number {
-  const basePrice = calculateBasePrice(tire, null);
-  return Math.round(basePrice * 100) / 100;
+  // Site price = cost + shipping + margin (no eBay fees to cover)
+  const cost = (tire as unknown as Record<string, unknown>).cost as number | undefined;
+  if (!cost || cost <= 0) return 0;
+  const weightLbs = tire.weight ? parseFloat(tire.weight) : null;
+  const shipping = getShippingEstimate(weightLbs);
+  return Math.round((cost + shipping + getDesiredMargin(cost)) * 100) / 100;
 }
 
-/** Calculate the eBay listing price — base price adjusted to cover marketplace fees */
-function calculatePrice(tire: TireRow, competitivePrice: number | null): number {
-  const basePrice = calculateBasePrice(tire, competitivePrice);
-  if (basePrice <= 0) return 0;
-  // Gross up so that after eBay takes fees, we net the base price
-  return Math.round((basePrice / (1 - EBAY_TOTAL_FEE)) * 100) / 100;
+/** Estimate shipping cost from tire weight */
+function getShippingEstimate(weightLbs: number | null): number {
+  if (!weightLbs || weightLbs <= 0) return 55; // default
+  if (weightLbs <= 25) return 40;
+  if (weightLbs <= 50) return 55;
+  if (weightLbs <= 75) return 72;
+  return 99;
 }
 
 // ── Distributor pricing ──────────────────────────────────────
 
-/** Calculate the eBay sell price from distributor cost + fees */
+/**
+ * Calculate the eBay sell price from distributor cost + shipping + tiered margin.
+ * Formula: price = (cost + shipping×1.1325 + margin) / 0.8376
+ * Margin: $10 for cost ≤ $50, $15 for cost > $50.
+ */
 export function calculateDistributorPrice(
   cost: number,
   shippingCost: number,
-  ebayFvf: number,
-  miscRate: number,
-  marginRate: number
+  margin?: number
 ): number {
-  return Math.round(((cost + shippingCost) / (1 - ebayFvf - miscRate - marginRate)) * 100) / 100;
+  const m = margin ?? getDesiredMargin(cost);
+  return Math.round(((cost + shippingCost * EBAY_SHIPPING_FVF + m) / EBAY_PRICE_FACTOR) * 100) / 100;
 }
 
 /** Map a DB tire + distributor pricing to an eBay listing */
@@ -816,8 +900,8 @@ export function distributorToEbayItem(
   if (tire.terrain) itemSpecifics["Performance Category"] = tire.terrain;
   if (tire.ply_rating) itemSpecifics["Ply Rating"] = tire.ply_rating;
   if (tire.load_range) itemSpecifics["Load Range"] = tire.load_range;
-  if (tire.upc) itemSpecifics["UPC"] = tire.upc;
-  if (tire.ean) itemSpecifics["EAN"] = tire.ean;
+  if (tire.upc) itemSpecifics["UPC"] = tire.upc.split(/[,()]/)[0].trim().slice(0, 65);
+  if (tire.ean) itemSpecifics["EAN"] = tire.ean.split(/[,()]/)[0].trim().slice(0, 65);
 
   return {
     title,
@@ -839,7 +923,7 @@ export function tireToSku(tire: TireRow): string {
 /** Map a TireRow to eBay Trading API listing input */
 export function tireToEbayItem(
   tire: TireRow,
-  competitivePrice?: number | null
+  ebayPrice: number
 ): { listing: EbayListingInput; price: number } | null {
   const imageUrls = resolveAllImageUrls(tire);
   const imageUrl = imageUrls[0] || null;
@@ -848,8 +932,8 @@ export function tireToEbayItem(
   const mpn = tire.item_number || tire.gm_code;
   if (!mpn && !tire.ean && !tire.upc) return null;
 
-  const price = calculatePrice(tire, competitivePrice ?? null);
-  if (price <= 0) return null;
+  if (ebayPrice <= 0) return null;
+  const price = ebayPrice;
 
   // Resolve size fields — fall back to parsing from name
   const parsed = parseSizeFromName(tire.name);
@@ -880,8 +964,8 @@ export function tireToEbayItem(
   if (tire.terrain) itemSpecifics["Performance Category"] = tire.terrain;
   if (tire.ply_rating) itemSpecifics["Ply Rating"] = tire.ply_rating;
   if (tire.load_range) itemSpecifics["Load Range"] = tire.load_range;
-  if (tire.upc) itemSpecifics["UPC"] = tire.upc;
-  if (tire.ean) itemSpecifics["EAN"] = tire.ean;
+  if (tire.upc) itemSpecifics["UPC"] = tire.upc.split(/[,()]/)[0].trim().slice(0, 65);
+  if (tire.ean) itemSpecifics["EAN"] = tire.ean.split(/[,()]/)[0].trim().slice(0, 65);
 
   const listing: EbayListingInput = {
     title,

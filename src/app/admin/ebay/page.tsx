@@ -67,13 +67,40 @@ interface EbayListing {
 type Tab = "sync" | "manage" | "distributor";
 
 // ── Distributor pricing constants ──────────────────────────
-const DIST_SHIPPING = 55;
-const DIST_EBAY_FVF = 0.1325;
-const DIST_MISC = 0.02;
-const DIST_MARGIN = 0.15;
+// eBay FVF 13.25% on (price + shipping + tax). Avg tax ~7.5%.
+// Formula: price = (cost + shipping×1.1325 + $15) / 0.8376
+// Targets flat $15 net profit per tire after all fees.
+const DIST_SHIPPING_TIERS = [
+  { maxWeight: 25, cost: 40 },    // under 25 lbs
+  { maxWeight: 50, cost: 55 },    // 25-50 lbs
+  { maxWeight: 75, cost: 72 },    // 50-75 lbs
+  { maxWeight: Infinity, cost: 99 }, // over 75 lbs
+];
+const DIST_SHIPPING_DEFAULT = 55; // fallback when weight unknown
+const EBAY_FVF = 0.1325;
+const EBAY_FVF_TAX = 0.009938;   // FVF on avg sales tax (13.25% × 7.5%)
+const EBAY_MISC = 0.02;          // payment processing + buffer
+const EBAY_SHIPPING_FVF = 1.1325; // shipping × (1 + FVF)
+const EBAY_PRICE_FACTOR = 1 - EBAY_FVF - EBAY_FVF_TAX - EBAY_MISC; // ~0.8376
+const MARGIN_LOW = 10;            // cost ≤ $50
+const MARGIN_HIGH = 15;           // cost > $50
+const MARGIN_THRESHOLD = 50;
 
-function calcDistPrice(cost: number): number {
-  return Math.round(((cost + DIST_SHIPPING) / (1 - DIST_EBAY_FVF - DIST_MISC - DIST_MARGIN)) * 100) / 100;
+function getMargin(cost: number): number {
+  return cost <= MARGIN_THRESHOLD ? MARGIN_LOW : MARGIN_HIGH;
+}
+
+function getShippingForWeight(weightLbs: number | null): number {
+  if (!weightLbs || weightLbs <= 0) return DIST_SHIPPING_DEFAULT;
+  for (const tier of DIST_SHIPPING_TIERS) {
+    if (weightLbs <= tier.maxWeight) return tier.cost;
+  }
+  return DIST_SHIPPING_TIERS[DIST_SHIPPING_TIERS.length - 1].cost;
+}
+
+function calcDistPrice(cost: number, shipping = DIST_SHIPPING_DEFAULT): number {
+  const margin = getMargin(cost);
+  return Math.round(((cost + shipping * EBAY_SHIPPING_FVF + margin) / EBAY_PRICE_FACTOR) * 100) / 100;
 }
 
 interface DistributorItem {
@@ -155,6 +182,25 @@ export default function EbayPage() {
 
   // Confirmation modal
   const [confirmAction, setConfirmAction] = useState<{ type: string; message: string; onConfirm: () => void } | null>(null);
+
+  // Bulk list state
+  const [bulkListing, setBulkListing] = useState(false);
+  const [bulkDryRun, setBulkDryRun] = useState(true);
+  const [bulkResult, setBulkResult] = useState<{
+    dryRun: boolean;
+    totalInventory: number;
+    uniqueTires: number;
+    alreadyListed: number;
+    listed: number;
+    revised: number;
+    skipped: number;
+    noMatch: number;
+    noImages: number;
+    catalogMatched: number;
+    errorCount: number;
+    errors: Array<{ tireId: number; error: string }>;
+  } | null>(null);
+  const [bulkError, setBulkError] = useState<string | null>(null);
 
   // Distributor tab state
   const [distBrand, setDistBrand] = useState("BFGoodrich");
@@ -378,6 +424,37 @@ export default function EbayPage() {
     });
   }
 
+  async function handleEndAll() {
+    setConfirmAction({
+      type: "end",
+      message: "Are you sure you want to END ALL active eBay listings? This will remove every listing from your store. This cannot be undone.",
+      onConfirm: async () => {
+        setConfirmAction(null);
+        setActionLoading(true);
+        setActionMessage({ type: "success", text: "Ending all listings... this may take a few minutes." });
+        try {
+          const res = await fetch("/api/admin/ebay/end", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ endAll: true }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error);
+          const msg = data.errors?.length
+            ? `Found ${data.totalFound}. Ended ${data.ended}, ${data.errors.length} failed.`
+            : `Ended all ${data.ended} listing${data.ended !== 1 ? "s" : ""}.`;
+          setActionMessage({ type: data.errors?.length ? "error" : "success", text: msg });
+          setSelectedItems(new Set());
+          fetchListings(1);
+        } catch (e) {
+          setActionMessage({ type: "error", text: e instanceof Error ? e.message : "Failed to end all listings" });
+        } finally {
+          setActionLoading(false);
+        }
+      },
+    });
+  }
+
   async function handleInlinePrice(itemId: string) {
     const newPrice = parseFloat(editPriceValue);
     if (isNaN(newPrice) || newPrice <= 0) {
@@ -434,6 +511,30 @@ export default function EbayPage() {
       setActionMessage({ type: "error", text: e instanceof Error ? e.message : "Failed to adjust prices" });
     } finally {
       setActionLoading(false);
+    }
+  }
+
+  async function startBulkList() {
+    setBulkListing(true);
+    setBulkResult(null);
+    setBulkError(null);
+    try {
+      const res = await fetch("/api/admin/ebay/bulk-list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dryRun: bulkDryRun }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `Bulk list failed (${res.status})`);
+      }
+      const data = await res.json();
+      setBulkResult(data);
+      if (!bulkDryRun) fetchStatus();
+    } catch (e) {
+      setBulkError(e instanceof Error ? e.message : "Bulk list failed");
+    } finally {
+      setBulkListing(false);
     }
   }
 
@@ -510,9 +611,115 @@ export default function EbayPage() {
             ) : null}
           </div>
 
+          {/* Bulk List All Inventory */}
+          <div className="bg-white rounded-lg border-2 border-green-200 p-5 mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h2 className="font-semibold text-gray-900">List All Inventory on eBay</h2>
+                <p className="text-xs text-gray-500 mt-1">
+                  Lists every in-stock distributor item that matches a tire in the catalog. Uses distributor cost-based pricing with eBay fee markup.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={bulkDryRun}
+                  onChange={(e) => setBulkDryRun(e.target.checked)}
+                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                />
+                Dry Run
+              </label>
+              <button
+                onClick={startBulkList}
+                disabled={bulkListing}
+                className={`px-6 py-2.5 rounded-lg text-sm font-semibold text-white ${
+                  bulkListing
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : bulkDryRun
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                {bulkListing
+                  ? "Processing..."
+                  : bulkDryRun
+                  ? "Preview All"
+                  : "List All on eBay"}
+              </button>
+            </div>
+
+            {bulkError && (
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                {bulkError}
+              </div>
+            )}
+
+            {bulkResult && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="font-semibold text-gray-900 mb-2">
+                  {bulkResult.dryRun ? "Preview Results" : "Listing Results"}
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                  <div>
+                    <span className="text-gray-500">Total Inventory:</span>{" "}
+                    <span className="font-medium">{bulkResult.totalInventory.toLocaleString()}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Unique Tires:</span>{" "}
+                    <span className="font-medium">{bulkResult.uniqueTires.toLocaleString()}</span>
+                  </div>
+                  <div>
+                    <span className="text-green-600 font-medium">
+                      {bulkResult.dryRun ? "Would List" : "Listed"}: {bulkResult.listed}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-blue-600 font-medium">
+                      Revised: {bulkResult.revised}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-500">Already on eBay:</span>{" "}
+                    <span className="font-medium">{bulkResult.alreadyListed}</span>
+                  </div>
+                  {bulkResult.catalogMatched > 0 && (
+                  <div>
+                    <span className="text-blue-600">Catalog Matched (by brand+size): {bulkResult.catalogMatched}</span>
+                  </div>
+                  )}
+                  <div>
+                    <span className="text-yellow-600">No Catalog Match: {bulkResult.noMatch}</span>
+                  </div>
+                  <div>
+                    <span className="text-yellow-600">No Images: {bulkResult.noImages}</span>
+                  </div>
+                  <div>
+                    <span className="text-red-600">Errors: {bulkResult.errorCount}</span>
+                  </div>
+                </div>
+
+                {bulkResult.noMatch > 0 && (
+                  <p className="mt-2 text-xs text-gray-500">
+                    {bulkResult.noMatch} items have no matching tire in the catalog (no images/specs available). Add these tires to the catalog to list them.
+                  </p>
+                )}
+
+                {bulkResult.errors.length > 0 && (
+                  <div className="mt-3 max-h-32 overflow-y-auto text-xs text-red-600 space-y-1">
+                    {bulkResult.errors.map((e, i) => (
+                      <p key={i}>Tire {e.tireId}: {e.error}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Sync controls */}
           <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Sync to eBay</h2>
+            <h2 className="font-semibold text-gray-900 mb-4">Sync to eBay (Catalog)</h2>
 
             {/* Options row */}
             <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -851,6 +1058,13 @@ export default function EbayPage() {
                 End Selected
               </button>
               <button
+                onClick={handleEndAll}
+                disabled={actionLoading}
+                className="px-3 py-1.5 bg-red-900 text-white rounded text-xs font-medium hover:bg-red-800 disabled:opacity-50"
+              >
+                End All Listings
+              </button>
+              <button
                 onClick={() => {
                   setBulkAdjustValue("");
                   setShowPriceModal(true);
@@ -1127,10 +1341,7 @@ export default function EbayPage() {
                         cost: newItem.cost,
                         partNumber: newItem.partNumber || undefined,
                       }],
-                      shippingCost: DIST_SHIPPING,
-                      ebayFvf: DIST_EBAY_FVF,
-                      miscRate: DIST_MISC,
-                      marginRate: DIST_MARGIN,
+                      shippingCost: DIST_SHIPPING_DEFAULT,
                       dryRun: true,
                     }),
                   });
@@ -1243,10 +1454,7 @@ export default function EbayPage() {
                             cost: i.cost,
                             partNumber: i.partNumber || undefined,
                           })),
-                          shippingCost: DIST_SHIPPING,
-                          ebayFvf: DIST_EBAY_FVF,
-                          miscRate: DIST_MISC,
-                          marginRate: DIST_MARGIN,
+                          shippingCost: DIST_SHIPPING_DEFAULT,
                           dryRun: true,
                         }),
                       });
@@ -1311,10 +1519,7 @@ export default function EbayPage() {
                             cost: i.cost,
                             partNumber: i.partNumber || undefined,
                           })),
-                          shippingCost: DIST_SHIPPING,
-                          ebayFvf: DIST_EBAY_FVF,
-                          miscRate: DIST_MISC,
-                          marginRate: DIST_MARGIN,
+                          shippingCost: DIST_SHIPPING_DEFAULT,
                           dryRun: distDryRun,
                           distributorId: distSelectedDistributor || undefined,
                         }),
@@ -1439,16 +1644,25 @@ export default function EbayPage() {
           {/* Pricing formula reference */}
           {distItems.length === 0 && (
             <div className="bg-gray-50 rounded-lg border border-gray-200 p-5 text-sm text-gray-600">
-              <h3 className="font-medium text-gray-800 mb-2">Pricing Formula</h3>
+              <h3 className="font-medium text-gray-800 mb-2">Pricing Formula — Tiered Net Profit</h3>
               <p className="font-mono text-xs mb-2">
-                eBay Price = (Cost + ${DIST_SHIPPING}) / (1 - {DIST_EBAY_FVF} - {DIST_MISC} - {DIST_MARGIN})
+                eBay Price = (Cost + Shipping × {EBAY_SHIPPING_FVF} + Margin) / {EBAY_PRICE_FACTOR.toFixed(4)}
               </p>
-              <p className="text-xs text-gray-500">
-                Shipping: ${DIST_SHIPPING} | eBay FVF: {(DIST_EBAY_FVF * 100).toFixed(2)}% | Misc: {(DIST_MISC * 100)}% | Margin: {(DIST_MARGIN * 100)}%
+              <p className="text-xs text-gray-500 mb-2">
+                eBay FVF: {(EBAY_FVF * 100).toFixed(2)}% | FVF on Tax: {(EBAY_FVF_TAX * 100).toFixed(2)}% | Misc: {(EBAY_MISC * 100)}%
               </p>
+              <p className="text-xs font-medium text-gray-700 mb-2">
+                Cost &le; ${MARGIN_THRESHOLD}: ${MARGIN_LOW}/tire net profit &nbsp;|&nbsp; Cost &gt; ${MARGIN_THRESHOLD}: ${MARGIN_HIGH}/tire net profit
+              </p>
+              <div className="text-xs text-gray-500 mb-3">
+                <p className="font-medium text-gray-700 mb-1">Weight-Based Shipping:</p>
+                <p>&lt;25 lbs: $40 | 25-50 lbs: $55 | 50-75 lbs: $72 | 75+ lbs: $99</p>
+              </div>
               <div className="mt-3 space-y-1 text-xs">
-                <p>Example: $212 cost &rarr; ${calcDistPrice(212).toFixed(2)} eBay price</p>
-                <p>Example: $293.95 cost &rarr; ${calcDistPrice(293.95).toFixed(2)} eBay price</p>
+                <p>Example: $35 cost (budget, $40 ship) &rarr; ${calcDistPrice(35, 40).toFixed(2)} (${MARGIN_LOW} margin)</p>
+                <p>Example: $50 cost (light, $40 ship) &rarr; ${calcDistPrice(50, 40).toFixed(2)} (${MARGIN_LOW} margin)</p>
+                <p>Example: $100 cost (mid, $55 ship) &rarr; ${calcDistPrice(100, 55).toFixed(2)} (${MARGIN_HIGH} margin)</p>
+                <p>Example: $200 cost (heavy, $72 ship) &rarr; ${calcDistPrice(200, 72).toFixed(2)} (${MARGIN_HIGH} margin)</p>
               </div>
             </div>
           )}

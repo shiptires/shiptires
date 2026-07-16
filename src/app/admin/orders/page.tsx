@@ -225,6 +225,7 @@ function OrderRow({
                   shippedAt={order.shipped_at ? String(order.shipped_at) : null}
                   orderSource={order.order_source ? String(order.order_source) : undefined}
                   externalOrderId={order.external_order_id ? String(order.external_order_id) : undefined}
+                  itemQuantity={items.reduce((sum, item) => sum + (item.quantity || 1), 0)}
                 />
               </div>
             </div>

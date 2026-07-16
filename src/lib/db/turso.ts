@@ -54,7 +54,7 @@ async function safeExecute(stmt: any, _timeoutMs?: number) {
   if (TURSO_FORCE_DISABLED) return emptyResult;
 
   const db = getDb();
-  const timeoutMs = _timeoutMs ?? (IS_BUILD ? 30_000 : 15_000);
+  const timeoutMs = _timeoutMs ?? 15_000;
   try {
     const timeout = new Promise<never>((_, rej) => setTimeout(() => rej(new Error("DB_TIMEOUT")), timeoutMs));
     return await Promise.race([db.execute(stmt), timeout]);
@@ -198,13 +198,13 @@ async function _fetchModelsByBrand(slug: string): Promise<ModelSummaryRow[]> {
     ORDER BY model_name ASC`,
     args: [brandName],
   });
-  const summaryRows = result.rows as unknown as ModelSummaryRow[];
+  const summaryRows = (result.rows as unknown as ModelSummaryRow[]).map(fixOutlierMinPrice);
 
   // model_summary may be incomplete — supplement with DISTINCT models from tires table
   const tiresResult = await safeExecute({
     sql: `SELECT
       model_name,
-      COUNT(*) as tire_count,
+      COUNT(DISTINCT width || '/' || aspect_ratio || 'R' || rim_size) as tire_count,
       MIN(CASE WHEN price_map > 0 THEN price_map END) as min_price,
       MAX(price_map) as max_price,
       MAX(season) as season,
@@ -217,7 +217,7 @@ async function _fetchModelsByBrand(slug: string): Promise<ModelSummaryRow[]> {
     ORDER BY model_name ASC`,
     args: [brandName],
   });
-  const tiresRows = tiresResult.rows as unknown as ModelSummaryRow[];
+  const tiresRows = (tiresResult.rows as unknown as ModelSummaryRow[]).map(fixOutlierMinPrice);
 
   // Merge: use model_summary data when available, add missing models from tires table
   const seen = new Set(summaryRows.map((r) => r.model_name));
@@ -228,7 +228,15 @@ async function _fetchModelsByBrand(slug: string): Promise<ModelSummaryRow[]> {
       seen.add(row.model_name);
     }
   }
-  merged.sort((a, b) => (a.model_name ?? "").localeCompare(b.model_name ?? ""));
+  // Sort: priced models first (by price ascending), then unpriced models alphabetically
+  merged.sort((a, b) => {
+    const aHasPrice = a.min_price != null && a.min_price > 0;
+    const bHasPrice = b.min_price != null && b.min_price > 0;
+    if (aHasPrice && !bHasPrice) return -1;
+    if (!aHasPrice && bHasPrice) return 1;
+    if (aHasPrice && bHasPrice) return (a.min_price ?? 0) - (b.min_price ?? 0);
+    return (a.model_name ?? "").localeCompare(b.model_name ?? "");
+  });
 
   if (merged.length > 0) {
     _modelsByBrandCache.set(slug, { data: merged, ts: Date.now() });
@@ -402,13 +410,67 @@ export async function searchTires(params: SearchParams): Promise<SearchResult> {
   const conditions: string[] = [];
   const values: (string | number)[] = [];
 
+  // Detect brand from explicit param or from query words (fast path)
+  let brandDetected = false;
   if (params.brand) {
     const brandName = await slugToBrandName(params.brand);
     if (brandName) {
       conditions.push("make_name = ?");
       values.push(brandName);
+      brandDetected = true;
     }
-  } else {
+  }
+
+  // If query looks like a part number / SKU (numeric or short alphanumeric), search identifiers first
+  if (params.query) {
+    const trimmed = params.query.trim();
+    const looksLikePartNumber = /^[A-Za-z0-9\-]{3,20}$/.test(trimmed) && /\d/.test(trimmed) && !/\//.test(trimmed);
+    if (looksLikePartNumber) {
+      // Try direct part number lookup in Turso — skip brand filtering
+      const pnResult = await safeExecute({
+        sql: `SELECT * FROM tires WHERE item_number = ? OR gm_code = ? OR upc = ? OR ean = ? LIMIT ?`,
+        args: [trimmed, trimmed, trimmed, trimmed, limit],
+      });
+      if (pnResult.rows.length > 0) {
+        return {
+          tires: pnResult.rows as unknown as TireRow[],
+          total: pnResult.rows.length,
+          page: 1,
+          limit,
+          totalPages: 1,
+        };
+      }
+
+      // Fallback: check distributor_inventory part_number in Supabase
+      const distResult = await lookupByDistributorPartNumber(trimmed, limit);
+      if (distResult && distResult.length > 0) {
+        return {
+          tires: distResult,
+          total: distResult.length,
+          page: 1,
+          limit,
+          totalPages: 1,
+        };
+      }
+    }
+  }
+
+  // If query is provided, check if any word matches a curated brand name for fast exact match
+  let queryModelWords: string[] = [];
+  if (params.query) {
+    const words = params.query.trim().split(/\s+/).filter(Boolean);
+    for (const word of words) {
+      if (!brandDetected && CURATED_BRANDS.has(word.toUpperCase())) {
+        conditions.push("make_name = ?");
+        values.push(word.toUpperCase());
+        brandDetected = true;
+      } else {
+        queryModelWords.push(word);
+      }
+    }
+  }
+
+  if (!brandDetected) {
     // No specific brand — filter to curated brands only
     const brands = Array.from(CURATED_BRANDS.keys());
     conditions.push(`make_name IN (${brands.map(() => "?").join(", ")})`);
@@ -433,10 +495,16 @@ export async function searchTires(params: SearchParams): Promise<SearchResult> {
   if (params.minPrice != null) { conditions.push("price_map >= ?"); values.push(params.minPrice); }
   if (params.maxPrice != null) { conditions.push("price_map <= ?"); values.push(params.maxPrice); }
 
-  if (params.query) {
-    conditions.push("(name LIKE ? OR model_name LIKE ? OR make_name LIKE ?)");
-    const q = `%${params.query}%`;
-    values.push(q, q, q);
+  // Remaining query words — match against model_name (brand already filtered above)
+  for (const word of queryModelWords) {
+    if (brandDetected) {
+      conditions.push("model_name LIKE ?");
+      values.push(`%${word}%`);
+    } else {
+      conditions.push("(make_name LIKE ? OR model_name LIKE ? OR name LIKE ?)");
+      const w = `%${word}%`;
+      values.push(w, w, w);
+    }
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -475,6 +543,7 @@ export interface ModelSearchRow {
   tire_count: number;
   min_price: number | null;
   max_price: number | null;
+  local_thumbnail: string | null;
   thumbnail_url: string | null;
   make_image_url: string | null;
   season: string | null;
@@ -500,13 +569,114 @@ export async function searchModels(params: SearchParams): Promise<ModelSearchRes
   const conditions: string[] = [];
   const values: (string | number)[] = [];
 
+  // If query looks like a part number / SKU, search identifiers first
+  if (params.query) {
+    const trimmed = params.query.trim();
+    const looksLikePartNumber = /^[A-Za-z0-9\-]{3,20}$/.test(trimmed) && /\d/.test(trimmed) && !/\//.test(trimmed);
+    if (looksLikePartNumber) {
+      const pnResult = await safeExecute({
+        sql: `SELECT
+          make_name,
+          model_name,
+          COUNT(DISTINCT width || '/' || aspect_ratio || 'R' || rim_size) as tire_count,
+          MIN(CASE WHEN price_map > 0 THEN price_map END) as min_price,
+          MAX(price_map) as max_price,
+          MAX(local_thumbnail) as local_thumbnail,
+          MAX(thumbnail_url) as thumbnail_url,
+          MAX(make_image_url) as make_image_url,
+          MAX(season) as season,
+          MAX(terrain) as terrain,
+          MAX(category) as category,
+          MAX(warranty) as warranty,
+          GROUP_CONCAT(DISTINCT speed_rating) as speed_ratings
+        FROM tires
+        WHERE item_number = ? OR gm_code = ? OR upc = ? OR ean = ?
+        GROUP BY make_name, model_name`,
+        args: [trimmed, trimmed, trimmed, trimmed],
+      });
+      if (pnResult.rows.length > 0) {
+        return {
+          models: pnResult.rows as unknown as ModelSearchRow[],
+          total: pnResult.rows.length,
+          page: 1,
+          limit,
+          totalPages: 1,
+        };
+      }
+
+      // Fallback: check distributor_inventory part_number in Supabase
+      const distTires = await lookupByDistributorPartNumber(trimmed, limit);
+      if (distTires && distTires.length > 0) {
+        // Group into model-level results
+        const modelMap = new Map<string, ModelSearchRow>();
+        for (const tire of distTires) {
+          const key = `${tire.make_name}|${tire.model_name}`;
+          const existing = modelMap.get(key);
+          const size = `${tire.width}/${tire.aspect_ratio}R${tire.rim_size}`;
+          if (!existing) {
+            modelMap.set(key, {
+              make_name: tire.make_name,
+              model_name: tire.model_name,
+              tire_count: 1,
+              min_price: (tire.price_map ?? 0) > 0 ? tire.price_map : null,
+              max_price: (tire.price_map ?? 0) > 0 ? tire.price_map : null,
+              local_thumbnail: tire.local_thumbnail ?? null,
+              thumbnail_url: tire.thumbnail_url ?? null,
+              make_image_url: tire.make_image_url ?? null,
+              season: tire.season ?? null,
+              terrain: tire.terrain ?? null,
+              category: tire.category ?? null,
+              warranty: tire.warranty ?? null,
+              speed_ratings: tire.speed_rating ?? null,
+            });
+          } else {
+            existing.tire_count++;
+            const pm = tire.price_map ?? 0;
+            if (pm > 0) {
+              if (existing.min_price === null || pm < existing.min_price) existing.min_price = pm;
+              if (existing.max_price === null || pm > existing.max_price) existing.max_price = pm;
+            }
+          }
+        }
+        const models = Array.from(modelMap.values());
+        return {
+          models,
+          total: models.length,
+          page: 1,
+          limit,
+          totalPages: 1,
+        };
+      }
+    }
+  }
+
+  // Detect brand from explicit param or from query words (fast path)
+  let brandDetected = false;
   if (params.brand) {
     const brandName = await slugToBrandName(params.brand);
     if (brandName) {
       conditions.push("make_name = ?");
       values.push(brandName);
+      brandDetected = true;
     }
-  } else {
+  }
+
+  // If query is provided, check if any word matches a curated brand name for fast exact match
+  let queryModelWords: string[] = [];
+  if (params.query) {
+    const words = params.query.trim().split(/\s+/).filter(Boolean);
+    for (const word of words) {
+      if (!brandDetected && CURATED_BRANDS.has(word.toUpperCase())) {
+        conditions.push("make_name = ?");
+        values.push(word.toUpperCase());
+        brandDetected = true;
+      } else {
+        queryModelWords.push(word);
+      }
+    }
+  }
+
+  if (!brandDetected) {
     const brands = Array.from(CURATED_BRANDS.keys());
     conditions.push(`make_name IN (${brands.map(() => "?").join(", ")})`);
     values.push(...brands);
@@ -530,10 +700,16 @@ export async function searchModels(params: SearchParams): Promise<ModelSearchRes
   if (params.minPrice != null) { conditions.push("price_map >= ?"); values.push(params.minPrice); }
   if (params.maxPrice != null) { conditions.push("price_map <= ?"); values.push(params.maxPrice); }
 
-  if (params.query) {
-    conditions.push("(name LIKE ? OR model_name LIKE ? OR make_name LIKE ?)");
-    const q = `%${params.query}%`;
-    values.push(q, q, q);
+  // Remaining query words — match against model_name (brand already filtered above)
+  for (const word of queryModelWords) {
+    if (brandDetected) {
+      conditions.push("model_name LIKE ?");
+      values.push(`%${word}%`);
+    } else {
+      conditions.push("(make_name LIKE ? OR model_name LIKE ? OR name LIKE ?)");
+      const w = `%${word}%`;
+      values.push(w, w, w);
+    }
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -545,19 +721,19 @@ export async function searchModels(params: SearchParams): Promise<ModelSearchRes
   const total = Number((countResult.rows[0] as unknown as { total: number })?.total ?? 0);
 
   if (total > 0) {
-    let orderBy = "tire_count DESC";
+    // Default: priced tires first (cheap → expensive), unpriced at end
+    let orderBy = "CASE WHEN min_price IS NOT NULL THEN 0 ELSE 1 END, min_price ASC NULLS LAST, tire_count DESC";
     switch (params.sort) {
       case "price-asc":
-        orderBy = "min_price ASC NULLS LAST";
+        orderBy = "CASE WHEN min_price IS NOT NULL THEN 0 ELSE 1 END, min_price ASC NULLS LAST";
         break;
       case "price-desc":
-        orderBy = "max_price DESC";
+        orderBy = "CASE WHEN max_price IS NOT NULL THEN 0 ELSE 1 END, max_price DESC NULLS LAST";
         break;
       case "name-asc":
         orderBy = "model_name ASC";
         break;
       case "sizes-desc":
-      default:
         orderBy = "tire_count DESC";
         break;
     }
@@ -566,9 +742,10 @@ export async function searchModels(params: SearchParams): Promise<ModelSearchRes
       sql: `SELECT
         make_name,
         model_name,
-        COUNT(*) as tire_count,
+        COUNT(DISTINCT width || '/' || aspect_ratio || 'R' || rim_size) as tire_count,
         MIN(CASE WHEN price_map > 0 THEN price_map END) as min_price,
         MAX(price_map) as max_price,
+        MAX(local_thumbnail) as local_thumbnail,
         MAX(thumbnail_url) as thumbnail_url,
         MAX(make_image_url) as make_image_url,
         MAX(season) as season,
@@ -584,7 +761,7 @@ export async function searchModels(params: SearchParams): Promise<ModelSearchRes
     });
 
     return {
-      models: modelsResult.rows as unknown as ModelSearchRow[],
+      models: (modelsResult.rows as unknown as ModelSearchRow[]).map(fixOutlierMinPrice),
       total,
       page,
       limit,
@@ -804,12 +981,18 @@ export async function getTireBySize(
 
   // Strategy 1: Query by brand + size (precise, avoids LIMIT issues on popular sizes)
   if (brandName) {
+    const isFullProfile = !aspectRatio;
     const result = await safeExecute({
-      sql: `SELECT * FROM tires
+      sql: isFullProfile
+        ? `SELECT * FROM tires
+            WHERE make_name = ? AND width = ? AND (aspect_ratio IS NULL OR aspect_ratio = '') AND rim_size = ?
+            ORDER BY price_map DESC
+            LIMIT 50`
+        : `SELECT * FROM tires
             WHERE make_name = ? AND width = ? AND aspect_ratio = ? AND rim_size = ?
             ORDER BY price_map DESC
             LIMIT 50`,
-      args: [brandName, width, aspectRatio, rimSize],
+      args: isFullProfile ? [brandName, width, rimSize] : [brandName, width, aspectRatio, rimSize],
     });
     if (result.rows.length > 0) {
       const match = (result.rows as unknown as TireRow[]).find((row) => {
@@ -820,12 +1003,18 @@ export async function getTireBySize(
   }
 
   // Strategy 2: Query by size only (brand name resolution may have failed)
+  const isFullProfile = !aspectRatio;
   const result = await safeExecute({
-    sql: `SELECT * FROM tires
+    sql: isFullProfile
+      ? `SELECT * FROM tires
+          WHERE width = ? AND (aspect_ratio IS NULL OR aspect_ratio = '') AND rim_size = ?
+          ORDER BY price_map DESC
+          LIMIT 100`
+      : `SELECT * FROM tires
           WHERE width = ? AND aspect_ratio = ? AND rim_size = ?
           ORDER BY price_map DESC
           LIMIT 100`,
-    args: [width, aspectRatio, rimSize],
+    args: isFullProfile ? [width, rimSize] : [width, aspectRatio, rimSize],
   });
   if (result.rows.length > 0) {
     const match = (result.rows as unknown as TireRow[]).find((row) => {
@@ -955,6 +1144,29 @@ async function slugToModelName(brandName: string, slug: string): Promise<string 
   return cache.get(slug) ?? null;
 }
 
+/**
+ * Fix outlier min_price values caused by bad data in the TireWeb catalog.
+ * Some tires have MAP prices that are clearly wrong (e.g., $115 for a tire
+ * that should be $400+). If min_price < 30% of max_price and max_price > $100,
+ * replace min_price with a reasonable estimate (max_price * 0.4) so the
+ * "Starting at" display doesn't show the bad value.
+ *
+ * This preserves the model as "priced" rather than showing "Call for Price".
+ * Individual tire prices on the model page are unaffected — they come from
+ * the tires table directly.
+ */
+function fixOutlierMinPrice<T extends { min_price: number | null; max_price: number | null }>(row: T): T {
+  if (
+    row.min_price != null &&
+    row.max_price != null &&
+    row.max_price > 100 &&
+    row.min_price < row.max_price * 0.3
+  ) {
+    return { ...row, min_price: Math.round(row.max_price * 0.4 * 100) / 100 };
+  }
+  return row;
+}
+
 export function toSlug(name: string | null | undefined): string {
   if (!name) return "";
   return name
@@ -986,4 +1198,238 @@ export async function getBrandSlugMap(): Promise<Map<string, string>> {
   }
 
   return _brandSlugCache;
+}
+
+/**
+ * Build tire lookup maps from the global tires catalog for inventory matching.
+ * Returns maps keyed by part number and by brand|size for matching distributor CSV rows
+ * against the full tire catalog (not just existing distributor inventory).
+ */
+export async function getTireLookupMaps(): Promise<{
+  byPartNumber: Map<string, number>;
+  byBrandSize: Map<string, number>;
+  modelById: Map<number, string>;
+  sizeById: Map<number, string>;
+}> {
+  const byPartNumber = new Map<string, number>();
+  const byBrandSize = new Map<string, number>();
+  const modelById = new Map<number, string>();
+  const sizeById = new Map<number, string>();
+
+  const result = await safeExecute(
+    {
+      sql: `SELECT id, item_number, gm_code, upc, ean, make_name, model_name, width, aspect_ratio, rim_size
+            FROM tires`,
+      args: [],
+    },
+    90000
+  );
+
+  for (const raw of result.rows) {
+    const row = raw as unknown as {
+      id: number;
+      item_number: string | null;
+      gm_code: string | null;
+      upc: string | null;
+      ean: string | null;
+      make_name: string;
+      model_name: string;
+      width: string | null;
+      aspect_ratio: string | null;
+      rim_size: string | null;
+    };
+
+    // Map by part numbers (item_number, gm_code, upc, ean)
+    if (row.item_number) byPartNumber.set(row.item_number, row.id);
+    if (row.gm_code) byPartNumber.set(row.gm_code, row.id);
+    if (row.upc) byPartNumber.set(row.upc, row.id);
+    if (row.ean) byPartNumber.set(row.ean, row.id);
+
+    // Map by brand|size (e.g. "goodyear|225/45r17")
+    if (row.width && row.aspect_ratio && row.rim_size) {
+      const size = `${row.width}/${row.aspect_ratio}R${row.rim_size}`.toLowerCase();
+      const key = `${row.make_name.toLowerCase()}|${size}`;
+      byBrandSize.set(key, row.id);
+    }
+
+    // Map tire_id → model_name for backfilling empty model fields
+    if (row.model_name) {
+      modelById.set(row.id, row.model_name);
+    }
+
+    // Map tire_id → canonical size string for backfilling bad/missing size fields
+    if (row.width && row.rim_size) {
+      const canonicalSize = row.aspect_ratio
+        ? `${row.width}/${row.aspect_ratio}R${row.rim_size}`
+        : `${row.width}R${row.rim_size}`;
+      sizeById.set(row.id, canonicalSize);
+    }
+  }
+
+  return { byPartNumber, byBrandSize, modelById, sizeById };
+}
+
+// ---------------------------------------------------------------------------
+// Distributor part number lookup (Supabase fallback for search)
+// ---------------------------------------------------------------------------
+
+/**
+ * Look up tires by distributor part number when Turso identifiers don't match.
+ * Queries Supabase distributor_inventory for the part_number, gets the tire_id(s),
+ * then fetches those tires from Turso.
+ */
+async function lookupByDistributorPartNumber(
+  partNumber: string,
+  limit: number
+): Promise<TireRow[] | null> {
+  try {
+    const { getSupabase } = await import("../supabase");
+    const sb = getSupabase();
+
+    const { data, error } = await sb
+      .from("distributor_inventory")
+      .select("tire_id")
+      .eq("active", true)
+      .ilike("part_number", partNumber)
+      .limit(limit);
+
+    if (error || !data || data.length === 0) return null;
+
+    // Deduplicate tire_ids
+    const tireIds = [...new Set(data.map((d) => d.tire_id))];
+    if (tireIds.length === 0) return null;
+
+    // Fetch those tires from Turso
+    const placeholders = tireIds.map(() => "?").join(", ");
+    const result = await safeExecute({
+      sql: `SELECT * FROM tires WHERE id IN (${placeholders})`,
+      args: tireIds,
+    });
+
+    if (result.rows.length === 0) return null;
+    return result.rows as unknown as TireRow[];
+  } catch (e) {
+    console.warn("[turso] distributor part number lookup failed:", e);
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Pricing anomaly detection
+// ---------------------------------------------------------------------------
+
+/**
+ * Find tires with anomalous pricing within their model.
+ * A tire is flagged if its price_map is less than 50% of the model's median price.
+ * Optionally filter by brand and/or model name.
+ */
+export async function findPricingAnomalies(
+  brandFilter?: string,
+  modelFilter?: string
+): Promise<{
+  anomalies: Array<{
+    id: number;
+    make_name: string;
+    model_name: string;
+    size: string;
+    price_map: number;
+    model_min: number;
+    model_avg: number;
+    model_max: number;
+    model_count: number;
+  }>;
+  modelsChecked: number;
+}> {
+  // Build WHERE clause
+  const conditions: string[] = ["price_map > 0"];
+  const args: (string | number)[] = [];
+  if (brandFilter) {
+    conditions.push("make_name = ?");
+    args.push(brandFilter.toUpperCase());
+  }
+  if (modelFilter) {
+    conditions.push("model_name LIKE ?");
+    args.push(`%${modelFilter}%`);
+  }
+  const where = conditions.join(" AND ");
+
+  // Get model-level stats
+  const statsResult = await safeExecute({
+    sql: `SELECT
+      make_name,
+      model_name,
+      MIN(price_map) as model_min,
+      AVG(price_map) as model_avg,
+      MAX(price_map) as model_max,
+      COUNT(*) as model_count
+    FROM tires
+    WHERE ${where}
+    GROUP BY make_name, model_name
+    HAVING COUNT(*) >= 3 AND (MAX(price_map) / MIN(price_map)) > 2.0
+    ORDER BY (MAX(price_map) / MIN(price_map)) DESC
+    LIMIT 50`,
+    args,
+  }, 30000);
+
+  const modelStats = statsResult.rows as unknown as Array<{
+    make_name: string;
+    model_name: string;
+    model_min: number;
+    model_avg: number;
+    model_max: number;
+    model_count: number;
+  }>;
+
+  const anomalies: Array<{
+    id: number;
+    make_name: string;
+    model_name: string;
+    size: string;
+    price_map: number;
+    model_min: number;
+    model_avg: number;
+    model_max: number;
+    model_count: number;
+  }> = [];
+
+  // For each model with high price variance, find the outlier tires
+  for (const stat of modelStats) {
+    const threshold = stat.model_avg * 0.5; // tires priced at less than 50% of average
+    const outlierResult = await safeExecute({
+      sql: `SELECT id, make_name, model_name, width, aspect_ratio, rim_size, price_map
+            FROM tires
+            WHERE make_name = ? AND model_name = ? AND price_map > 0 AND price_map < ?
+            ORDER BY price_map ASC
+            LIMIT 10`,
+      args: [stat.make_name, stat.model_name, threshold],
+    });
+
+    for (const raw of outlierResult.rows) {
+      const row = raw as unknown as {
+        id: number;
+        make_name: string;
+        model_name: string;
+        width: string;
+        aspect_ratio: string;
+        rim_size: string;
+        price_map: number;
+      };
+      anomalies.push({
+        id: row.id,
+        make_name: row.make_name,
+        model_name: row.model_name,
+        size: `${row.width}/${row.aspect_ratio}R${row.rim_size}`,
+        price_map: row.price_map,
+        model_min: stat.model_min,
+        model_avg: Math.round(stat.model_avg * 100) / 100,
+        model_max: stat.model_max,
+        model_count: stat.model_count,
+      });
+    }
+  }
+
+  return {
+    anomalies,
+    modelsChecked: modelStats.length,
+  };
 }

@@ -97,44 +97,105 @@ export async function getDefaultWarehouse(): Promise<Warehouse> {
   return warehouses.find((w) => w.isDefault) || warehouses[0] || FALLBACK_WAREHOUSE;
 }
 
-// ── Nearest warehouse routing ────────────────────────────────
+// ── Shipping cost estimator ──────────────────────────────────
 
 /**
- * Find the nearest warehouse that has a specific tire in stock.
- *
- * Uses ZIP code distance via the `zipcodes` package for proximity ranking.
- * Falls back to 3-digit ZIP prefix region matching if exact ZIP lookup fails.
+ * Estimate ground shipping cost between two ZIP codes.
+ * Uses distance tiers based on typical UPS/FedEx Ground rates for ~30lb packages.
+ * Not exact — directionally correct for routing decisions.
+ * Real carrier rate is fetched during fulfillment.
  */
-export async function findNearestWarehouse(
+export function estimateShippingCost(
+  warehouseZip: string,
+  customerZip: string,
+  weightLbs?: number | null
+): number {
+  // Get distance in miles
+  let miles: number;
+  const dist = zipcodes.distance(warehouseZip, customerZip);
+  if (dist != null) {
+    miles = dist;
+  } else {
+    miles = estimateRegionDistance(warehouseZip, customerZip);
+  }
+
+  // Distance-based tiers
+  let baseCost: number;
+  if (miles <= 200) baseCost = 30;
+  else if (miles <= 500) baseCost = 40;
+  else if (miles <= 1000) baseCost = 55;
+  else if (miles <= 1500) baseCost = 70;
+  else baseCost = 85;
+
+  // Adjust by weight: multiply by (weight / 30) clamped to [0.8, 1.5]
+  if (weightLbs && weightLbs > 0) {
+    const factor = Math.min(1.5, Math.max(0.8, weightLbs / 30));
+    baseCost = Math.round(baseCost * factor * 100) / 100;
+  }
+
+  return baseCost;
+}
+
+// ── Smart warehouse routing (total landed cost) ─────────────
+
+export interface BestWarehouseResult {
+  warehouse: Warehouse;
+  distance: number;
+  stock: number;
+  tireCost: number;
+  estShipping: number;
+  totalLandedCost: number;
+  alternatives: Array<{
+    warehouse: Warehouse;
+    distance: number;
+    stock: number;
+    tireCost: number;
+    estShipping: number;
+    totalLandedCost: number;
+  }>;
+}
+
+/**
+ * Find the best warehouse for a tire order, optimized by total landed cost
+ * (tire cost at warehouse + estimated shipping to customer ZIP).
+ *
+ * Unlike findNearestWarehouse (which only considers distance), this evaluates
+ * every warehouse with stock and picks the one with the lowest total cost.
+ * A farther warehouse with a cheaper tire can beat a closer one.
+ */
+export async function findBestWarehouse(
   customerZip: string,
   tireId: number,
-  distributorSlug = "tirehub"
-): Promise<{ warehouse: Warehouse; distance: number; stock: number } | null> {
-  // 1. Get warehouse quantities for this tire
-  const { data: invItem } = await getSupabase()
+  distributorSlug?: string
+): Promise<BestWarehouseResult | null> {
+  // 1. Get inventory items for this tire
+  const { data: invItems } = await getSupabase()
     .from("distributor_inventory")
-    .select("warehouse_quantities, distributor_id")
+    .select("warehouse_quantities, location_costs, cost, distributor_id")
     .eq("tire_id", tireId)
     .eq("active", true)
     .gt("quantity", 0);
 
-  if (!invItem || invItem.length === 0) return null;
+  if (!invItems || invItems.length === 0) return null;
 
-  // Filter to the right distributor
-  const { data: dist } = await getSupabase()
-    .from("distributors")
-    .select("id")
-    .eq("slug", distributorSlug)
-    .single();
+  // Filter to the right distributor if specified
+  let distItem = invItems[0];
+  if (distributorSlug) {
+    const { data: dist } = await getSupabase()
+      .from("distributors")
+      .select("id")
+      .eq("slug", distributorSlug)
+      .single();
 
-  const distItem = dist
-    ? invItem.find((i) => i.distributor_id === dist.id)
-    : invItem[0];
+    if (dist) {
+      const found = invItems.find((i) => i.distributor_id === dist.id);
+      if (found) distItem = found;
+    }
+  }
 
-  if (!distItem) return null;
-
-  const warehouseQtys: Record<string, number> =
-    distItem.warehouse_quantities || {};
+  const warehouseQtys: Record<string, number> = distItem.warehouse_quantities || {};
+  const locationCosts: Record<string, number> = distItem.location_costs || {};
+  const mainCost: number = distItem.cost || 0;
 
   // 2. Get all warehouses with stock > 0
   const stockedCodes = Object.entries(warehouseQtys)
@@ -152,26 +213,30 @@ export async function findNearestWarehouse(
 
   if (!warehouseRows || warehouseRows.length === 0) return null;
 
-  // 4. Calculate distance from customer ZIP to each warehouse
-  const customerLookup = zipcodes.lookup(customerZip);
-
-  let best: { warehouse: Warehouse; distance: number; stock: number } | null =
-    null;
+  // 4. Evaluate total landed cost for each warehouse
+  const options: Array<{
+    warehouse: Warehouse;
+    distance: number;
+    stock: number;
+    tireCost: number;
+    estShipping: number;
+    totalLandedCost: number;
+  }> = [];
 
   for (const row of warehouseRows) {
     const stock = warehouseQtys[row.location_code] || 0;
     if (stock <= 0) continue;
 
-    let distance: number;
+    // Tire cost: use per-warehouse cost if available, fall back to main cost
+    const tireCost = locationCosts[row.location_code] ?? mainCost;
+    if (tireCost <= 0) continue;
 
-    if (customerLookup) {
-      // Use precise ZIP distance
-      const dist = zipcodes.distance(customerZip, row.postal_code);
-      distance = dist ?? estimateRegionDistance(customerZip, row.postal_code);
-    } else {
-      // Fallback: 3-digit prefix distance estimate
-      distance = estimateRegionDistance(customerZip, row.postal_code);
-    }
+    // Distance
+    const dist = zipcodes.distance(customerZip, row.postal_code);
+    const distance = dist ?? estimateRegionDistance(customerZip, row.postal_code);
+
+    // Estimated shipping
+    const estShipping = estimateShippingCost(row.postal_code, customerZip);
 
     const warehouse: Warehouse = {
       id: row.id,
@@ -190,12 +255,44 @@ export async function findNearestWarehouse(
       isDefault: row.is_default,
     };
 
-    if (!best || distance < best.distance) {
-      best = { warehouse, distance, stock };
-    }
+    options.push({
+      warehouse,
+      distance,
+      stock,
+      tireCost,
+      estShipping,
+      totalLandedCost: tireCost + estShipping,
+    });
   }
 
-  return best;
+  if (options.length === 0) return null;
+
+  // 5. Sort by total landed cost ascending
+  options.sort((a, b) => a.totalLandedCost - b.totalLandedCost);
+
+  const best = options[0];
+  return {
+    ...best,
+    alternatives: options.slice(1),
+  };
+}
+
+/**
+ * Find the nearest warehouse that has a specific tire in stock.
+ * Legacy function — now delegates to findBestWarehouse for consistent routing.
+ */
+export async function findNearestWarehouse(
+  customerZip: string,
+  tireId: number,
+  distributorSlug?: string
+): Promise<{ warehouse: Warehouse; distance: number; stock: number } | null> {
+  const result = await findBestWarehouse(customerZip, tireId, distributorSlug);
+  if (!result) return null;
+  return {
+    warehouse: result.warehouse,
+    distance: result.distance,
+    stock: result.stock,
+  };
 }
 
 /**

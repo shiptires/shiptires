@@ -1,5 +1,6 @@
-import { searchTires, toSlug } from "@/lib/db";
+import { searchModels, toSlug, resolveImage } from "@/lib/db";
 import { sitePrice } from "@/lib/pricing";
+import { detectVehicle, parseFlexibleSize, parseRimSize } from "@/lib/vehicle-detection";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -18,35 +19,54 @@ export async function GET(req: Request) {
   const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 100);
   const page = parseInt(searchParams.get("page") || "1") || 1;
 
-  const result = await searchTires({
+  // 1. Check if query is a vehicle (e.g., "2018 camry", "honda civic")
+  const vehicle = query ? detectVehicle(query) : null;
+
+  // 2. Check if query is a tire size in flexible format
+  let resolvedSize = size;
+  let resolvedRimSize: string | undefined;
+  if (query && !vehicle) {
+    const parsedSize = parseFlexibleSize(query);
+    if (parsedSize) {
+      resolvedSize = parsedSize;
+    } else {
+      const rimSize = parseRimSize(query);
+      if (rimSize) resolvedRimSize = rimSize;
+    }
+  }
+
+  // 3. If vehicle detected, search by its tire sizes
+  let searchSize = resolvedSize;
+  if (vehicle && vehicle.sizes.length > 0 && !resolvedSize) {
+    searchSize = vehicle.sizes[0];
+  }
+
+  const result = await searchModels({
     brand,
-    size,
+    size: searchSize,
     season,
     terrain,
     category,
     minPrice,
     maxPrice,
-    query,
+    query: vehicle || resolvedSize || resolvedRimSize ? undefined : query,
+    rimSize: resolvedRimSize,
     page,
     limit,
   });
 
-  const results = result.tires.map((t) => ({
-    brand: t.make_name,
-    brand_slug: toSlug(t.make_name),
-    model: t.model_name,
-    model_slug: toSlug(t.model_name),
-    type: t.season || t.terrain || "",
-    size:
-      t.width && t.aspect_ratio && t.rim_size
-        ? `${t.width}/${t.aspect_ratio}R${t.rim_size}`
-        : t.name,
-    load_index: parseInt(t.load_rating ?? "0") || 0,
-    speed_rating: t.speed_rating ?? "",
-    price: sitePrice(t.price_map),
-    warranty: t.warranty ?? "",
+  const results = result.models.map((m) => ({
+    brand: m.make_name,
+    brand_slug: toSlug(m.make_name),
+    model: m.model_name,
+    model_slug: toSlug(m.model_name),
+    type: m.season || m.terrain || "",
+    size: `${m.tire_count} size${m.tire_count !== 1 ? "s" : ""}`,
+    price: sitePrice(m.min_price),
+    warranty: m.warranty ?? "",
     features: [] as string[],
-    url: `https://ship.tires/tires/${toSlug(t.make_name)}/${toSlug(t.model_name)}`,
+    url: `/tires/${toSlug(m.make_name)}/${toSlug(m.model_name)}`,
+    thumbnail: resolveImage(m.local_thumbnail, m.thumbnail_url) ?? null,
   }));
 
   return Response.json(
@@ -55,6 +75,15 @@ export async function GET(req: Request) {
       page: result.page,
       total_pages: result.totalPages,
       results,
+      vehicle: vehicle
+        ? {
+            year: vehicle.year,
+            make: vehicle.makeDisplay,
+            model: vehicle.model.replace(/\b\w/g, (c) => c.toUpperCase()),
+            sizes: vehicle.sizes,
+            url: vehicle.url,
+          }
+        : undefined,
       shipping: "Free shipping on all orders — all 50 US states",
       contact: { phone: "(279) 238-8473", email: "info@ship.tires" },
     },

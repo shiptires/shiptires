@@ -2,19 +2,42 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
-// ── Pricing constants (mirrored from pricing.ts + ebay distributor) ──
-const STRIPE_FEE = 0.03;
-const SITE_MARGIN = 0.15;
-const EBAY_FVF = 0.1325;
-const EBAY_MISC = 0.02;
-const EBAY_MARGIN = 0.15;
+// ── Pricing constants (mirrored from pricing.ts + ebay.ts) ──
+const STRIPE_FEE = 0.06;   // BNPL worst-case (card is 3% → extra margin)
 const DEFAULT_SHIPPING = 55;
 
+// Tiered margins — 3 tiers
+const MARGIN_THRESHOLD_LOW = 50;
+const MARGIN_THRESHOLD_HIGH = 200;
+const SITE_MARGIN_LOW = 10;    // cost ≤ $50
+const SITE_MARGIN_MID = 15;    // cost $51-$200
+const SITE_MARGIN_HIGH = 20;   // cost > $200
+const EBAY_MARGIN_LOW = 10;    // cost ≤ $50
+const EBAY_MARGIN_MID = 15;    // cost $51-$200
+const EBAY_MARGIN_HIGH = 20;   // cost > $200
+
+// eBay fee factors
+const EBAY_FVF = 0.1325;
+const EBAY_FVF_TAX = 0.009938;
+const EBAY_MISC = 0.02;
+const EBAY_SHIPPING_FVF = 1.1325;
+const EBAY_PRICE_FACTOR = 1 - EBAY_FVF - EBAY_FVF_TAX - EBAY_MISC;
+
+function getSiteMargin(cost: number): number {
+  if (cost <= MARGIN_THRESHOLD_LOW) return SITE_MARGIN_LOW;
+  if (cost <= MARGIN_THRESHOLD_HIGH) return SITE_MARGIN_MID;
+  return SITE_MARGIN_HIGH;
+}
+function getEbayMargin(cost: number): number {
+  if (cost <= MARGIN_THRESHOLD_LOW) return EBAY_MARGIN_LOW;
+  if (cost <= MARGIN_THRESHOLD_HIGH) return EBAY_MARGIN_MID;
+  return EBAY_MARGIN_HIGH;
+}
 function calcSitePrice(cost: number, shipping: number): number {
-  return Math.round(((cost + shipping) / (1 - STRIPE_FEE - SITE_MARGIN)) * 100) / 100;
+  return Math.round(((cost + shipping + getSiteMargin(cost)) / (1 - STRIPE_FEE)) * 100) / 100;
 }
 function calcEbayPrice(cost: number, shipping: number): number {
-  return Math.round(((cost + shipping) / (1 - EBAY_FVF - EBAY_MISC - EBAY_MARGIN)) * 100) / 100;
+  return Math.round(((cost + shipping * EBAY_SHIPPING_FVF + getEbayMargin(cost)) / EBAY_PRICE_FACTOR) * 100) / 100;
 }
 
 interface Distributor {
@@ -132,6 +155,11 @@ export default function DistributorsPage() {
   const [itemSaving, setItemSaving] = useState(false);
   const [itemError, setItemError] = useState<string | null>(null);
   const [itemSuccess, setItemSuccess] = useState<string | null>(null);
+
+  // CSV upload
+  const [csvUploading, setCsvUploading] = useState(false);
+  const [csvResult, setCsvResult] = useState<{ totalRows: number; matched: number; unmatched: number; zeroed: number; errors: string[]; duration: number } | null>(null);
+  const csvInputRef = useRef<HTMLInputElement>(null);
 
   // Action messages
   const [actionMsg, setActionMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -316,9 +344,6 @@ export default function DistributorsPage() {
           partNumber: item.part_number || undefined,
         })),
         shippingCost: shipping,
-        ebayFvf: EBAY_FVF,
-        miscRate: EBAY_MISC,
-        marginRate: EBAY_MARGIN,
         dryRun: syncDryRun,
         distributorId: selectedDist.id,
       };
@@ -589,6 +614,50 @@ export default function DistributorsPage() {
     } catch { /* ignore */ }
   }
 
+  // ── CSV Upload ───────────────────────────────────────────
+  async function handleCsvUpload(file: File) {
+    if (!selectedDist) return;
+    setCsvUploading(true);
+    setCsvResult(null);
+    setActionMsg(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(`/api/admin/distributors/${selectedDist.id}/inventory/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+
+      setCsvResult({
+        totalRows: data.totalRows,
+        matched: data.matched,
+        unmatched: data.unmatched,
+        zeroed: data.zeroed,
+        errors: data.errors || [],
+        duration: data.duration,
+      });
+
+      setActionMsg({
+        type: data.matched > 0 ? "success" : "error",
+        text: `CSV Upload: ${data.matched} matched, ${data.unmatched} unmatched, ${data.zeroed} zeroed (${(data.duration / 1000).toFixed(1)}s)`,
+      });
+
+      // Refresh data
+      fetchDetail(selectedDist.id);
+      fetchInventory(selectedDist.id, invPage, searchQuery);
+    } catch (e) {
+      setActionMsg({ type: "error", text: e instanceof Error ? e.message : "CSV upload failed" });
+    } finally {
+      setCsvUploading(false);
+      if (csvInputRef.current) csvInputRef.current.value = "";
+    }
+  }
+
   // ── List View ─────────────────────────────────────────────
   if (view === "list") {
     return (
@@ -841,6 +910,53 @@ export default function DistributorsPage() {
                   </div>
                 )}
               </div>
+
+              {/* CSV Upload */}
+              <div className="mt-2 pt-2 border-t border-gray-100 space-y-2">
+                <p className="text-xs font-medium text-gray-700">Upload CSV</p>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={csvInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleCsvUpload(file);
+                    }}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => csvInputRef.current?.click()}
+                    disabled={csvUploading}
+                    className="px-3 py-1.5 bg-safety-orange text-white rounded text-xs font-medium hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                  >
+                    {csvUploading ? "Uploading..." : "Choose CSV File"}
+                  </button>
+                  <span className="text-[10px] text-gray-400">
+                    Accepts distributor inventory CSV
+                  </span>
+                </div>
+                {csvResult && (
+                  <div className={`text-xs rounded px-3 py-2 ${csvResult.matched > 0 ? "bg-green-50 border border-green-200 text-green-700" : "bg-yellow-50 border border-yellow-200 text-yellow-700"}`}>
+                    <div className="flex gap-4 mb-1">
+                      <span>{csvResult.totalRows} rows</span>
+                      <span className="font-medium">{csvResult.matched} matched</span>
+                      <span>{csvResult.unmatched} unmatched</span>
+                      <span>{csvResult.zeroed} zeroed</span>
+                    </div>
+                    {csvResult.errors.length > 0 && (
+                      <div className="text-[10px] text-gray-600 mt-1 max-h-20 overflow-y-auto">
+                        {csvResult.errors.slice(0, 5).map((err, i) => (
+                          <p key={i} className="truncate">{err}</p>
+                        ))}
+                        {csvResult.errors.length > 5 && (
+                          <p className="text-gray-400">...and {csvResult.errors.length - 5} more</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -923,7 +1039,7 @@ export default function DistributorsPage() {
               <div className="bg-gray-50 rounded px-3 py-2 mb-3 text-xs text-gray-600 flex gap-6">
                 <span>Site: <span className="font-medium text-gray-900">${calcSitePrice(parseFloat(itemCost), shipping).toFixed(2)}</span></span>
                 <span>eBay: <span className="font-medium text-gray-900">${calcEbayPrice(parseFloat(itemCost), shipping).toFixed(2)}</span></span>
-                <span>Margin: <span className="font-medium text-green-700">15%</span></span>
+                <span>Net Profit: <span className="font-medium text-green-700">${EBAY_MARGIN_LOW} (≤${MARGIN_THRESHOLD_LOW}) / ${EBAY_MARGIN_MID} (≤${MARGIN_THRESHOLD_HIGH}) / ${EBAY_MARGIN_HIGH} (&gt;${MARGIN_THRESHOLD_HIGH})</span></span>
               </div>
             )}
 

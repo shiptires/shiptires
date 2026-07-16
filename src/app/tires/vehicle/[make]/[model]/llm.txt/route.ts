@@ -61,7 +61,7 @@ export async function GET(
     "## How to Buy",
     `1. Browse tires at ${BASE}/tires/vehicle/${make}/${model}`,
     "2. Select your tire size",
-    "3. Choose from 34 curated brands — free shipping on all orders",
+    "3. Choose from top brands — free shipping on all orders",
     "4. Call/Text (279) 238-8473 for help",
     "",
     `Source: Ship.Tires — ${BASE}`,

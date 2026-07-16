@@ -1,13 +1,14 @@
 import { isAdminRequest } from "@/lib/admin-auth";
-import { findNearestWarehouse } from "@/lib/warehouses";
+import { findBestWarehouse } from "@/lib/warehouses";
 
 /**
  * POST /api/admin/warehouses/suggest
  *
- * Finds the nearest warehouse with stock for a given tire and customer ZIP.
+ * Finds the best warehouse for a given tire and customer ZIP,
+ * optimized by total landed cost (tire cost + estimated shipping).
  *
  * Body: { customerZip: string, tireId: number, distributorSlug?: string }
- * Returns: { warehouse, distance, stock } or { warehouse: null }
+ * Returns: { warehouse, distance, stock, tireCost, estShipping, totalLandedCost, alternatives }
  */
 export async function POST(req: Request) {
   if (!(await isAdminRequest())) {
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const result = await findNearestWarehouse(
+    const result = await findBestWarehouse(
       customerZip,
       tireId,
       distributorSlug
@@ -46,6 +47,22 @@ export async function POST(req: Request) {
       },
       distance: Math.round(result.distance),
       stock: result.stock,
+      tireCost: result.tireCost,
+      estShipping: result.estShipping,
+      totalLandedCost: result.totalLandedCost,
+      alternatives: result.alternatives.map((alt) => ({
+        warehouse: {
+          id: alt.warehouse.id,
+          label: alt.warehouse.label,
+          city: alt.warehouse.city,
+          state: alt.warehouse.state,
+        },
+        distance: Math.round(alt.distance),
+        stock: alt.stock,
+        tireCost: alt.tireCost,
+        estShipping: alt.estShipping,
+        totalLandedCost: alt.totalLandedCost,
+      })),
     });
   } catch (e) {
     console.error("Warehouse suggest error:", e);

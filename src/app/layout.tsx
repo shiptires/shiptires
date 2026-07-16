@@ -8,7 +8,10 @@ import { getStats } from "@/lib/db";
 import ChatBot from "@/components/ChatBot";
 import CookieConsent from "@/components/CookieConsent";
 import ClientProviders from "@/components/ClientProviders";
-import NewVisitorTracker from "@/components/NewVisitorTracker";
+import GoogleMerchantBadge from "@/components/GoogleMerchantBadge";
+
+import CartDrawer from "@/components/CartDrawer";
+import ToastContainer from "@/components/Toast";
 
 const archivoBlack = Archivo_Black({
   weight: "400",
@@ -90,7 +93,7 @@ const jsonLd = {
   email: "info@ship.tires",
   logo: "https://ship.tires/logo.png",
   description:
-    "Shop tires online from 34 curated brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Hankook, Yokohama, Cooper, Toyo, Falken, Firestone, Kumho, Nexen, Nitto, Dunlop, Nokian, General Tire, Maxxis, and more. Ship free to your door or installer anywhere in the US. Find tires for Honda, Toyota, Ford, Chevrolet, BMW, Mercedes-Benz, Nissan, Hyundai, Kia, Jeep, Ram, GMC, Subaru, Volkswagen, Audi, Lexus, Mazda, Tesla & all vehicles.",
+    "Shop tires online from top brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Hankook, Yokohama, Cooper, Toyo, Falken, Firestone, Kumho, Nexen, Nitto, Dunlop, Nokian, General Tire, Maxxis, and more. Ship free to your door or installer anywhere in the US. Find tires for Honda, Toyota, Ford, Chevrolet, BMW, Mercedes-Benz, Nissan, Hyundai, Kia, Jeep, Ram, GMC, Subaru, Volkswagen, Audi, Lexus, Mazda, Tesla & all vehicles.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Sacramento",
@@ -256,7 +259,6 @@ export default async function RootLayout({
       className={`${archivoBlack.variable} ${sourceSans.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
       <head>
-        <link rel="preconnect" href="https://storage.googleapis.com" />
         <link rel="preconnect" href="https://new.tirelibrary.com" />
         <link rel="preconnect" href="https://img.logo.dev" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
@@ -283,15 +285,29 @@ export default async function RootLayout({
         <Script id="gtag-init" strategy="afterInteractive">
           {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-JQ5FYZVLXK');var c=localStorage.getItem('ship-tires-cookie-consent');if(c==='granted'){gtag('consent','update',{analytics_storage:'granted'});}`}
         </Script>
+        <Script id="meta-pixel" strategy="afterInteractive">
+          {`!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','1956480158319223');fbq('track','PageView');`}
+        </Script>
+        <noscript>
+          <img
+            height="1"
+            width="1"
+            style={{ display: "none" }}
+            src="https://www.facebook.com/tr?id=1956480158319223&ev=PageView&noscript=1"
+            alt=""
+          />
+        </noscript>
       </head>
-      <body className="min-h-full flex flex-col font-body">
+      <body className="min-h-full flex flex-col font-body overflow-x-hidden">
         <ClientProviders>
-          <NewVisitorTracker />
           <Header brandCount={stats.brandCount} modelCount={stats.modelCount} tireCount={stats.tireCount} />
           <main className="flex-1">{children}</main>
           <Footer />
+          <CartDrawer />
+          <ToastContainer />
           <ChatBot />
           <CookieConsent />
+          <GoogleMerchantBadge />
         </ClientProviders>
       </body>
     </html>

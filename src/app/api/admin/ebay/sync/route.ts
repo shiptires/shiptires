@@ -4,11 +4,13 @@ import type { TireRow } from "@/lib/db";
 import {
   addFixedPriceItem,
   getActiveListings,
-  getCompetitivePrice,
   reviseItemWithImages,
   tireToEbayItem,
   tireToSku,
+  calculateDistributorPrice,
 } from "@/lib/ebay";
+import { getSupabase } from "@/lib/supabase";
+import { getShippingByWeight } from "@/lib/pricing";
 
 export const maxDuration = 300; // 5 min for large syncs
 
@@ -175,15 +177,27 @@ export async function POST(req: Request) {
       seenInBatch.add(key);
 
       try {
-        // Look up competitive pricing
-        let competitivePrice: number | null = null;
-        try {
-          competitivePrice = await getCompetitivePrice(tire);
-        } catch {
-          // Non-fatal — fall back to MAP + markup
+        // Look up distributor cost for this tire
+        const sb = getSupabase();
+        const { data: inv } = await sb.from("distributor_inventory")
+          .select("cost")
+          .eq("tire_id", tire.id)
+          .eq("active", true)
+          .gt("cost", 0)
+          .order("cost", { ascending: true })
+          .limit(1);
+
+        const cost = inv?.[0]?.cost;
+        if (!cost) {
+          result.skipped++;
+          continue;
         }
 
-        const mapped = tireToEbayItem(tire, competitivePrice);
+        const weightLbs = tire.weight ? parseFloat(tire.weight) : null;
+        const shippingCost = getShippingByWeight(weightLbs);
+        const ebayPrice = calculateDistributorPrice(cost, shippingCost);
+
+        const mapped = tireToEbayItem(tire, ebayPrice);
         if (!mapped) {
           result.skipped++;
           continue;

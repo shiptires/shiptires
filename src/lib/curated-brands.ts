@@ -10,6 +10,7 @@
 export const CURATED_BRANDS: Map<string, string> = new Map([
   ["ACCELERA", ""],
   ["ACCELUS", ""],
+  ["ACHILLES", ""],
   ["ADVANCE", ""],
   ["AEOLUS", ""],
   ["AG PLUS", ""],

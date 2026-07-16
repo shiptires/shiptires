@@ -199,7 +199,7 @@ Absolutely. Choose from our network of certified installation partners at checko
 Use our Vehicle Lookup tool — enter your year, make, model, and trim, and we'll show you the manufacturer-recommended tire sizes. You can also find your tire size on the placard inside your driver's door jamb.
 
 ## What brands do you carry?
-We carry 34 curated brands: Advanta, BFGoodrich, Bridgestone, Continental, Cooper, Dunlop, Falken, Firestone, General Tire, Goodyear, Hankook, Hoosier, Kenda, Kumho, Laufenn, Maxxis, Michelin, Mickey Thompson, Nankang, Nexen, Nitto, Nokian, Pirelli, Power King, Radar, Range Finder, Riken, Sumitomo, Toyo, Uniroyal, Vitour, Vogue, Vredestein, and Yokohama.
+We carry top brands including Michelin, Bridgestone, Continental, Goodyear, Pirelli, Cooper, Hankook, Yokohama, Falken, Toyo, BFGoodrich, Firestone, Kumho, Nexen, Nitto, Maxxis, and many more.
 
 ## Can I return tires?
 Unmounted tires can be returned within 30 days for a full refund. Once mounted, manufacturer warranties apply.

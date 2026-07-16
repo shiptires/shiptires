@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getTiresBySize, toSlug, getAllBrands, brandSummaryToBrand } from "@/lib/db";
-import { sitePrice } from "@/lib/pricing";
+import { resolveImage } from "@/lib/db/mappers";
 import { states } from "@/data/locations";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { getVehiclesForSize } from "@/data/tire-sizes";
+import { getSitePriceBatch } from "@/lib/pricing";
 import type { TireRow } from "@/lib/db";
 import type { Metadata } from "next";
 
@@ -36,9 +37,18 @@ export async function generateMetadata({
   const parsed = parseSizeSlug(size);
   if (!parsed) return {};
 
-  // Fetch tires to get starting price for title
+  // Fetch tires and get real pricing from distributor/competitor pipeline
   const tires = await getTiresBySize(parsed.width, parsed.aspect, parsed.rim);
-  const prices = tires.map((t) => sitePrice(t.price_map)).filter((p) => p > 0);
+  const metaPriceMap = await getSitePriceBatch(
+    tires.filter((t) => t.id).map((t) => ({
+      id: t.id,
+      brand: t.make_name,
+      model: t.model_name,
+      weight: t.weight ? parseFloat(t.weight) || null : null,
+      rimSize: t.rim_size ? parseInt(t.rim_size) || null : null,
+    }))
+  );
+  const prices = [...metaPriceMap.values()].filter((p) => p > 0);
   const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
 
   // Get vehicle names for description
@@ -91,11 +101,23 @@ export default async function SizePage({
   const allBrands = allBrandRows.map(brandSummaryToBrand);
   const topCities = states.flatMap((s) => s.cities.map((c) => ({ ...c, state: s }))).sort((a, b) => b.population - a.population).slice(0, 20);
 
+  // Get real pricing from distributor/competitor pipeline
+  const priceMap = await getSitePriceBatch(
+    tires.filter((t) => t.id).map((t) => ({
+      id: t.id,
+      brand: t.make_name,
+      model: t.model_name,
+      weight: t.weight ? parseFloat(t.weight) || null : null,
+      rimSize: t.rim_size ? parseInt(t.rim_size) || null : null,
+    }))
+  );
+
   // Group by brand+model (exclude retreads — not consumer products)
   const grouped = new Map<string, GroupedModel>();
   for (const tire of tires) {
     if (/retread/i.test(tire.model_name) || /retread/i.test(tire.name ?? "")) continue;
     const key = `${tire.make_name}|||${tire.model_name}`;
+    const tirePrice = priceMap.get(tire.id) ?? 0;
     if (!grouped.has(key)) {
       grouped.set(key, {
         brandName: tire.make_name,
@@ -104,26 +126,29 @@ export default async function SizePage({
         modelName: tire.model_name,
         modelSlug: toSlug(tire.model_name),
         season: tire.season || "",
-        price: sitePrice(tire.price_map),
+        price: tirePrice,
         speedRating: tire.speed_rating ?? "",
         loadRating: tire.load_rating ?? "",
-        imageUrl: tire.thumbnail_url ?? tire.image_0100_url,
+        imageUrl: resolveImage(tire.local_thumbnail, tire.thumbnail_url, tire.image_0100_url) ?? null,
         tireCount: 0,
       });
     }
     grouped.get(key)!.tireCount++;
     // Use lowest non-zero price
     const g = grouped.get(key)!;
-    const sp = sitePrice(tire.price_map);
-    if (sp > 0 && (g.price === 0 || sp < g.price)) {
-      g.price = sp;
+    if (tirePrice > 0 && (g.price === 0 || tirePrice < g.price)) {
+      g.price = tirePrice;
     }
   }
 
-  // Only show models with real pricing (hide no-price items from public display)
+  // Show all models, priced first then unpriced
   const models = [...grouped.values()]
-    .filter((m) => m.price > 0)
-    .sort((a, b) => a.price - b.price);
+    .sort((a, b) => {
+      if (a.price > 0 && b.price <= 0) return -1;
+      if (a.price <= 0 && b.price > 0) return 1;
+      if (a.price > 0 && b.price > 0) return a.price - b.price;
+      return a.modelName.localeCompare(b.modelName);
+    });
 
   const breadcrumb = buildBreadcrumbSchema([
     { name: "Home", url: "https://ship.tires" },

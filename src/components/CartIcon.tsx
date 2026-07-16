@@ -1,14 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 
 export default function CartIcon() {
-  const { totalItems } = useCart();
+  const { totalItems, setCartOpen } = useCart();
 
   return (
-    <Link
-      href="/cart"
+    <button
+      onClick={() => setCartOpen(true)}
       className="relative inline-flex items-center justify-center rounded-md p-2 text-white/70 hover:text-white transition-colors"
       aria-label={`Cart with ${totalItems} items`}
     >
@@ -30,6 +29,6 @@ export default function CartIcon() {
           {totalItems > 99 ? "99+" : totalItems}
         </span>
       )}
-    </Link>
+    </button>
   );
 }

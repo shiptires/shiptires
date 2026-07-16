@@ -18,12 +18,19 @@ export function GET() {
     },
     apis: [
       {
-        name: "Product Feed",
+        name: "Google Merchant Feed",
         description:
           "RSS 2.0 XML feed of tire products. Supports pagination, brand filtering, and vehicle-expanded listings.",
         url: "https://ship.tires/api/feeds/google-merchant",
         type: "rest",
         documentation_url: "https://ship.tires/openapi.json",
+      },
+      {
+        name: "Meta Commerce Feed",
+        description:
+          "TSV feed for Meta Commerce Manager (Facebook Shops, Instagram Shopping). Supports pagination and brand filtering.",
+        url: "https://ship.tires/api/feeds/meta-commerce",
+        type: "rest",
       },
     ],
     capabilities: {

@@ -1,14 +1,16 @@
 import Link from "next/link";
-import { getStripe } from "@/lib/stripe";
+import { getSupabase } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/server";
 import CartClearer from "@/components/CartClearer";
+import MetaPixelPurchase from "@/components/MetaPixelPurchase";
+import GoogleCustomerReviews from "@/components/GoogleCustomerReviews";
 
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{ order_id?: string }>;
 }) {
-  const { session_id } = await searchParams;
+  const { order_id } = await searchParams;
 
   let orderDetails: {
     email: string;
@@ -26,26 +28,46 @@ export default async function CheckoutSuccessPage({
     // Not logged in
   }
 
-  if (session_id) {
+  if (order_id) {
     try {
-      const session = await getStripe().checkout.sessions.retrieve(session_id);
-      const items = session.metadata?.items_json
-        ? JSON.parse(session.metadata.items_json)
-        : [];
+      const { data: order } = await getSupabase()
+        .from("tire_orders")
+        .select("customer_email, total, items")
+        .eq("payment_id", order_id)
+        .single();
 
-      orderDetails = {
-        email: session.customer_email || "",
-        total: (session.amount_total || 0) / 100,
-        items,
-      };
+      if (order) {
+        orderDetails = {
+          email: order.customer_email || "",
+          total: order.total || 0,
+          items: order.items || [],
+        };
+      }
     } catch {
-      // Session retrieval failed — show generic success
+      // Order retrieval failed — show generic success
     }
   }
 
   return (
     <div className="bg-gray-50 min-h-[60vh]">
       <CartClearer />
+      {orderDetails && (
+        <>
+          <MetaPixelPurchase
+            total={orderDetails.total}
+            items={orderDetails.items}
+          />
+          <GoogleCustomerReviews
+            orderId={order_id || ""}
+            email={orderDetails.email}
+            estimatedDeliveryDate={(() => {
+              const d = new Date();
+              d.setDate(d.getDate() + 9);
+              return d.toISOString().split("T")[0];
+            })()}
+          />
+        </>
+      )}
       <div className="mx-auto max-w-2xl px-4 py-20 text-center sm:px-6 lg:px-8">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
           <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -56,6 +78,9 @@ export default async function CheckoutSuccessPage({
         <p className="mt-3 text-gray-600">
           Thank you for your purchase. Your tires will ship within 1-2 business days with free shipping.
         </p>
+        <div className="mt-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+          Payment is processing via ACH bank transfer (1-3 business days). You&apos;ll receive a confirmation once the payment clears.
+        </div>
 
         {orderDetails && (
           <div className="mt-8 rounded-xl bg-white border border-gray-200 p-6 text-left shadow-sm">

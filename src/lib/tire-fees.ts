@@ -96,8 +96,7 @@ const STATE_TAX_RATES: Record<string, number> = {
   WY: 4.0,
 };
 
-/** Flat handling fee per order (USD). */
-export const HANDLING_FEE = 5.0;
+
 
 /** Per-tire disposal fee for the given state, or 0 if none. */
 export function getTireFee(state: string): number {
@@ -114,7 +113,6 @@ export function getSalesTaxRate(state: string): number {
 export interface OrderFees {
   tireFeePerTire: number;
   tireFeeTotal: number;
-  handlingFee: number;
   taxableAmount: number;
   taxRate: number;
   taxAmount: number;
@@ -123,7 +121,7 @@ export interface OrderFees {
 
 /**
  * Calculate all fees and tax for an order.
- * Tax applies to: tire subtotal + tire disposal fee + handling fee.
+ * Tax applies to: tire subtotal + tire disposal fee.
  */
 export function calculateOrderFees(
   state: string,
@@ -132,16 +130,14 @@ export function calculateOrderFees(
 ): OrderFees {
   const tireFeePerTire = getTireFee(state);
   const tireFeeTotal = tireFeePerTire * tireCount;
-  const handlingFee = HANDLING_FEE;
-  const taxableAmount = subtotal + tireFeeTotal + handlingFee;
+  const taxableAmount = subtotal + tireFeeTotal;
   const taxRate = getSalesTaxRate(state);
   const taxAmount = Math.round(taxableAmount * taxRate * 100) / 100;
-  const total = subtotal + tireFeeTotal + handlingFee + taxAmount;
+  const total = subtotal + tireFeeTotal + taxAmount;
 
   return {
     tireFeePerTire,
     tireFeeTotal,
-    handlingFee,
     taxableAmount,
     taxRate,
     taxAmount,

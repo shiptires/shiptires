@@ -5,7 +5,7 @@ import { states } from "@/data/locations";
 import { searchTires, toSlug } from "@/lib/db";
 import type { TireRow } from "@/lib/db";
 import { isCuratedBrand } from "@/lib/curated-brands";
-import { sitePrice } from "@/lib/pricing";
+import { getSitePriceBatch } from "@/lib/pricing";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { lookupTireSizes } from "@/data/tire-sizes";
 import { vehicleMakes, getModelsForMake } from "@/data/vehicle-content";
@@ -86,6 +86,17 @@ export default async function CityVehiclePage({
   }
 
   const curatedTires = allTires.filter((t) => isCuratedBrand(t.make_name));
+
+  // Get real pricing from distributor/competitor pipeline
+  const priceMap = await getSitePriceBatch(
+    curatedTires.filter((t) => t.id).map((t) => ({
+      id: t.id,
+      brand: t.make_name,
+      model: t.model_name,
+      weight: t.weight ? parseFloat(t.weight) || null : null,
+      rimSize: t.rim_size ? parseInt(t.rim_size) || null : null,
+    }))
+  );
 
   // Deduplicate by brand+model, keep one per
   const seen = new Set<string>();
@@ -207,8 +218,8 @@ export default async function CityVehiclePage({
                         {tire.width && tire.aspect_ratio && tire.rim_size && (
                           <span className="text-xs font-mono text-gray-500">{tire.width}/{tire.aspect_ratio}R{tire.rim_size}</span>
                         )}
-                        {sitePrice(tire.price_map) > 0 && (
-                          <p className="mt-1 text-sm font-bold text-gray-900">From ${sitePrice(tire.price_map).toFixed(2)}<span className="text-xs text-gray-500"> /tire</span></p>
+                        {(priceMap.get(tire.id) ?? 0) > 0 && (
+                          <p className="mt-1 text-sm font-bold text-gray-900">From ${(priceMap.get(tire.id) ?? 0).toFixed(2)}<span className="text-xs text-gray-500"> /tire</span></p>
                         )}
                       </div>
                     </Link>

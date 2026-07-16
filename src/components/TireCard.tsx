@@ -100,10 +100,10 @@ export default function TireCard({
           <div className="mb-4">
             {hasPrice ? (
               <div>
-                <span className="text-2xl font-bold text-gray-900">${model.priceRange[0]}</span>
+                <span className="text-2xl font-bold text-gray-900">${model.priceRange[0].toFixed(2)}</span>
                 <span className="text-sm text-gray-500">/tire</span>
                 {model.priceRange[1] > model.priceRange[0] && (
-                  <span className="ml-2 text-sm text-gray-400">— ${model.priceRange[1]}</span>
+                  <span className="ml-2 text-sm text-gray-400">— ${model.priceRange[1].toFixed(2)}</span>
                 )}
               </div>
             ) : (

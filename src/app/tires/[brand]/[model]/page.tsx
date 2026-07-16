@@ -59,7 +59,7 @@ export async function generateMetadata({
   if (!data) return {};
 
   const baseModel = tiresToModel(data.model, data.tires, data.brand, data.modelDetails);
-  const distPricing = await applyDistributorPricing(baseModel.sizes);
+  const distPricing = await applyDistributorPricing(baseModel.sizes, data.brand, data.model);
   const pricedSizes = distPricing.sizes.filter((s) => s.price > 0);
   const model = { ...baseModel, sizes: pricedSizes, priceRange: distPricing.priceRange };
   const hasPrice = model.priceRange[0] > 0;
@@ -95,8 +95,8 @@ export default async function ModelPage({
 
   const baseModel = tiresToModel(data.model, data.tires, data.brand, data.modelDetails);
 
-  // Apply distributor pricing — always takes priority over MAP-based pricing
-  const distPricing = await applyDistributorPricing(baseModel.sizes);
+  // Apply distributor pricing — all prices from Express Tire, never TireWeb MAP
+  const distPricing = await applyDistributorPricing(baseModel.sizes, data.brand, data.model);
   // Filter to only sizes with real pricing for public display (page stays alive for SEO)
   const pricedSizes = distPricing.sizes.filter((s) => s.price > 0);
   const model = { ...baseModel, sizes: pricedSizes, priceRange: distPricing.priceRange };

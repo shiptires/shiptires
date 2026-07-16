@@ -63,6 +63,17 @@ export interface TireCategory {
   features: string[];
 }
 
+export type BlogCategory =
+  | "tire-guides"
+  | "tire-types"
+  | "tire-maintenance"
+  | "exotic-cars"
+  | "performance"
+  | "seasonal"
+  | "shopping"
+  | "safety"
+  | "tech";
+
 export interface BlogPost {
   title: string;
   slug: string;
@@ -72,6 +83,7 @@ export interface BlogPost {
   author: string;
   image: string;
   readTime: string;
+  category?: BlogCategory;
 }
 
 export interface VehicleMake {
@@ -149,6 +161,7 @@ export interface CartItem {
   loadIndex: number;
   speedRating: string;
   image?: string;
+  tireId?: number;
 }
 
 export interface ShippingAddress {

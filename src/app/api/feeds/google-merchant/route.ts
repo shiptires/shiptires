@@ -42,24 +42,53 @@ function escapeXml(s: string): string {
 
 const R2_BASE = "https://pub-1404e52fd5554e9dac9a045b7bb89f22.r2.dev";
 
+function resolveUrl(src: string | null | undefined): string | null {
+  if (!src || src === "FAILED") return null;
+  if (src.startsWith("images/") || src.startsWith("images\\")) {
+    const r2Path = src.replace(/\\/g, "/").replace(/^images\//, "");
+    return `${R2_BASE}/${r2Path}`;
+  }
+  if (src.startsWith("http")) return src;
+  return null;
+}
+
 function resolveImageUrl(row: TireRow): string | null {
   const sources = [row.local_thumbnail, row.thumbnail_url, row.image_0100_url];
   for (const src of sources) {
-    if (!src || src === "FAILED") continue;
-    // Local path from sync → R2 URL
-    if (src.startsWith("images/") || src.startsWith("images\\")) {
-      const r2Path = src.replace(/\\/g, "/").replace(/^images\//, "");
-      return `${R2_BASE}/${r2Path}`;
-    }
-    // Already a full URL
-    if (src.startsWith("http")) return src;
+    const url = resolveUrl(src);
+    if (url) return url;
   }
   return null;
+}
+
+function resolveAdditionalImages(row: TireRow, primaryUrl: string | null): string[] {
+  const candidates = [
+    row.local_side, row.side_image_url,
+    row.local_angle, row.angle_image_url,
+    row.local_front, row.front_image_url,
+    row.local_side2, row.side2_image_url,
+    row.image_0200_url, row.image_0301_url, row.image_0302_url,
+  ];
+  const seen = new Set<string>();
+  if (primaryUrl) seen.add(primaryUrl);
+  const result: string[] = [];
+  for (const src of candidates) {
+    const url = resolveUrl(src);
+    if (url && !seen.has(url)) {
+      seen.add(url);
+      result.push(url);
+      if (result.length >= 9) break; // Google allows up to 10 total (1 primary + 9 additional)
+    }
+  }
+  return result;
 }
 
 function buildSize(row: TireRow): string {
   if (row.width && row.aspect_ratio && row.rim_size) {
     return `${row.width}/${row.aspect_ratio}R${row.rim_size}`;
+  }
+  if (row.width && row.rim_size) {
+    return `${row.width}R${row.rim_size}`;
   }
   return row.name;
 }
@@ -153,12 +182,14 @@ function buildItemXml(
   const title = escapeXml(buildTitle(row, size, vehicleName));
   const description = escapeXml(buildDescription(row, size, vehicleName));
 
+  // Skip items without proper size data — these produce bad URLs
+  if (!row.width || !row.rim_size) return "";
+
   const brandSlug = toSlug(row.make_name);
   const modelSlug = toSlug(row.model_name);
-  const sizeSlug =
-    row.width && row.aspect_ratio && row.rim_size
-      ? `${row.width}-${row.aspect_ratio}r${row.rim_size}`.toLowerCase()
-      : String(row.id);
+  const sizeSlug = row.aspect_ratio
+    ? `${row.width}-${row.aspect_ratio}r${row.rim_size}`.toLowerCase()
+    : `${row.width}r${row.rim_size}`.toLowerCase();
 
   const link = vehicle
     ? `https://ship.tires/tires/vehicle/${toSlug(vehicle.make)}/${toSlug(vehicle.model)}`
@@ -166,7 +197,7 @@ function buildItemXml(
 
   const imageLink = resolveImageUrl(row);
 
-  // Pricing waterfall: distributor → competitor → MAP
+  // Pricing: distributor cost → competitor price (no TireWeb MAP fallback)
   const distSource = distPricing?.get(row.id);
   const compSource = compPricing?.get(row.id);
   let price: string;
@@ -175,11 +206,14 @@ function buildItemXml(
   } else if (compSource) {
     price = sitePriceFromCompetitor(compSource.competitorPrice).toFixed(2);
   } else {
-    price = sitePrice(row.price_map).toFixed(2);
+    price = "0.00"; // No distributor/competitor data — skip this item
   }
 
-  // Skip items with no price (no MAP and no distributor pricing)
+  // Skip items without real pricing
   if (price === "0.00") return "";
+
+  // Skip items without a product image — Google requires one
+  if (!imageLink) return "";
 
   const gtin = row.ean || row.upc || "";
   const mpn = row.item_number || row.gm_code || "";
@@ -196,18 +230,42 @@ function buildItemXml(
     `      <g:title>${title}</g:title>`,
     `      <g:description>${description}</g:description>`,
     `      <g:link>${link}</g:link>`,
-    `      <g:checkout_link_template>https://ship.tires/buy/${row.id}</g:checkout_link_template>`,
     ...(imageLink ? [`      <g:image_link>${escapeXml(imageLink)}</g:image_link>`] : []),
+    ...resolveAdditionalImages(row, imageLink).map(
+      (url) => `      <g:additional_image_link>${escapeXml(url)}</g:additional_image_link>`
+    ),
     `      <g:price>${price} USD</g:price>`,
     `      <g:brand>${escapeXml(row.make_name)}</g:brand>`,
     `      <g:condition>new</g:condition>`,
     `      <g:availability>in_stock</g:availability>`,
+    `      <g:identifier_exists>true</g:identifier_exists>`,
     `      <g:google_product_category>${GOOGLE_CATEGORY_ID}</g:google_product_category>`,
     `      <g:product_type>${escapeXml(GOOGLE_CATEGORY)}</g:product_type>`,
   ];
 
   if (gtin) lines.push(`      <g:gtin>${escapeXml(gtin)}</g:gtin>`);
   if (mpn) lines.push(`      <g:mpn>${escapeXml(mpn)}</g:mpn>`);
+
+  // Shipping weight — helps Google rank and calculate shipping
+  if (row.weight) {
+    const w = parseFloat(row.weight);
+    if (w > 0) {
+      lines.push(`      <g:shipping_weight>${w.toFixed(2)} lb</g:shipping_weight>`);
+    }
+  }
+
+  // Product highlights — shown in Google Shopping results
+  const highlights: string[] = [];
+  highlights.push("Free shipping nationwide");
+  highlights.push("30-day returns on unmounted tires");
+  if (row.season) highlights.push(`${row.season} tire`);
+  if (row.warranty) highlights.push(row.warranty);
+  if (row.run_flat) highlights.push("Run-Flat technology");
+  if (row.three_pmsf) highlights.push("3PMSF severe snow rated");
+  if (row.mud_and_snow) highlights.push("M+S rated");
+  for (const h of highlights.slice(0, 6)) {
+    lines.push(`      <g:product_highlight>${escapeXml(h)}</g:product_highlight>`);
+  }
 
   lines.push(`      <g:custom_label_0>${escapeXml(size)}</g:custom_label_0>`);
 
@@ -225,15 +283,16 @@ function buildItemXml(
   }
 
   lines.push(
-    "      <g:multipack>1</g:multipack>",
-    "      <g:is_bundle>no</g:is_bundle>",
-    "      <g:included_destination>Free_listings</g:included_destination>",
-    "      <g:included_destination>Shopping_ads</g:included_destination>",
     "      <g:shipping>",
     "        <g:country>US</g:country>",
     "        <g:service>Standard</g:service>",
     "        <g:price>0 USD</g:price>",
+    "        <g:min_handling_time>1</g:min_handling_time>",
+    "        <g:max_handling_time>2</g:max_handling_time>",
+    "        <g:min_transit_time>3</g:min_transit_time>",
+    "        <g:max_transit_time>7</g:max_transit_time>",
     "      </g:shipping>",
+    "      <g:ships_from_country>US</g:ships_from_country>",
     "    </item>"
   );
 

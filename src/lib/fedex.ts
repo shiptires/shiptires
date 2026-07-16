@@ -184,6 +184,7 @@ const SERVICE_NAMES: Record<string, string> = {
   FEDEX_1_DAY_FREIGHT: "FedEx 1-Day Freight",
   SMART_POST: "FedEx Ground Economy",
   FEDEX_GROUND_ECONOMY: "FedEx Ground Economy",
+  FEDEX_GROUND_ECONOMY_SAVER: "FedEx Ground Economy Saver",
 };
 
 // ── getRates ───────────────────────────────────────────────────
@@ -258,6 +259,49 @@ export async function getRates(params: {
 
   const details = data.output?.rateReplyDetails;
   if (!Array.isArray(details)) return [];
+
+  // If Ground Economy wasn't returned but hub ID is configured, make a separate
+  // request specifically for Ground Economy (FedEx sometimes only returns it
+  // when serviceType is explicitly set)
+  const hubId = process.env.FEDEX_SMARTPOST_HUB_ID;
+  const hasGroundEconomy = details.some(
+    (d: Record<string, unknown>) =>
+      d.serviceType === "SMART_POST" ||
+      d.serviceType === "FEDEX_GROUND_ECONOMY" ||
+      d.serviceType === "FEDEX_GROUND_ECONOMY_SAVER"
+  );
+
+  if (hubId && !hasGroundEconomy) {
+    try {
+      const geBody = {
+        ...body,
+        requestedShipment: {
+          ...body.requestedShipment,
+          serviceType: "GROUND_HOME_DELIVERY",
+          smartPostInfoDetail: {
+            hubId,
+            indicia: "PARCEL_SELECT",
+          },
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const geData = await fedexFetch<{ output?: { rateReplyDetails?: Record<string, any>[] } }>(
+        "/rate/v1/rates/quotes",
+        { method: "POST", body: geBody }
+      );
+      const geDetails = geData.output?.rateReplyDetails;
+      if (Array.isArray(geDetails)) {
+        for (const d of geDetails) {
+          const st = d.serviceType as string;
+          if (!details.some((existing: Record<string, unknown>) => existing.serviceType === st)) {
+            details.push(d);
+          }
+        }
+      }
+    } catch {
+      // Ground Economy not available for this lane — that's OK
+    }
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return details.map((d: Record<string, any>) => {

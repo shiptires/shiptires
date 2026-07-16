@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { searchModels, getAllBrands, getDistinctSizes, toSlug, resolveImage } from "@/lib/db";
 import TireImage from "@/components/TireImage";
-import { sitePrice, formatPrice } from "@/lib/pricing";
+import { formatPrice } from "@/lib/pricing";
 import { detectVehicle, parseFlexibleSize, parseRimSize } from "@/lib/vehicle-detection";
 import type { Metadata } from "next";
 
@@ -496,11 +496,8 @@ export default async function SearchPage({
 
                       <div className="mt-3 flex items-baseline justify-between">
                         <div>
-                          <span className="text-xl font-bold text-gray-900">${formatPrice(sitePrice(m.min_price))}</span>
-                          <span className="text-xs text-gray-400">/tire</span>
-                          {m.max_price && m.max_price > (m.min_price ?? 0) && (
-                            <span className="ml-1 text-xs text-gray-400">— ${formatPrice(sitePrice(m.max_price))}</span>
-                          )}
+                          <span className="text-sm font-semibold text-gray-900">View Pricing</span>
+                          <span className="text-xs text-green-600 ml-1">Free Shipping</span>
                         </div>
                         <span className="text-xs font-mono text-gray-400">{m.tire_count} size{m.tire_count !== 1 ? "s" : ""}</span>
                       </div>

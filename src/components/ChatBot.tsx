@@ -52,19 +52,46 @@ function replaceCheckoutCommands(content: string, replacement: string): string {
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { role: "assistant", content: chatbotConfig.welcomeMessage },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [autoOpened, setAutoOpened] = useState(false);
+  const [cookieBarVisible, setCookieBarVisible] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { addItem } = useCart();
 
-  // Auto-open after 3s on first-ever visit (localStorage persists across sessions)
+  // Check if user previously dismissed the chatbot icon
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (sessionStorage.getItem("ship-tires-chatbot-dismissed")) {
+      setIsDismissed(true);
+    }
+    // Check if cookie consent bar is showing (no consent stored yet)
+    if (!localStorage.getItem("ship-tires-cookie-consent")) {
+      setCookieBarVisible(true);
+    }
+    // Listen for consent changes so chatbot shifts down after accept/decline
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "ship-tires-cookie-consent") setCookieBarVisible(false);
+    };
+    window.addEventListener("storage", onStorage);
+    // Also poll briefly since localStorage changes in the same tab don't fire storage events
+    const poll = setInterval(() => {
+      if (localStorage.getItem("ship-tires-cookie-consent")) {
+        setCookieBarVisible(false);
+        clearInterval(poll);
+      }
+    }, 1000);
+    return () => { window.removeEventListener("storage", onStorage); clearInterval(poll); };
+  }, []);
+
+  // Auto-open after 3s on first-ever visit (localStorage persists across sessions)
+  useEffect(() => {
+    if (typeof window === "undefined" || isDismissed) return;
     const key = "ship-tires-chatbot-opened";
     if (!localStorage.getItem(key)) {
       const timer = setTimeout(() => {
@@ -74,7 +101,7 @@ export default function ChatBot() {
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [isDismissed]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -119,6 +146,7 @@ export default function ChatBot() {
           quantity: qty,
           loadIndex: size.loadIndex,
           speedRating: size.speedRating,
+          tireId: size.tireId,
         });
         subtotal += size.price * qty;
         addedNames.push(`${qty}x ${brand.name} ${model.name} ${size.size}`);
@@ -291,47 +319,86 @@ export default function ChatBot() {
 
   return (
     <>
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          aria-label="Open chat"
-          style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            width: "60px",
-            height: "60px",
-            borderRadius: "50%",
-            backgroundColor: colors.accent,
-            color: "#ffffff",
-            border: "none",
-            cursor: "pointer",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-            transition: "transform 0.2s",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
-          onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-        >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-        </button>
+      {!isOpen && !isDismissed && (
+        <>
+          {/* Dismiss X — separate fixed element so nothing can block it */}
+          <button
+            onClick={() => {
+              setIsDismissed(true);
+              sessionStorage.setItem("ship-tires-chatbot-dismissed", "1");
+            }}
+            aria-label="Hide chat"
+            style={{
+              position: "fixed",
+              bottom: cookieBarVisible ? "146px" : "80px",
+              right: "20px",
+              width: "28px",
+              height: "28px",
+              borderRadius: "50%",
+              backgroundColor: "#374151",
+              color: "#ffffff",
+              border: "2px solid #ffffff",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 10002,
+              padding: "8px",
+              boxSizing: "content-box",
+              touchAction: "manipulation",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              transition: "bottom 0.3s ease",
+              WebkitTapHighlightColor: "transparent",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+          {/* Chat open button */}
+          <button
+            onClick={() => setIsOpen(true)}
+            aria-label="Open chat"
+            style={{
+              position: "fixed",
+              bottom: cookieBarVisible ? "90px" : "24px",
+              right: "24px",
+              width: "60px",
+              height: "60px",
+              borderRadius: "50%",
+              backgroundColor: colors.accent,
+              color: "#ffffff",
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "bottom 0.3s ease, transform 0.2s",
+              zIndex: 10001,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+        </>
       )}
 
       {isOpen && (
         <div
           style={{
             position: "fixed",
-            bottom: "24px",
+            bottom: cookieBarVisible ? "90px" : "24px",
             right: "24px",
             width: "380px",
             maxWidth: "calc(100vw - 32px)",
             height: "520px",
-            maxHeight: "calc(100vh - 48px)",
+            maxHeight: cookieBarVisible ? "calc(100dvh - 114px)" : "calc(100dvh - 48px)",
+            transition: "bottom 0.3s ease, max-height 0.3s ease",
             backgroundColor: "#ffffff",
             borderRadius: "16px",
             border: "2px solid #DC2626",
@@ -339,7 +406,7 @@ export default function ChatBot() {
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
-            zIndex: 9999,
+            zIndex: 10001,
           }}
         >
           {/* Header */}
@@ -378,13 +445,15 @@ export default function ChatBot() {
                 border: "none",
                 color: "#ffffff",
                 cursor: "pointer",
-                padding: "4px",
+                padding: "8px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                minWidth: "44px",
+                minHeight: "44px",
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>

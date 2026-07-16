@@ -1,5 +1,5 @@
 import { isAdminRequest } from "@/lib/admin-auth";
-import { getActiveListings } from "@/lib/ebay";
+import { getActiveListings, getActiveListingsDebug } from "@/lib/ebay";
 
 export async function GET(req: Request) {
   if (!(await isAdminRequest())) {
@@ -10,6 +10,12 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const page = parseInt(url.searchParams.get("page") || "1");
     const limit = parseInt(url.searchParams.get("limit") || "50");
+    const debug = url.searchParams.get("debug") === "1";
+
+    if (debug) {
+      const result = await getActiveListingsDebug(page, limit);
+      return Response.json(result);
+    }
 
     const result = await getActiveListings(page, limit);
     return Response.json(result);

@@ -12,6 +12,9 @@ import { brands as staticBrands } from "@/data/brands";
 
 const API_BASE = "https://app.tireweblibrary.com/api/v1";
 
+// Build-phase detection — skip expensive enrichment (price lookups, pattern details)
+const IS_BUILD = process.env.NEXT_PHASE === "phase-production-build";
+
 // ---------------------------------------------------------------------------
 // Sliding-window rate limiter — 170 req/min (under 200 API limit)
 // ---------------------------------------------------------------------------
@@ -317,6 +320,21 @@ export async function apiGetModelsByBrand(brandName: string): Promise<ModelSumma
   const { patterns } = unwrapPatterns(raw as ApiPatternsResponse);
   if (patterns.length === 0) return [];
 
+  // During build: skip expensive pattern detail + price enrichment to stay under
+  // API rate limits. Return catalog data only. Prices/images fill in via ISR.
+  if (IS_BUILD) {
+    return patterns.map((p) => ({
+      model_name: p.name,
+      tire_count: p.size_count || 0,
+      min_price: null,
+      max_price: null,
+      season: p.season ?? null,
+      terrain: p.terrain ?? null,
+      category: p.category ?? null,
+      thumbnail_url: p.image_url ?? null,
+    }));
+  }
+
   // Fetch pattern details for top 15 patterns (by size_count) to get:
   // 1. Representative price (first tire_size → /tires/{id})
   // 2. Image URL (pattern detail has higher-quality images)
@@ -437,33 +455,37 @@ export async function apiGetModelBySlug(
 
   // Step 3: Fetch individual tire details in parallel batches
   const tireIds = detail.tire_sizes.map((ts) => ts.id);
-  const BATCH_SIZE = 20;
   const allTireRows: TireRow[] = [];
   const patternImageUrl = detail.image_url;
 
-  for (let i = 0; i < tireIds.length; i += BATCH_SIZE) {
-    const batch = tireIds.slice(i, i + BATCH_SIZE);
-    const results = await Promise.allSettled(
-      batch.map((id) => apiFetch<ApiTire>(`/tires/${id}`, 10000))
-    );
+  // During build: skip individual tire fetches (saves hundreds of API calls per model).
+  // Just create lightweight rows from tire_sizes. Full data fills in via ISR.
+  if (!IS_BUILD) {
+    const BATCH_SIZE = 20;
+    for (let i = 0; i < tireIds.length; i += BATCH_SIZE) {
+      const batch = tireIds.slice(i, i + BATCH_SIZE);
+      const results = await Promise.allSettled(
+        batch.map((id) => apiFetch<ApiTire>(`/tires/${id}`, 10000))
+      );
 
-    for (const result of results) {
-      if (result.status === "fulfilled" && result.value) {
-        const row = apiTireToRow(result.value);
-        // Cache the price for reuse across pages
-        if (row.price_map && row.price_map > 0) {
-          setCachedPrice(row.id, row.price_map);
+      for (const result of results) {
+        if (result.status === "fulfilled" && result.value) {
+          const row = apiTireToRow(result.value);
+          // Cache the price for reuse across pages
+          if (row.price_map && row.price_map > 0) {
+            setCachedPrice(row.id, row.price_map);
+          }
+          // Use the pattern's high-quality image as thumbnail if tire has none
+          if (!row.thumbnail_url && patternImageUrl) {
+            row.thumbnail_url = patternImageUrl;
+          }
+          allTireRows.push(row);
         }
-        // Use the pattern's high-quality image as thumbnail if tire has none
-        if (!row.thumbnail_url && patternImageUrl) {
-          row.thumbnail_url = patternImageUrl;
-        }
-        allTireRows.push(row);
       }
     }
   }
 
-  // If individual fetches failed, fall back to creating rows from tire_sizes
+  // If individual fetches failed (or skipped during build), create rows from tire_sizes
   if (allTireRows.length === 0) {
     for (const ts of detail.tire_sizes) {
       const parsed = parseTireName(ts.name);
@@ -541,6 +563,9 @@ import type { SearchParams, SearchResult } from "./db/types";
 export async function apiSearchTires(params: SearchParams): Promise<SearchResult> {
   const page = params.page ?? 1;
   const limit = Math.min(params.limit ?? 24, 100);
+
+  // During build: skip search queries to conserve API calls. Fills in via ISR.
+  if (IS_BUILD) return { tires: [], total: 0, page, limit, totalPages: 0 };
 
   // Build API query params
   const qp = new URLSearchParams();
@@ -639,6 +664,9 @@ export async function apiSearchTires(params: SearchParams): Promise<SearchResult
 export async function apiGetDistinctSizesForBrand(
   brandName: string
 ): Promise<{ width: string; aspect_ratio: string; rim_size: string; count: number }[]> {
+  // During build: skip size enumeration (too many API calls). Fills in via ISR.
+  if (IS_BUILD) return [];
+
   const encoded = encodeURIComponent(brandName);
   const sizeMap = new Map<string, { width: string; aspect_ratio: string; rim_size: string; count: number }>();
 

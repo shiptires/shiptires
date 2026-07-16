@@ -7,7 +7,7 @@ import { isCuratedBrand } from "@/lib/curated-brands";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { lookupTireSizes } from "@/data/tire-sizes";
 import { getMakeContent, getModelContent, getModelsForMake, vehicleMakes } from "@/data/vehicle-content";
-import { sitePrice } from "@/lib/pricing";
+import { getSitePriceBatch } from "@/lib/pricing";
 import { getVehicleImage } from "@/lib/vehicle-image";
 import type { Metadata } from "next";
 
@@ -98,6 +98,17 @@ export default async function VehicleYearPage({
 
   const curatedTires = allTires.filter((t) => isCuratedBrand(t.make_name));
 
+  // Get real pricing from distributor/competitor pipeline
+  const priceMap = await getSitePriceBatch(
+    curatedTires.filter((t) => t.id).map((t) => ({
+      id: t.id,
+      brand: t.make_name,
+      model: t.model_name,
+      weight: t.weight ? parseFloat(t.weight) || null : null,
+      rimSize: t.rim_size ? parseInt(t.rim_size) || null : null,
+    }))
+  );
+
   // Group by brand + model
   const grouped = new Map<string, GroupedTire>();
   for (const tire of curatedTires) {
@@ -118,7 +129,7 @@ export default async function VehicleYearPage({
     }
     const g = grouped.get(key)!;
     g.tireCount++;
-    const sp = sitePrice(tire.price_map);
+    const sp = priceMap.get(tire.id) ?? 0;
     if (sp > 0) {
       g.minPrice = Math.min(g.minPrice, sp);
       g.maxPrice = Math.max(g.maxPrice, sp);

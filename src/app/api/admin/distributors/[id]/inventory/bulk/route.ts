@@ -26,6 +26,10 @@ export async function POST(
       brand: string;
       model: string;
       size: string;
+      manufacturer?: string;
+      description?: string;
+      fet?: number;
+      map_pricing?: number;
     }) => ({
       distributor_id: id,
       tire_id: item.tire_id,
@@ -35,6 +39,10 @@ export async function POST(
       brand: item.brand,
       model: item.model,
       size: item.size,
+      manufacturer: item.manufacturer,
+      description: item.description,
+      fet: item.fet,
+      map_pricing: item.map_pricing,
     }));
 
     const result = await bulkUpsertInventory(items);

@@ -22,7 +22,7 @@ import {
   getTypeLabel,
   getStateClimate,
 } from "@/lib/location-seo";
-import { sitePrice } from "@/lib/pricing";
+import { getSitePriceBatch } from "@/lib/pricing";
 import type { Metadata } from "next";
 
 export const revalidate = 3600;
@@ -63,7 +63,16 @@ export async function generateMetadata({
 
   const displaySize = slugToDisplaySize(sizeSlug);
   const models = new Set(tires.map((t) => t.model_name));
-  const prices = tires.map((t) => sitePrice(t.price_map)).filter((p) => p > 0);
+  const metaPriceMap = await getSitePriceBatch(
+    tires.filter((t) => t.id).map((t) => ({
+      id: t.id,
+      brand: t.make_name,
+      model: t.model_name,
+      weight: t.weight ? parseFloat(t.weight) || null : null,
+      rimSize: t.rim_size ? parseInt(t.rim_size) || null : null,
+    }))
+  );
+  const prices = [...metaPriceMap.values()].filter((p) => p > 0);
   const lowestPrice = prices.length > 0 ? Math.min(...prices) : 0;
 
   const vehicles = getVehiclesForSize(`${parsed.width}/${parsed.aspect}R${parsed.rim}`);
@@ -104,6 +113,17 @@ export default async function SizePage({
   const tires = await getTiresByBrandAndSize(brandSlug, parsed.width, parsed.aspect, parsed.rim);
   if (tires.length === 0) notFound();
 
+  // Get real pricing from distributor/competitor pipeline
+  const priceMap = await getSitePriceBatch(
+    tires.filter((t) => t.id).map((t) => ({
+      id: t.id,
+      brand: t.make_name,
+      model: t.model_name,
+      weight: t.weight ? parseFloat(t.weight) || null : null,
+      rimSize: t.rim_size ? parseInt(t.rim_size) || null : null,
+    }))
+  );
+
   const displaySize = slugToDisplaySize(sizeSlug);
   const realSize = `${parsed.width}/${parsed.aspect}R${parsed.rim}`;
   const climate = getStateClimate(stateSlug);
@@ -121,8 +141,8 @@ export default async function SizePage({
     sizeInfo: tireRowToSize(rows[0]),
   }));
 
-  // Prices
-  const allPrices = modelEntries.map((e) => sitePrice(e.sizeInfo.price)).filter((p) => p > 0);
+  // Prices — use pipeline prices for each model's first tire
+  const allPrices = modelEntries.map((e) => priceMap.get(e.tire.id) ?? 0).filter((p) => p > 0);
   const lowestPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
 
   // Vehicles
@@ -131,11 +151,20 @@ export default async function SizePage({
 
   // Other brands with this size
   const allSizeTires = await getTiresBySize(parsed.width, parsed.aspect, parsed.rim);
+  const otherBrandPriceMap = await getSitePriceBatch(
+    allSizeTires.filter((t) => t.id && t.make_name !== brandRow.make_name).map((t) => ({
+      id: t.id,
+      brand: t.make_name,
+      model: t.model_name,
+      weight: t.weight ? parseFloat(t.weight) || null : null,
+      rimSize: t.rim_size ? parseInt(t.rim_size) || null : null,
+    }))
+  );
   const otherBrandMap = new Map<string, { count: number; minPrice: number }>();
   for (const t of allSizeTires) {
     if (t.make_name === brandRow.make_name) continue;
     const existing = otherBrandMap.get(t.make_name);
-    const price = sitePrice(t.price_map);
+    const price = otherBrandPriceMap.get(t.id) ?? 0;
     if (existing) {
       existing.count++;
       if (price > 0 && (existing.minPrice === 0 || price < existing.minPrice)) {
@@ -169,11 +198,11 @@ export default async function SizePage({
         name: `${brand.name} ${entry.model.name} ${realSize}`,
         brand: { "@type": "Brand", name: brand.name },
         category: `${getTypeLabel(entry.model.type)} Tires`,
-        ...(sitePrice(entry.sizeInfo.price) > 0
+        ...((priceMap.get(entry.tire.id) ?? 0) > 0
           ? {
               offers: {
                 "@type": "Offer",
-                price: sitePrice(entry.sizeInfo.price),
+                price: (priceMap.get(entry.tire.id) ?? 0),
                 priceCurrency: "USD",
                 availability: "https://schema.org/InStock",
                 seller: { "@type": "Organization", name: "Ship.Tires" },
@@ -272,7 +301,9 @@ export default async function SizePage({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {modelEntries.map(({ model, sizeInfo: si }) => (
+                      {modelEntries.map(({ model, tire, sizeInfo: si }) => {
+                        const modelPrice = priceMap.get(tire.id) ?? 0;
+                        return (
                         <tr key={model.slug} className="hover:bg-gray-50">
                           <td className="py-3 pr-4">
                             <Link
@@ -286,17 +317,17 @@ export default async function SizePage({
                           <td className="py-3 pr-4 text-gray-600">{si.loadIndex || "—"}</td>
                           <td className="py-3 pr-4 text-gray-600">{si.speedRating || "—"}</td>
                           <td className="py-3 pr-4 font-bold text-gray-900">
-                            {sitePrice(si.price) > 0 ? `$${sitePrice(si.price).toFixed(2)}` : "Quote"}
+                            {modelPrice > 0 ? `$${modelPrice.toFixed(2)}` : "Quote"}
                           </td>
                           <td className="py-3 flex items-center gap-2">
-                            {sitePrice(si.price) > 0 ? (
+                            {modelPrice > 0 ? (
                               <AddToCartButton
                                 brand={brand.name}
                                 brandSlug={brand.slug}
                                 model={model.name}
                                 modelSlug={model.slug}
                                 size={si.size}
-                                price={sitePrice(si.price)}
+                                price={modelPrice}
                                 loadIndex={si.loadIndex}
                                 speedRating={si.speedRating}
                               />
@@ -310,7 +341,8 @@ export default async function SizePage({
                             )}
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

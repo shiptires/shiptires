@@ -122,17 +122,11 @@ export async function POST(req: Request) {
     const {
       items,
       shippingCost = 55,
-      ebayFvf = 0.1325,
-      miscRate = 0.02,
-      marginRate = 0.15,
       dryRun = false,
       distributorId,
     } = body as {
       items: DistributorItem[];
       shippingCost?: number;
-      ebayFvf?: number;
-      miscRate?: number;
-      marginRate?: number;
       dryRun?: boolean;
       distributorId?: string;
     };
@@ -159,10 +153,7 @@ export async function POST(req: Request) {
     for (const item of items) {
       const ebayPrice = calculateDistributorPrice(
         item.cost,
-        shippingCost,
-        ebayFvf,
-        miscRate,
-        marginRate
+        shippingCost
       );
 
       // Find DB match

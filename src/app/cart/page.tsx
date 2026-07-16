@@ -49,7 +49,7 @@ export default function CartPage() {
                     <p className="mt-1 text-sm text-gray-500">
                       Size: {item.size} &middot; Load: {item.loadIndex} &middot; Speed: {item.speedRating}
                     </p>
-                    <p className="mt-1 text-sm font-bold text-gray-900">${item.price}/tire</p>
+                    <p className="mt-1 text-sm font-bold text-gray-900">${item.price.toFixed(2)}/tire</p>
                   </div>
 
                   <div className="flex items-center gap-3">

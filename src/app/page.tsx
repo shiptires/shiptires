@@ -247,7 +247,7 @@ export default async function HomePage() {
       return {
         ...tire,
         image,
-        minPrice: match?.min_price ?? undefined,
+        minPrice: match?.min_price != null ? Number(match.min_price) : undefined,
       };
     })
   )).filter((t): t is NonNullable<typeof t> => t !== null);
@@ -767,14 +767,7 @@ export default async function HomePage() {
                             <h4 className="font-display text-base text-rubber group-hover:text-safety-orange transition-colors truncate">
                               {m.model_name}
                             </h4>
-                            <div className="mt-1">
-                              <span className="text-lg font-bold text-rubber">${sitePrice(m.min_price).toFixed(2)}</span>
-                              <span className="text-xs text-ink-grey"> /tire</span>
-                              {m.max_price > m.min_price && (
-                                <span className="text-xs text-ink-grey ml-1">— ${sitePrice(m.max_price).toFixed(2)}</span>
-                              )}
-                            </div>
-                            <div className="mt-0.5 flex items-center gap-2 text-xs text-ink-grey">
+                            <div className="mt-1 flex items-center gap-2 text-xs text-ink-grey">
                               <span>{m.tire_count} sizes</span>
                               <span className="text-green-600 font-medium">Free Ship</span>
                             </div>

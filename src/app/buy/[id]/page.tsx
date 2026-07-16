@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTireById, toSlug } from "@/lib/db";
 import { getSitePrice } from "@/lib/pricing";
 import BuyClient from "./BuyClient";
+import MetaPixelViewContent from "@/components/MetaPixelViewContent";
 import type { CartItem } from "@/lib/types";
 
 export default async function BuyPage({
@@ -16,13 +17,15 @@ export default async function BuyPage({
   const tire = await getTireById(id);
   if (!tire) notFound();
 
-  const price = await getSitePrice(tire.id, tire.price_map);
+  const price = await getSitePrice(tire.id, tire.make_name, tire.model_name, parseFloat(tire.weight ?? "") || null);
   if (price <= 0) notFound();
 
   const size =
     tire.width && tire.aspect_ratio && tire.rim_size
       ? `${tire.width}/${tire.aspect_ratio}R${tire.rim_size}`
-      : tire.name;
+      : tire.width && tire.rim_size
+        ? `${tire.width}R${tire.rim_size}`
+        : tire.name;
 
   const brandSlug = toSlug(tire.make_name);
   const modelSlug = toSlug(tire.model_name);
@@ -56,15 +59,22 @@ export default async function BuyPage({
   };
 
   return (
-    <BuyClient
-      item={item}
-      brand={tire.make_name}
-      model={tire.model_name}
-      size={size}
-      price={price}
-      season={tire.season || tire.terrain || ""}
-      imageUrl={imageUrl}
-      productUrl={productUrl}
-    />
+    <>
+      <MetaPixelViewContent
+        contentId={String(tire.id)}
+        contentName={`${tire.make_name} ${tire.model_name} ${size}`}
+        value={price}
+      />
+      <BuyClient
+        item={item}
+        brand={tire.make_name}
+        model={tire.model_name}
+        size={size}
+        price={price}
+        season={tire.season || tire.terrain || ""}
+        imageUrl={imageUrl}
+        productUrl={productUrl}
+      />
+    </>
   );
 }

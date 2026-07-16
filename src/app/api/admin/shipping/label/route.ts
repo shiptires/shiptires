@@ -117,23 +117,35 @@ export async function POST(req: Request) {
       }),
     });
 
-    // Save tracking info back to order
-    const { error: updateError } = await getSupabase()
-      .from("tire_orders")
-      .update({
-        tracking_number: result.trackingNumber,
-        carrier: carrierName,
-        service_code: serviceCode,
-        shipment_cost: result.totalCharge,
-        shipment_id: result.shipmentId,
-        shipped_at: new Date().toISOString(),
-        status: "shipped",
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", orderId);
+    // Multi-package support: skip order update when creating intermediate labels
+    const { skipOrderUpdate, previousTrackingNumbers, accumulatedCost } = body;
 
-    if (updateError) {
-      console.error("Failed to update order with tracking info:", updateError);
+    if (!skipOrderUpdate) {
+      // Combine all tracking numbers (previous + current) for multi-package orders
+      const allTracking = previousTrackingNumbers?.length
+        ? [...previousTrackingNumbers, result.trackingNumber].join(", ")
+        : result.trackingNumber;
+      const totalShipCost = accumulatedCost != null
+        ? accumulatedCost + result.totalCharge
+        : result.totalCharge;
+
+      const { error: updateError } = await getSupabase()
+        .from("tire_orders")
+        .update({
+          tracking_number: allTracking,
+          carrier: carrierName,
+          service_code: serviceCode,
+          shipment_cost: totalShipCost,
+          shipment_id: result.shipmentId,
+          shipped_at: new Date().toISOString(),
+          status: "shipped",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", orderId);
+
+      if (updateError) {
+        console.error("Failed to update order with tracking info:", updateError);
+      }
     }
 
     return Response.json({

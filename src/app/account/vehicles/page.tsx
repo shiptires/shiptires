@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth, type Vehicle } from "@/contexts/AuthContext";
 
 export default function VehiclesPage() {
   const { profile, refreshProfile } = useAuth();
-  const [vehicles, setVehicles] = useState<Vehicle[]>(profile?.vehicles || []);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+
+  useEffect(() => {
+    if (profile?.vehicles) setVehicles(profile.vehicles);
+  }, [profile]);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [showAdd, setShowAdd] = useState(false);

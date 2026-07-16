@@ -1,6 +1,6 @@
 import { isAdminRequest } from "@/lib/admin-auth";
 import { Resend } from "resend";
-import { buildOrderConfirmationHtml } from "@/app/api/checkout/webhook/route";
+import { buildOrderConfirmationHtml } from "@/lib/order-utils";
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY);

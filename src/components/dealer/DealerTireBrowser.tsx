@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { usePlaidLink } from "react-plaid-link";
 
 interface DealerTire {
   id: number;
@@ -63,6 +64,8 @@ export default function DealerTireBrowser() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [linkToken, setLinkToken] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState("");
 
   useEffect(() => {
     setCart(getCart());
@@ -137,31 +140,76 @@ export default function DealerTireBrowser() {
   const cartTotal = cart.reduce((sum, c) => sum + c.price * c.quantity, 0);
   const cartCount = cart.reduce((sum, c) => sum + c.quantity, 0);
 
-  async function handleCheckout() {
-    if (cart.length === 0) return;
-    setCheckoutLoading(true);
-
+  async function fetchLinkToken() {
     try {
-      const res = await fetch("/api/dealer/checkout/create-session", {
+      const res = await fetch("/api/plaid/create-link-token", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: cart }),
+        body: JSON.stringify({}),
       });
-
       const data = await res.json();
-      if (data.url) {
-        // Clear cart on successful checkout redirect
-        saveCart([]);
-        window.location.href = data.url;
+      if (data.link_token) {
+        setLinkToken(data.link_token);
       } else {
-        alert(data.error || "Failed to create checkout session");
+        setCheckoutError("Failed to initialize payment. Please try again.");
       }
     } catch {
-      alert("Network error. Please try again.");
-    } finally {
-      setCheckoutLoading(false);
+      setCheckoutError("Failed to initialize payment. Please try again.");
     }
   }
+
+  async function handleCheckout() {
+    if (cart.length === 0) return;
+    setCheckoutError("");
+    if (!linkToken) {
+      await fetchLinkToken();
+    }
+    // Plaid Link will be opened by the usePlaidLink hook once linkToken is set
+  }
+
+  const { open: openPlaid, ready: plaidReady } = usePlaidLink({
+    token: linkToken,
+    onSuccess: async (publicToken: string, metadata: { accounts: { id: string }[] }) => {
+      const accountId = metadata.accounts[0]?.id;
+      if (!accountId) return;
+
+      setCheckoutLoading(true);
+      setCheckoutError("");
+
+      try {
+        const res = await fetch("/api/dealer/checkout/create-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: cart,
+            public_token: publicToken,
+            account_id: accountId,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Payment failed");
+
+        saveCart([]);
+        setCart([]);
+        window.location.href = "/dealer/dashboard/orders?success=true";
+      } catch (err) {
+        setCheckoutError(err instanceof Error ? err.message : "Payment failed. Please try again.");
+      } finally {
+        setCheckoutLoading(false);
+      }
+    },
+    onExit: () => {
+      setCheckoutLoading(false);
+    },
+  });
+
+  // Auto-open Plaid Link when token becomes available after checkout button click
+  useEffect(() => {
+    if (linkToken && plaidReady) {
+      openPlaid();
+    }
+  }, [linkToken, plaidReady, openPlaid]);
 
   return (
     <div className="flex gap-6">
@@ -331,12 +379,15 @@ export default function DealerTireBrowser() {
                   <span className="font-semibold text-gray-900">Total</span>
                   <span className="text-lg font-bold text-gray-900">${cartTotal.toFixed(2)}</span>
                 </div>
+                {checkoutError && (
+                  <p className="text-xs text-red-600 mb-2">{checkoutError}</p>
+                )}
                 <button
                   onClick={handleCheckout}
                   disabled={checkoutLoading}
                   className="w-full rounded-lg bg-orange-500 py-2.5 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-50 transition-colors"
                 >
-                  {checkoutLoading ? "Processing..." : "Checkout"}
+                  {checkoutLoading ? "Processing..." : "Pay with Bank Account"}
                 </button>
               </div>
             </>
@@ -399,7 +450,7 @@ export default function DealerTireBrowser() {
                 disabled={checkoutLoading}
                 className="w-full rounded-lg bg-orange-500 py-2.5 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-50"
               >
-                {checkoutLoading ? "Processing..." : "Checkout"}
+                {checkoutLoading ? "Processing..." : "Pay with Bank Account"}
               </button>
             </div>
           </div>

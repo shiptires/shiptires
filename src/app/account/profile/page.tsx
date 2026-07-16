@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth, type SavedAddress } from "@/contexts/AuthContext";
 
 export default function ProfilePage() {
@@ -8,9 +8,17 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  const [fullName, setFullName] = useState(profile?.full_name || "");
-  const [phone, setPhone] = useState(profile?.phone || "");
-  const [addresses, setAddresses] = useState<SavedAddress[]>(profile?.saved_addresses || []);
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.full_name || "");
+      setPhone(profile.phone || "");
+      setAddresses(profile.saved_addresses || []);
+    }
+  }, [profile]);
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [newAddress, setNewAddress] = useState<SavedAddress>({
     label: "",
