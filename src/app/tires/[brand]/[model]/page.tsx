@@ -15,7 +15,7 @@ import {
 import { getLogoUrl } from "@/lib/api-helpers";
 import { buildBreadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { parseUTQG, treadwearLabel } from "@/lib/utqg";
-import { applyDistributorPricing } from "@/lib/pricing";
+
 import { getRankingsForModel } from "@/lib/ranking-helpers";
 import { getVehiclesForSize } from "@/data/tire-sizes";
 import CartSidebar from "@/components/CartSidebar";
@@ -54,33 +54,35 @@ export async function generateMetadata({
 }: {
   params: Promise<{ brand: string; model: string }>;
 }): Promise<Metadata> {
-  const { brand: brandSlug, model: modelSlug } = await params;
-  const data = await cachedGetModelBySlug(brandSlug, modelSlug);
-  if (!data) return {};
+  try {
+    const { brand: brandSlug, model: modelSlug } = await params;
+    const data = await cachedGetModelBySlug(brandSlug, modelSlug);
+    if (!data) return {};
 
-  const baseModel = tiresToModel(data.model, data.tires, data.brand, data.modelDetails);
-  const distPricing = await applyDistributorPricing(baseModel.sizes, data.brand, data.model);
-  const pricedSizes = distPricing.sizes.filter((s) => s.price > 0);
-  const model = { ...baseModel, sizes: pricedSizes, priceRange: distPricing.priceRange };
-  const hasPrice = model.priceRange[0] > 0;
+    const model = tiresToModel(data.model, data.tires, data.brand, data.modelDetails);
+    const hasPrice = model.priceRange[0] > 0;
 
-  const fullName = `${data.brand} ${model.name}`;
-  const titleBase = hasPrice
-    ? `${fullName} Tires | From $${model.priceRange[0]} | Free Shipping`
-    : `${fullName} Tires | ${model.sizes.length} Sizes | Free Shipping`;
-  // Truncate to 60 chars for SERP display
-  const title = titleBase.length > 60 ? titleBase.slice(0, 57) + "..." : titleBase;
+    const fullName = `${data.brand} ${model.name}`;
+    const titleBase = hasPrice
+      ? `${fullName} Tires | From $${model.priceRange[0]} | Free Shipping`
+      : `${fullName} Tires | ${model.sizes.length} Sizes | Free Shipping`;
+    // Truncate to 60 chars for SERP display
+    const title = titleBase.length > 60 ? titleBase.slice(0, 57) + "..." : titleBase;
 
-  return {
-    title,
-    description: hasPrice
-      ? `Buy ${fullName} tires from $${model.priceRange[0]}/tire. ${model.sizes.length} sizes available. Free shipping to your door or installer.${model.warranty ? ` ${model.warranty} warranty.` : ""} Fits Honda, Toyota, Ford, BMW & more.`
-      : `Buy ${fullName} tires — ${model.sizes.length} sizes available. Free shipping. Request a quote for pricing. Fits Honda, Toyota, Ford, BMW & more.`,
-    alternates: {
-      canonical: `https://ship.tires/tires/${brandSlug}/${modelSlug}`,
-      types: { "text/plain": `https://ship.tires/tires/${brandSlug}/${modelSlug}/llm.txt` },
-    },
-  };
+    return {
+      title,
+      description: hasPrice
+        ? `Buy ${fullName} tires from $${model.priceRange[0]}/tire. ${model.sizes.length} sizes available. Free shipping to your door or installer.${model.warranty ? ` ${model.warranty} warranty.` : ""} Fits Honda, Toyota, Ford, BMW & more.`
+        : `Buy ${fullName} tires — ${model.sizes.length} sizes available. Free shipping. Request a quote for pricing. Fits Honda, Toyota, Ford, BMW & more.`,
+      alternates: {
+        canonical: `https://ship.tires/tires/${brandSlug}/${modelSlug}`,
+        types: { "text/plain": `https://ship.tires/tires/${brandSlug}/${modelSlug}/llm.txt` },
+      },
+    };
+  } catch (e) {
+    console.error("[model-page] generateMetadata error:", e);
+    return {};
+  }
 }
 
 export default async function ModelPage({
@@ -88,18 +90,13 @@ export default async function ModelPage({
 }: {
   params: Promise<{ brand: string; model: string }>;
 }) {
+ try {
   const { brand: brandSlug, model: modelSlug } = await params;
   const data = await cachedGetModelBySlug(brandSlug, modelSlug);
 
   if (!data) notFound();
 
-  const baseModel = tiresToModel(data.model, data.tires, data.brand, data.modelDetails);
-
-  // Apply distributor pricing — all prices from Express Tire, never TireWeb MAP
-  const distPricing = await applyDistributorPricing(baseModel.sizes, data.brand, data.model);
-  // Filter to only sizes with real pricing for public display (page stays alive for SEO)
-  const pricedSizes = distPricing.sizes.filter((s) => s.price > 0);
-  const model = { ...baseModel, sizes: pricedSizes, priceRange: distPricing.priceRange };
+  const model = tiresToModel(data.model, data.tires, data.brand, data.modelDetails);
 
   const [brandRow, allModels] = await Promise.all([
     getBrandBySlug(brandSlug),
@@ -640,4 +637,21 @@ export default async function ModelPage({
       </div>
     </>
   );
+ } catch (err) {
+  console.error("[model-page] RENDER ERROR:", err);
+  const message = err instanceof Error ? err.message : String(err);
+  const stack = err instanceof Error ? err.stack : "";
+  return (
+    <div style={{ padding: "2rem", fontFamily: "monospace" }}>
+      <h1 style={{ color: "red" }}>Model Page Render Error</h1>
+      <pre style={{ whiteSpace: "pre-wrap", background: "#f5f5f5", padding: "1rem", borderRadius: "8px" }}>
+        {message}
+      </pre>
+      <details>
+        <summary>Stack trace</summary>
+        <pre style={{ whiteSpace: "pre-wrap", fontSize: "12px" }}>{stack}</pre>
+      </details>
+    </div>
+  );
+ }
 }
