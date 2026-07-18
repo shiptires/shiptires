@@ -66,7 +66,7 @@ export function tireRowToSize(row: TireRow): TireSize {
     size,
     loadIndex: parseInt(row.load_rating ?? "0") || 0,
     speedRating: row.speed_rating ?? "",
-    price: 0, // overridden by distributor/competitor pricing in getSitePrice/applyDistributorPricing
+    price: Number(row.price_map) || 0,
     tireId: row.id,
     imageUrl: resolveImage(row.local_thumbnail, row.thumbnail_url, row.image_0100_url),
     thumbnailUrl: resolveImage(row.local_thumbnail, row.thumbnail_url, row.image_0100_url),

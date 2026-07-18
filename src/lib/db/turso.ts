@@ -18,6 +18,135 @@ import {
 } from "../tire-api";
 import { isCuratedBrand, CURATED_BRANDS, getBrandLogo } from "../curated-brands";
 import { brands as staticBrands } from "@/data/brands";
+import brandSummaries from "@/data/generated/brand-summaries.json";
+import modelSummaries from "@/data/generated/model-summaries.json";
+
+// ---------------------------------------------------------------------------
+// Per-brand tire data loader (reads from JSON files exported from SQLite)
+// ---------------------------------------------------------------------------
+
+interface CompactTire extends Array<unknown> {
+  0: number;   // id
+  1: string;   // width
+  2: string;   // aspect_ratio
+  3: string;   // rim_size
+  4: string;   // load_rating
+  5: string;   // speed_rating
+  6: number;   // price_map
+  7: string;   // name
+  8?: { wt?: string; td?: string; utqg?: string; lr?: string; pr?: string }; // extras
+}
+
+interface BrandModelData {
+  mn: string;   // model_name
+  bn: string;   // brand_name
+  sn: string | null;  // season
+  tr: string | null;  // terrain
+  ct: string | null;  // category
+  wr: string | null;  // warranty
+  pmsf: number;
+  rf: number;
+  ms: number;
+  st: number;
+  img: string | null;
+  imgs?: { side?: string; angle?: string; front?: string; side2?: string; i100?: string };
+  desc?: string;
+  feat?: string;
+  ben?: string;
+  murl?: string;
+  t: CompactTire[];
+}
+
+type BrandTireData = Record<string, BrandModelData>;
+
+const _tireDataCache = new Map<string, BrandTireData | null>();
+
+async function loadBrandTireData(brandSlug: string): Promise<BrandTireData | null> {
+  const cached = _tireDataCache.get(brandSlug);
+  if (cached !== undefined) return cached;
+  try {
+    let data: BrandTireData;
+    if (process.env.VERCEL) {
+      // On Vercel: fetch from CDN (public directory serves static files)
+      const host = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+      const url = `https://${host}/tire-data/${brandSlug}.json`;
+      const res = await fetch(url, { next: { revalidate: 86400 } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      data = await res.json();
+    } else {
+      // Locally: read from filesystem
+      const { readFileSync } = await import("fs");
+      const { join } = await import("path");
+      const json = readFileSync(join(process.cwd(), "public", "tire-data", `${brandSlug}.json`), "utf8");
+      data = JSON.parse(json);
+    }
+    _tireDataCache.set(brandSlug, data);
+    return data;
+  } catch (e) {
+    console.warn(`[tire-data] Failed to load brand ${brandSlug}:`, e instanceof Error ? e.message : e);
+    _tireDataCache.set(brandSlug, null);
+    return null;
+  }
+}
+
+/** Convert compact tire array to full TireRow */
+function compactToTireRow(compact: CompactTire, model: BrandModelData): TireRow {
+  const extras = (compact.length > 8 ? compact[8] : {}) as { wt?: string; td?: string; utqg?: string; lr?: string; pr?: string } | undefined;
+  return {
+    id: compact[0] as number,
+    name: compact[7] as string,
+    item_number: "",
+    tire_model_id: null,
+    tire_make_id: null,
+    make_name: model.bn,
+    make_image_url: null,
+    model_name: model.mn,
+    width: (compact[1] as string) || null,
+    aspect_ratio: (compact[2] as string) || null,
+    rim_size: (compact[3] as string) || null,
+    section_width: null,
+    diameter_overall: null,
+    load_rating: (compact[4] as string) || null,
+    speed_rating: (compact[5] as string) || null,
+    ply_rating: extras?.pr ?? null,
+    load_range: extras?.lr ?? null,
+    load_capacity_single: null,
+    load_capacity_dual: null,
+    max_inflation_pressure: null,
+    tread_depth: extras?.td ?? null,
+    weight: extras?.wt ?? null,
+    utqg: extras?.utqg ?? null,
+    season: model.sn,
+    terrain: model.tr,
+    category: model.ct,
+    studdable: model.st || null,
+    three_pmsf: model.pmsf || null,
+    run_flat: model.rf || null,
+    mud_and_snow: model.ms || null,
+    price_map: Number(compact[6]) || null,
+    warranty: model.wr,
+    gm_code: null,
+    upc: null,
+    ean: null,
+    asin: null,
+    image_0100_url: model.imgs?.i100 ?? null,
+    image_0200_url: null,
+    image_0301_url: null,
+    image_0302_url: null,
+    thumbnail_url: model.img,
+    angle_image_url: model.imgs?.angle ?? null,
+    front_image_url: model.imgs?.front ?? null,
+    side_image_url: model.imgs?.side ?? null,
+    side2_image_url: model.imgs?.side2 ?? null,
+    local_thumbnail: null,
+    local_angle: null,
+    local_front: null,
+    local_side: null,
+    local_side2: null,
+    has_detail: 0,
+    updated_at: "",
+  };
+}
 
 let _client: Client | null = null;
 
@@ -91,7 +220,24 @@ export async function getAllBrands(): Promise<BrandSummaryRow[]> {
 }
 
 async function _fetchAllBrands(): Promise<BrandSummaryRow[]> {
-  // DB-primary: try summary table first (pre-computed, ~100ms vs 56s)
+  // Primary: use bundled JSON data (always available, no DB dependency)
+  if (brandSummaries && brandSummaries.length > 0) {
+    const jsonRows: BrandSummaryRow[] = (brandSummaries as Array<{ make_name: string; make_image_url: string | null; tire_count: number; model_count: number }>)
+      .filter((r) => isCuratedBrand(r.make_name))
+      .map((r) => ({
+        make_name: r.make_name,
+        make_image_url: r.make_image_url || "",
+        local_logo: getBrandLogo(r.make_name) || "",
+        tire_count: r.tire_count,
+        model_count: r.model_count,
+      }));
+    if (jsonRows.length > 0) {
+      _allBrandsCache = { data: jsonRows, ts: Date.now() };
+      return jsonRows;
+    }
+  }
+
+  // Fallback: try Turso summary table
   const result = await safeExecute(
     `SELECT
       make_name,
@@ -110,15 +256,15 @@ async function _fetchAllBrands(): Promise<BrandSummaryRow[]> {
     return dbRows;
   }
 
-  // DB empty/failed — fall back to API
+  // Fallback: API
   const apiRows = await apiGetAllBrands();
   if (apiRows.length > 0) {
     _allBrandsCache = { data: apiRows, ts: Date.now() };
     return apiRows;
   }
 
-  // API also failed — use static brand data as last resort
-  console.log("[turso] Both DB and API failed — using static brand data");
+  // Last resort: static brand data
+  console.log("[turso] All sources failed — using static brand data");
   const staticRows: BrandSummaryRow[] = staticBrands.map((b) => ({
     make_name: b.name.toUpperCase(),
     make_image_url: getBrandLogo(b.name.toUpperCase()) || "",
@@ -171,7 +317,33 @@ export async function getModelsByBrand(slug: string): Promise<ModelSummaryRow[]>
 }
 
 async function _fetchModelsByBrand(slug: string): Promise<ModelSummaryRow[]> {
-  // Resolve brand name from slug
+  // Primary: use bundled JSON data (always available, no DB dependency)
+  const jsonModels = (modelSummaries as Record<string, Array<{ model_name: string; tire_count: number; min_price: number | null; max_price: number | null; season: string | null; terrain: string | null; category: string | null; thumbnail_url: string | null }>>)[slug];
+  if (jsonModels && jsonModels.length > 0) {
+    const rows: ModelSummaryRow[] = jsonModels.map((m) => fixOutlierMinPrice({
+      model_name: m.model_name,
+      tire_count: m.tire_count,
+      min_price: m.min_price,
+      max_price: m.max_price,
+      season: m.season,
+      terrain: m.terrain,
+      category: m.category,
+      thumbnail_url: m.thumbnail_url,
+    }));
+    // Sort: priced models first (by price ascending), then unpriced alphabetically
+    rows.sort((a, b) => {
+      const aHasPrice = a.min_price != null && a.min_price > 0;
+      const bHasPrice = b.min_price != null && b.min_price > 0;
+      if (aHasPrice && !bHasPrice) return -1;
+      if (!aHasPrice && bHasPrice) return 1;
+      if (aHasPrice && bHasPrice) return (a.min_price ?? 0) - (b.min_price ?? 0);
+      return (a.model_name ?? "").localeCompare(b.model_name ?? "");
+    });
+    _modelsByBrandCache.set(slug, { data: rows, ts: Date.now() });
+    return rows;
+  }
+
+  // Fallback: resolve brand name and try Turso
   let brandName: string | null = null;
   const slugMap = await getBrandSlugMap();
   brandName = slugMap.get(slug) ?? null;
@@ -182,7 +354,7 @@ async function _fetchModelsByBrand(slug: string): Promise<ModelSummaryRow[]> {
     else return [];
   }
 
-  // DB-primary: try model_summary first, then supplement from tires table
+  // Try model_summary table on Turso
   const result = await safeExecute({
     sql: `SELECT
       model_name,
@@ -200,7 +372,7 @@ async function _fetchModelsByBrand(slug: string): Promise<ModelSummaryRow[]> {
   });
   const summaryRows = (result.rows as unknown as ModelSummaryRow[]).map(fixOutlierMinPrice);
 
-  // model_summary may be incomplete — supplement with DISTINCT models from tires table
+  // Supplement with tires table GROUP BY
   const tiresResult = await safeExecute({
     sql: `SELECT
       model_name,
@@ -219,7 +391,7 @@ async function _fetchModelsByBrand(slug: string): Promise<ModelSummaryRow[]> {
   });
   const tiresRows = (tiresResult.rows as unknown as ModelSummaryRow[]).map(fixOutlierMinPrice);
 
-  // Merge: use model_summary data when available, add missing models from tires table
+  // Merge
   const seen = new Set(summaryRows.map((r) => r.model_name));
   const merged = [...summaryRows];
   for (const row of tiresRows) {
@@ -228,7 +400,6 @@ async function _fetchModelsByBrand(slug: string): Promise<ModelSummaryRow[]> {
       seen.add(row.model_name);
     }
   }
-  // Sort: priced models first (by price ascending), then unpriced models alphabetically
   merged.sort((a, b) => {
     const aHasPrice = a.min_price != null && a.min_price > 0;
     const bHasPrice = b.min_price != null && b.min_price > 0;
@@ -243,14 +414,14 @@ async function _fetchModelsByBrand(slug: string): Promise<ModelSummaryRow[]> {
     return merged;
   }
 
-  // DB empty — fall back to API
+  // API fallback
   const apiRows = await apiGetModelsByBrand(brandName);
   if (apiRows.length > 0) {
     _modelsByBrandCache.set(slug, { data: apiRows, ts: Date.now() });
     return apiRows;
   }
 
-  // Both failed — use static brand data
+  // Static brand data fallback
   const staticBrand = staticBrands.find(
     (b) => b.name.toUpperCase() === brandName!.toUpperCase()
   );
@@ -275,7 +446,32 @@ export async function getModelBySlug(
   brandSlug: string,
   modelSlug: string
 ): Promise<{ brand: string; model: string; tires: TireRow[]; modelDetails?: TireModelDetailsRow } | null> {
-  // Resolve brand name
+  // 1. Try per-brand JSON tire data (primary source — exported from SQLite)
+  const brandData = await loadBrandTireData(brandSlug);
+  if (brandData) {
+    const modelData = brandData[modelSlug];
+    if (modelData) {
+      const tires = modelData.t.map((ct) => compactToTireRow(ct, modelData));
+      // Build model details from JSON data
+      const modelDetails: TireModelDetailsRow | undefined = modelData.desc
+        ? {
+            id: 0,
+            name: modelData.mn,
+            description: modelData.desc || null,
+            features: modelData.feat || null,
+            benefits: modelData.ben || null,
+            image_url: modelData.img,
+            image_360_url: null,
+            video_url: null,
+            manufacturer_url: modelData.murl || null,
+            three_pmsf: modelData.pmsf || null,
+          }
+        : undefined;
+      return { brand: modelData.bn, model: modelData.mn, tires, modelDetails };
+    }
+  }
+
+  // 2. Resolve brand name for Turso/API fallback
   let brandName: string | null = null;
   const slugMap = await getBrandSlugMap();
   brandName = slugMap.get(brandSlug) ?? null;
@@ -286,7 +482,7 @@ export async function getModelBySlug(
   }
   if (!brandName) return null;
 
-  // DB-primary: try Turso first
+  // 3. Turso fallback
   const modelName = await slugToModelName(brandName, modelSlug);
   if (modelName) {
     const result = await safeExecute({
@@ -300,14 +496,13 @@ export async function getModelBySlug(
     });
     const tires = result.rows as unknown as TireRow[];
     if (tires.length > 0) {
-      // Fetch rich model details from tire_models table
       const modelId = tires[0].tire_model_id;
       const modelDetails = modelId ? await getTireModelDetails(modelId) : null;
       return { brand: brandName, model: modelName, tires, modelDetails: modelDetails ?? undefined };
     }
   }
 
-  // DB empty — fall back to API
+  // 4. API fallback (last resort)
   return apiGetModelBySlug(brandName, modelSlug);
 }
 
@@ -769,7 +964,89 @@ export async function searchModels(params: SearchParams): Promise<ModelSearchRes
     };
   }
 
+  // Turso returned nothing — fall back to JSON-based model search
+  const allModelEntries = modelSummaries as Record<string, Array<{ model_name: string; tire_count: number; min_price: number | null; max_price: number | null; season: string | null; terrain: string | null; category: string | null; thumbnail_url: string | null }>>;
+  const jsonResults: ModelSearchRow[] = [];
+  const brandMapForSearch = new Map((brandSummaries as Array<{ make_name: string; make_image_url: string | null }>).map(b => [toSlug(b.make_name), b]));
+
+  for (const [slug, models] of Object.entries(allModelEntries)) {
+    const brand = brandMapForSearch.get(slug);
+    if (!brand) continue;
+
+    // Brand filter
+    if (params.brand && slug !== params.brand) continue;
+    if (brandDetected && !conditions.some(c => c.includes("make_name"))) continue;
+    if (brandDetected) {
+      const brandVal = values.find((v, i) => conditions[i]?.includes("make_name") && typeof v === "string");
+      if (brandVal && brand.make_name !== brandVal) continue;
+    }
+
+    for (const m of models) {
+      // Season filter
+      if (params.season && m.season !== params.season) continue;
+      // Terrain filter
+      if (params.terrain && m.terrain !== params.terrain) continue;
+      // Category filter
+      if (params.category && !(m.category ?? "").toLowerCase().includes(params.category.toLowerCase())) continue;
+      // Query words match
+      if (queryModelWords.length > 0) {
+        const searchStr = `${brand.make_name} ${m.model_name}`.toLowerCase();
+        if (!queryModelWords.every(w => searchStr.includes(w.toLowerCase()))) continue;
+      }
+
+      jsonResults.push({
+        make_name: brand.make_name,
+        model_name: m.model_name,
+        tire_count: m.tire_count ?? 0,
+        min_price: m.min_price,
+        max_price: m.max_price,
+        local_thumbnail: null,
+        thumbnail_url: m.thumbnail_url,
+        make_image_url: brand.make_image_url || null,
+        season: m.season,
+        terrain: m.terrain,
+        category: m.category,
+        warranty: null,
+        speed_ratings: null,
+      });
+    }
+  }
+
+  if (jsonResults.length > 0) {
+    // Sort by tire_count DESC (most popular first)
+    jsonResults.sort((a, b) => (b.tire_count ?? 0) - (a.tire_count ?? 0));
+    const jsonTotal = jsonResults.length;
+    const paged = jsonResults.slice(offset, offset + limit);
+    return {
+      models: paged,
+      total: jsonTotal,
+      page,
+      limit,
+      totalPages: Math.min(Math.ceil(jsonTotal / limit), 50),
+    };
+  }
+
   return { models: [], total: 0, page, limit, totalPages: 0 };
+}
+
+// ---------------------------------------------------------------------------
+// Type matching helper for JSON-based filtering
+// ---------------------------------------------------------------------------
+
+type ModelFields = { season: string | null; terrain: string | null; category: string | null };
+
+function _typeMatchFn(type: string): ((m: ModelFields) => boolean) | null {
+  switch (type) {
+    case "all-season": return (m) => m.season === "All-Season" || m.season === "All-Weather";
+    case "winter": return (m) => m.season === "Winter";
+    case "summer": return (m) => m.season === "Summer";
+    case "performance": return (m) => /performance|uhp/i.test(m.category ?? "");
+    case "all-terrain": return (m) => m.terrain === "All-Terrain (A/T)";
+    case "mud-terrain": return (m) => m.terrain === "Mud-Terrain (M/T)";
+    case "highway": return (m) => m.terrain === "Highway Terrain(H/T)";
+    case "touring": return (m) => /touring/i.test(m.category ?? "");
+    default: return null;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -777,39 +1054,38 @@ export async function searchModels(params: SearchParams): Promise<ModelSearchRes
 // ---------------------------------------------------------------------------
 
 export async function getTopBrandsForType(type: string): Promise<BrandSummaryRow[]> {
-  const db = getDb();
+  const matchFn = _typeMatchFn(type);
+  if (!matchFn) return [];
 
-  let condition = "";
-  switch (type) {
-    case "all-season": condition = "season IN ('All-Season', 'All-Weather')"; break;
-    case "winter": condition = "season = 'Winter'"; break;
-    case "summer": condition = "season = 'Summer'"; break;
-    case "performance": condition = "(category LIKE '%performance%' OR category LIKE '%uhp%')"; break;
-    case "all-terrain": condition = "terrain = 'All-Terrain (A/T)'"; break;
-    case "mud-terrain": condition = "terrain = 'Mud-Terrain (M/T)'"; break;
-    case "highway": condition = "terrain = 'Highway Terrain(H/T)'"; break;
-    case "touring": condition = "category LIKE '%touring%'"; break;
-    default: return [];
+  // Primary: use bundled JSON data
+  const allModelEntries = modelSummaries as Record<string, Array<{ model_name: string; tire_count: number; min_price: number | null; max_price: number | null; season: string | null; terrain: string | null; category: string | null; thumbnail_url: string | null }>>;
+  const brandTotals = new Map<string, number>();
+  for (const [slug, models] of Object.entries(allModelEntries)) {
+    for (const m of models) {
+      if (matchFn(m)) {
+        brandTotals.set(slug, (brandTotals.get(slug) ?? 0) + (m.tire_count ?? 0));
+      }
+    }
   }
 
-  const result = await safeExecute(
-    `SELECT
-      ms.make_name,
-      bs.make_image_url,
-      NULL as local_logo,
-      SUM(ms.tire_count) as tire_count,
-      COUNT(*) as model_count
-    FROM model_summary ms
-    JOIN brand_summary bs ON bs.make_name = ms.make_name
-    WHERE ${condition}
-    GROUP BY ms.make_name
-    ORDER BY tire_count DESC
-    LIMIT 6`
-  );
-  const rows = result.rows as unknown as BrandSummaryRow[];
-  if (rows.length > 0) return rows;
+  if (brandTotals.size > 0) {
+    const brandMap = new Map((brandSummaries as Array<{ make_name: string; make_image_url: string | null; tire_count: number; model_count: number }>).map(b => [toSlug(b.make_name), b]));
+    const sorted = [...brandTotals.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+    return sorted
+      .map(([slug, tireCount]) => {
+        const b = brandMap.get(slug);
+        if (!b) return null;
+        return {
+          make_name: b.make_name,
+          make_image_url: b.make_image_url || "",
+          local_logo: getBrandLogo(b.make_name) || "",
+          tire_count: tireCount,
+          model_count: 0,
+        } as BrandSummaryRow;
+      })
+      .filter((x): x is BrandSummaryRow => x !== null);
+  }
 
-  // DB failed — fall back to top brands from getAllBrands()
   const allBrands = await getAllBrands();
   return allBrands.slice(0, 6);
 }
@@ -829,60 +1105,61 @@ export interface ShowcaseModel {
 }
 
 export async function getShowcaseModelsForType(type: string, limit = 2): Promise<ShowcaseModel[]> {
-  const db = getDb();
+  const matchFn = _typeMatchFn(type);
+  if (!matchFn) return [];
 
-  let condition = "";
-  switch (type) {
-    case "all-season": condition = "season IN ('All-Season', 'All-Weather')"; break;
-    case "winter": condition = "season = 'Winter'"; break;
-    case "summer": condition = "season = 'Summer'"; break;
-    case "performance": condition = "(category LIKE '%performance%' OR category LIKE '%uhp%')"; break;
-    case "all-terrain": condition = "terrain = 'All-Terrain (A/T)'"; break;
-    case "mud-terrain": condition = "terrain = 'Mud-Terrain (M/T)'"; break;
-    case "highway": condition = "terrain = 'Highway Terrain(H/T)'"; break;
-    case "touring": condition = "category LIKE '%touring%'"; break;
-    default: return [];
+  // Primary: use bundled JSON data
+  const allModelEntries = modelSummaries as Record<string, Array<{ model_name: string; tire_count: number; min_price: number | null; max_price: number | null; season: string | null; terrain: string | null; category: string | null; thumbnail_url: string | null }>>;
+  const brandMap = new Map((brandSummaries as Array<{ make_name: string; make_image_url: string | null }>).map(b => [toSlug(b.make_name), b]));
+
+  const candidates: ShowcaseModel[] = [];
+  for (const [slug, models] of Object.entries(allModelEntries)) {
+    const brand = brandMap.get(slug);
+    if (!brand) continue;
+    for (const m of models) {
+      if (
+        matchFn(m) &&
+        m.min_price != null && m.min_price > 0 &&
+        m.thumbnail_url &&
+        !/retread/i.test(m.model_name) &&
+        !/pre-mold/i.test(m.model_name)
+      ) {
+        candidates.push({
+          make_name: brand.make_name,
+          model_name: m.model_name,
+          min_price: m.min_price,
+          max_price: m.max_price ?? 0,
+          tire_count: m.tire_count ?? 0,
+          thumbnail_url: m.thumbnail_url,
+          make_image_url: brand.make_image_url || null,
+        });
+      }
+    }
   }
 
-  const result = await safeExecute(
-    `SELECT
-      ms.make_name,
-      ms.model_name,
-      ms.min_price,
-      ms.max_price,
-      ms.tire_count,
-      ms.thumbnail_url,
-      bs.make_image_url
-    FROM model_summary ms
-    JOIN brand_summary bs ON bs.make_name = ms.make_name
-    WHERE ${condition}
-      AND ms.min_price > 0
-      AND ms.thumbnail_url IS NOT NULL
-      AND ms.model_name NOT LIKE '%Retread%'
-      AND ms.model_name NOT LIKE '%Pre-Mold%'
-    ORDER BY ms.tire_count DESC
-    LIMIT ${limit}`
-  );
-  const rows = result.rows as unknown as ShowcaseModel[];
-  if (rows.length > 0) return rows;
+  if (candidates.length > 0) {
+    // Sort by tire_count DESC, pick top ones from different brands for variety
+    candidates.sort((a, b) => (b.tire_count ?? 0) - (a.tire_count ?? 0));
+    const result: ShowcaseModel[] = [];
+    const usedBrands = new Set<string>();
+    for (const c of candidates) {
+      if (result.length >= limit) break;
+      if (!usedBrands.has(c.make_name)) {
+        result.push(c);
+        usedBrands.add(c.make_name);
+      }
+    }
+    // If we still need more, allow same brand
+    if (result.length < limit) {
+      for (const c of candidates) {
+        if (result.length >= limit) break;
+        if (!result.includes(c)) result.push(c);
+      }
+    }
+    return result;
+  }
 
-  // DB failed — derive showcase from getAllBrands + getModelsByBrand
-  const allBrands = await getAllBrands();
-  const topBrand = allBrands[0];
-  if (!topBrand) return [];
-  const models = await getModelsByBrand(toSlug(topBrand.make_name));
-  return models
-    .filter((m) => m.thumbnail_url)
-    .slice(0, limit)
-    .map((m) => ({
-      make_name: topBrand.make_name,
-      model_name: m.model_name,
-      min_price: m.min_price ?? 0,
-      max_price: m.max_price ?? 0,
-      tire_count: m.tire_count ?? 0,
-      thumbnail_url: m.thumbnail_url,
-      make_image_url: topBrand.make_image_url,
-    }));
+  return [];
 }
 
 // ---------------------------------------------------------------------------
@@ -910,7 +1187,19 @@ async function _fetchStats(): Promise<{
   modelCount: number;
   tireCount: number;
 }> {
-  // DB-primary: use summary tables (fast, ~100ms)
+  // Primary: compute from bundled JSON data
+  if (brandSummaries && brandSummaries.length > 0) {
+    const brands = brandSummaries as Array<{ make_name: string; tire_count: number; model_count: number }>;
+    const stats = {
+      brandCount: brands.length,
+      modelCount: brands.reduce((acc, b) => acc + (b.model_count ?? 0), 0),
+      tireCount: brands.reduce((acc, b) => acc + (b.tire_count ?? 0), 0),
+    };
+    _statsCache = { data: stats, ts: Date.now() };
+    return stats;
+  }
+
+  // Fallback: try Turso
   const result = await safeExecute(
     `SELECT
       COUNT(*) as brandCount,
@@ -930,15 +1219,15 @@ async function _fetchStats(): Promise<{
     return stats;
   }
 
-  // DB empty — fall back to API
+  // API fallback
   const apiStats = await apiGetStats();
   if (apiStats.brandCount > 0) {
     _statsCache = { data: apiStats, ts: Date.now() };
     return apiStats;
   }
 
-  // Both failed — use static data
-  const fallback = { brandCount: 34, modelCount: 800, tireCount: 307000 };
+  // Static fallback
+  const fallback = { brandCount: 665, modelCount: 19403, tireCount: 301483 };
   _statsCache = { data: fallback, ts: Date.now() };
   return fallback;
 }
@@ -1106,37 +1395,34 @@ async function slugToModelName(brandName: string, slug: string): Promise<string 
   let cache = _modelSlugCaches.get(brandName);
   if (!cache) {
     cache = new Map();
-    const result = await safeExecute({
-      sql: `SELECT model_name FROM model_summary WHERE make_name = ?`,
-      args: [brandName],
-    });
-    for (const row of result.rows) {
-      const name = (row as unknown as { model_name: string }).model_name;
-      cache.set(toSlug(name), name);
+
+    // Primary: use bundled JSON data
+    const brandSlug = toSlug(brandName);
+    const jsonModels = (modelSummaries as Record<string, Array<{ model_name: string }>>)[brandSlug];
+    if (jsonModels && jsonModels.length > 0) {
+      for (const m of jsonModels) {
+        cache.set(toSlug(m.model_name), m.model_name);
+      }
     }
-    // Fallback: if Turso returned nothing, try the models-by-brand cache
+
+    // Supplement from Turso if JSON was empty
     if (cache.size === 0) {
-      const brandSlug = toSlug(brandName);
+      const result = await safeExecute({
+        sql: `SELECT model_name FROM model_summary WHERE make_name = ?`,
+        args: [brandName],
+      });
+      for (const row of result.rows) {
+        const name = (row as unknown as { model_name: string }).model_name;
+        cache.set(toSlug(name), name);
+      }
+    }
+
+    // Fallback: models-by-brand cache (also uses JSON primary)
+    if (cache.size === 0) {
       const modelRows = await getModelsByBrand(brandSlug);
       for (const m of modelRows) {
         cache.set(toSlug(m.model_name), m.model_name);
       }
-    }
-    _modelSlugCaches.set(brandName, cache);
-  }
-
-  if (cache.has(slug)) return cache.get(slug)!;
-
-  // model_summary may be incomplete — fall back to tires table
-  const fallback = await safeExecute({
-    sql: `SELECT DISTINCT model_name FROM tires WHERE make_name = ?`,
-    args: [brandName],
-  });
-  if (fallback.rows.length > 0) {
-    for (const row of fallback.rows) {
-      const name = (row as unknown as { model_name: string }).model_name;
-      const s = toSlug(name);
-      if (!cache.has(s)) cache.set(s, name);
     }
     _modelSlugCaches.set(brandName, cache);
   }
@@ -1177,18 +1463,28 @@ export function toSlug(name: string | null | undefined): string {
 
 export async function getBrandSlugMap(): Promise<Map<string, string>> {
   if (_brandSlugCache) return _brandSlugCache;
-  const db = getDb();
-  const result = await safeExecute(
-    `SELECT make_name FROM brand_summary ORDER BY make_name`
-  );
 
   _brandSlugCache = new Map();
-  for (const row of result.rows) {
-    const name = (row as unknown as { make_name: string }).make_name;
-    _brandSlugCache.set(toSlug(name), name);
+
+  // Primary: populate from bundled JSON data
+  if (brandSummaries && brandSummaries.length > 0) {
+    for (const b of brandSummaries as Array<{ make_name: string }>) {
+      _brandSlugCache.set(toSlug(b.make_name), b.make_name);
+    }
   }
 
-  // If DB returned nothing (timeout/empty), populate cache from API
+  // If JSON was empty, try Turso
+  if (_brandSlugCache.size === 0) {
+    const result = await safeExecute(
+      `SELECT make_name FROM brand_summary ORDER BY make_name`
+    );
+    for (const row of result.rows) {
+      const name = (row as unknown as { make_name: string }).make_name;
+      _brandSlugCache.set(toSlug(name), name);
+    }
+  }
+
+  // If still empty, fall back to API
   if (_brandSlugCache.size === 0) {
     console.log("[turso] getBrandSlugMap empty — populating from API");
     const apiBrands = await apiGetAllBrands();
