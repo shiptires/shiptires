@@ -30,7 +30,7 @@ const countryCode: Record<string, string> = {
 export const metadata: Metadata = {
   title: "Buy Tires Online — Ship Free to Your Door | Ship.Tires",
   description:
-    "Shop tires from Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Cooper, Hankook, Yokohama & 34 top brands. Find tires for Honda, Toyota, Ford, Chevrolet, BMW, Nissan, Jeep & all vehicles. Ship free to Los Angeles, New York, Houston, Chicago, Phoenix & nationwide.",
+    "Shop tires from Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Cooper, Yokohama, Toyo & 34 top brands. Find tires for Honda, Toyota, Ford, Chevrolet, BMW, Nissan, Jeep & all vehicles. Ship free to Los Angeles, New York, Houston, Chicago, Phoenix & nationwide.",
   alternates: { canonical: "https://ship.tires" },
 };
 
@@ -49,7 +49,7 @@ const faqItems = [
   },
   {
     q: "What tire brands do you carry?",
-    a: "We carry 34 curated tire brands including Advanta, BFGoodrich, Bridgestone, Continental, Cooper, Dunlop, Falken, Firestone, General Tire, Goodyear, Hankook, Hoosier, Kenda, Kumho, Laufenn, Maxxis, Michelin, Mickey Thompson, Nankang, Nexen, Nitto, Nokian, Pirelli, Power King, Radar, Range Finder, Riken, Sumitomo, Toyo, Uniroyal, Vitour, Vogue, Vredestein, and Yokohama. Shop any brand and ship free.",
+    a: "We carry 34 curated tire brands including Advanta, BFGoodrich, Bridgestone, Continental, Cooper, Dunlop, Falken, Firestone, General Tire, Goodyear, Hoosier, Kenda, Kumho, Laufenn, Maxxis, Michelin, Mickey Thompson, Nankang, Nexen, Nitto, Nokian, Pirelli, Power King, Radar, Range Finder, Riken, Sumitomo, Toyo, Uniroyal, Vitour, Vogue, Vredestein, and Yokohama. Shop any brand and ship free.",
   },
   {
     q: "Can I shop tires by my vehicle?",
@@ -118,7 +118,7 @@ export default async function HomePage() {
 
   // Fetch tires for popular vehicles — only show tires we actually stock (distributor inventory)
   const PREMIUM_BRANDS = new Set(["MICHELIN", "BRIDGESTONE", "CONTINENTAL", "PIRELLI", "GOODYEAR"]);
-  const MID_BRANDS = new Set(["COOPER", "HANKOOK", "YOKOHAMA", "FALKEN", "FIRESTONE", "KUMHO", "TOYO", "NEXEN", "NITTO", "DUNLOP", "BFGOODRICH", "UNIROYAL", "GENERAL TIRE", "NOKIAN"]);
+  const MID_BRANDS = new Set(["COOPER", "YOKOHAMA", "FALKEN", "FIRESTONE", "KUMHO", "TOYO", "NEXEN", "NITTO", "DUNLOP", "BFGOODRICH", "UNIROYAL", "GENERAL TIRE", "NOKIAN"]);
   const popularVehicles = [
     { make: "Toyota", model: "Camry", size: "215/55R17", link: "/tires/vehicle/toyota/camry" },
     { make: "Toyota", model: "Corolla", size: "205/55R16", link: "/tires/vehicle/toyota/corolla" },
@@ -146,14 +146,21 @@ export default async function HomePage() {
     budget?: VehicleTier; mid?: VehicleTier; premium?: VehicleTier;
   };
 
+  const hasDistPricing = distMap.size > 0;
+
   // Build all priced candidates for a tier, sorted by price ascending
   function tierCandidates(tires: TireRow[]): VehicleTier[] {
     const candidates: VehicleTier[] = [];
     for (const t of tires) {
+      let price: number;
       const dist = distMap.get(t.id);
-      if (!dist) continue;
-      const shipping = getShippingByWeight(t.weight ? parseFloat(t.weight) : null);
-      const price = sitePriceFromCost(dist.cost, shipping);
+      if (dist) {
+        const shipping = getShippingByWeight(t.weight ? parseFloat(t.weight) : null);
+        price = sitePriceFromCost(dist.cost, shipping);
+      } else {
+        // Fallback: use tire catalog price
+        price = Number(t.price_map) || 0;
+      }
       if (price <= 0) continue;
       const image = resolveImage(t.local_angle, t.local_side, t.local_thumbnail, t.angle_image_url, t.side_image_url, t.thumbnail_url, t.image_0100_url);
       if (!image) continue;
@@ -169,8 +176,10 @@ export default async function HomePage() {
       if (!arMatch) return { ...v };
       const [, ar, r] = arMatch;
       const allTires = await dbTimeout(getTiresBySize(w, ar, r), []);
-      // Only show tires we actually have in distributor inventory
-      const inStock = allTires.filter((t) => distMap.has(t.id));
+      // When distributor pricing available, filter to in-stock; otherwise show all
+      const inStock = hasDistPricing
+        ? allTires.filter((t) => distMap.has(t.id))
+        : allTires;
 
       const budgetTires: TireRow[] = [];
       const midTires: TireRow[] = [];
@@ -813,8 +822,8 @@ export default async function HomePage() {
             {(() => {
               const priorityOrder = [
                 "MICHELIN", "GOODYEAR", "BRIDGESTONE", "CONTINENTAL", "PIRELLI",
-                "COOPER", "HANKOOK", "YOKOHAMA", "TOYO", "FIRESTONE",
-                "BFGOODRICH", "FALKEN", "RADAR", "NITTO", "KUMHO", "NEXEN",
+                "COOPER", "YOKOHAMA", "TOYO", "FIRESTONE", "BFGOODRICH",
+                "FALKEN", "RADAR", "NITTO", "KUMHO", "NEXEN",
               ];
               const priorityRank = new Map(priorityOrder.map((n, i) => [n, i + 1]));
               return [...brands]

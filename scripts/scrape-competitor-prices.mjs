@@ -31,8 +31,8 @@ try {
 }
 
 // ── Config ──────────────────────────────────────────────────
-const TURSO_URL = "libsql://shiptires-cryptoshah.aws-us-west-2.turso.io";
-const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN || "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODEyMzY2MTMsImlkIjoiMDE5ZWI5ZjgtMDgwMS03MmRiLTk5NGQtYTFlZmM0YzNlNTQ0IiwicmlkIjoiMjVhYjViZTctNjc2ZS00ZjVmLTgxMDUtYTAwODFjMzQ4YWY5In0.CK8eWDTMQxbQS2xBLRRvkTvdJDy35d97-t0zhlH1ZxXEBGiYsD_AXXFjpYXhGPNB22MJAVzA9dAkzXRWadwaDg";
+const TURSO_URL = process.env.TURSO_DATABASE_URL || "libsql://shiptires-shiptires.aws-us-west-2.turso.io";
+const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN || "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3ODQzNzkzOTMsImlkIjoiMDE5Zjc1NGMtM2QwMS03NmZlLWI1MTctMjU5OTRmYzg4NTZhIiwia2lkIjoiNm4weWJRYk9PWEl2RlBLTWJDSTJ1N0lrREc2OWRLVzNjc2R1Yng5dDZ5WSIsInJpZCI6IjgyYzAwZDkxLWE2YzMtNGM5ZC04NDQzLTUzMjZhNGM0NDEzYyJ9.ENMwrr3gITthfhBM_CHaw3zcU2yG8JlSR3hG5gJTLV89SN7U0nQZqoUX1XRcq1CdtSv5qxsHu0kkAAPZ3RZ7Dg";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://jrzccxsakhmnbhtnusih.supabase.co";
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyemNjeHNha2htbmJodG51c2loIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2OTMyMzUxNiwiZXhwIjoyMDg0ODk5NTE2fQ.W-HmE-YHq8EMX7Ivnrb4evZ3S-X5xJDlGHR70M0Qof4";
 

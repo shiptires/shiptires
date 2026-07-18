@@ -186,7 +186,6 @@ export const CURATED_BRANDS: Map<string, string> = new Map([
   ["GT RADIAL", ""],
   ["GTK", ""],
   ["HAIDA", ""],
-  ["HANKOOK", "hankook.png"],
   ["HARTLAND", ""],
   ["HARVEST KING", ""],
   ["HEADWAY", ""],

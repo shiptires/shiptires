@@ -197,7 +197,7 @@ function buildItemXml(
 
   const imageLink = resolveImageUrl(row);
 
-  // Pricing: distributor cost → competitor price (no TireWeb MAP fallback)
+  // Pricing: distributor cost → competitor price → MAP price fallback
   const distSource = distPricing?.get(row.id);
   const compSource = compPricing?.get(row.id);
   let price: string;
@@ -205,8 +205,10 @@ function buildItemXml(
     price = sitePriceFromCost(distSource.cost, distSource.shipping).toFixed(2);
   } else if (compSource) {
     price = sitePriceFromCompetitor(compSource.competitorPrice).toFixed(2);
+  } else if (row.price_map && Number(row.price_map) > 0) {
+    price = Number(row.price_map).toFixed(2);
   } else {
-    price = "0.00"; // No distributor/competitor data — skip this item
+    price = "0.00";
   }
 
   // Skip items without real pricing

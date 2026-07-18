@@ -125,15 +125,17 @@ async function estimateFromDistributor(
   weightLbs?: number | null,
   rimSize?: number | null
 ): Promise<number> {
-  // 1. Same brand + model median cost (filtered by similar rim size)
-  const modelCost = await getModelAverageCost(brand, model, rimSize);
+  // Run model + brand cost lookups in parallel
+  const [modelCost, brandCost] = await Promise.all([
+    getModelAverageCost(brand, model, rimSize).catch(() => null),
+    getBrandAverageCost(brand, rimSize).catch(() => null),
+  ]);
+
+  // Prefer model-level estimate over brand-level
   if (modelCost && modelCost > 0) {
     const shipping = getShippingByWeight(weightLbs);
     return sitePriceFromCost(modelCost, shipping);
   }
-
-  // 2. Same brand (any model) median cost (filtered by rim size bucket)
-  const brandCost = await getBrandAverageCost(brand, rimSize);
   if (brandCost && brandCost > 0) {
     const shipping = getShippingByWeight(weightLbs);
     return sitePriceFromCost(brandCost, shipping);
@@ -169,22 +171,26 @@ async function _getSitePriceInner(
   rimSize?: number | null
 ): Promise<number> {
   try {
-    // 1. Distributor pricing (cheapest cost)
-    const source = await getCheapestSource(tireId);
+    // 1+2: Run distributor and competitor lookups in parallel
+    const [source, comp] = await Promise.all([
+      getCheapestSource(tireId).catch(() => null),
+      getCompetitorPrice(tireId).catch(() => null),
+    ]);
+
+    // Prefer distributor cost
     if (source) {
       const shipping = getShippingByWeight(weightLbs);
       const distPrice = sitePriceFromCost(source.cost, shipping);
       if (distPrice > 0) return distPrice;
     }
 
-    // 2. Competitor pricing
-    const comp = await getCompetitorPrice(tireId);
+    // Fallback to competitor price
     if (comp) {
       const compPrice = sitePriceFromCompetitor(comp.competitorPrice);
       if (compPrice > 0) return compPrice;
     }
 
-    // 3-4. Estimate from Express Tire data (same brand+model → same brand)
+    // 3-4: Estimate only if both failed
     if (brand) {
       const estimated = await estimateFromDistributor(brand, model, weightLbs, rimSize);
       if (estimated > 0) return estimated;

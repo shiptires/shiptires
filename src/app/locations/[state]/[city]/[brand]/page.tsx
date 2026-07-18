@@ -61,9 +61,9 @@ export default async function CityBrandPage({
   // Priority brands in explicit order for cross-linking
   const priorityOrder = [
     "MICHELIN", "GOODYEAR", "BRIDGESTONE", "CONTINENTAL", "PIRELLI",
-    "COOPER", "HANKOOK", "YOKOHAMA", "TOYO", "FIRESTONE",
-    "BFGOODRICH", "FALKEN", "GENERAL", "KUMHO", "NEXEN",
-    "NITTO", "DUNLOP", "NOKIAN", "UNIROYAL", "KELLY",
+    "COOPER", "YOKOHAMA", "TOYO", "FIRESTONE", "BFGOODRICH",
+    "FALKEN", "GENERAL", "KUMHO", "NEXEN", "NITTO",
+    "DUNLOP", "NOKIAN", "UNIROYAL", "KELLY",
   ];
   const priorityRank = new Map(priorityOrder.map((n, i) => [n, i + 1]));
 

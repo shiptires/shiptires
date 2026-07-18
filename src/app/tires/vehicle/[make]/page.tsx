@@ -303,7 +303,7 @@ export default async function VehicleMakePage({
           {(() => {
             // Group sample tires by brand+model and pick the best representative
             const modelMap = new Map<string, typeof sampleTires[0]>();
-            const priorityBrands = ["MICHELIN", "GOODYEAR", "BRIDGESTONE", "CONTINENTAL", "PIRELLI", "COOPER", "HANKOOK", "YOKOHAMA", "FALKEN", "FIRESTONE"];
+            const priorityBrands = ["MICHELIN", "GOODYEAR", "BRIDGESTONE", "CONTINENTAL", "PIRELLI", "COOPER", "YOKOHAMA", "FALKEN", "FIRESTONE", "TOYO"];
             for (const tire of sampleTires) {
               const key = `${tire.make_name}|${tire.model_name}`;
               if (!modelMap.has(key)) {

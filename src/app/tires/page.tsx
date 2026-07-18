@@ -11,7 +11,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Shop All Tire Brands A-Z — Ship Free Nationwide",
   description:
-    "Shop 34 tire brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Hankook, Yokohama, Cooper & more. Find tires for Honda, Toyota, Ford, Chevrolet, BMW & all vehicles. Free shipping to Los Angeles, New York, Houston, Chicago & nationwide.",
+    "Shop 34 tire brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Yokohama, Cooper, Toyo & more. Find tires for Honda, Toyota, Ford, Chevrolet, BMW & all vehicles. Free shipping to Los Angeles, New York, Houston, Chicago & nationwide.",
   alternates: { canonical: "https://ship.tires/tires" },
 };
 
@@ -23,9 +23,9 @@ export default async function TiresPage() {
   // Priority brands in explicit order
   const priorityOrder = [
     "MICHELIN", "GOODYEAR", "BRIDGESTONE", "CONTINENTAL", "PIRELLI",
-    "COOPER", "HANKOOK", "YOKOHAMA", "TOYO", "FIRESTONE",
-    "BFGOODRICH", "FALKEN", "GENERAL", "KUMHO", "NEXEN",
-    "NITTO", "DUNLOP", "NOKIAN", "UNIROYAL", "KELLY",
+    "COOPER", "YOKOHAMA", "TOYO", "FIRESTONE", "BFGOODRICH",
+    "FALKEN", "GENERAL", "KUMHO", "NEXEN", "NITTO",
+    "DUNLOP", "NOKIAN", "UNIROYAL", "KELLY",
   ];
   const priorityRank = new Map(priorityOrder.map((n, i) => [n, i + 1]));
 

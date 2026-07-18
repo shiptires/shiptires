@@ -6,7 +6,9 @@ import { useCart, TIRE_PROTECTION_PRICE } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { calculateOrderFees } from "@/lib/tire-fees";
 import type { ShippingAddress } from "@/lib/types";
+import SquarePayForm from "@/components/SquarePayForm";
 import PlaidPayButton from "@/components/PlaidPayButton";
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 
 function StepIndicator({ current }: { current: number }) {
   const steps = ["Cart", "Shipping", "Payment"];
@@ -142,7 +144,8 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [linkToken, setLinkToken] = useState<string | null>(null);
+  const [plaidLinkToken, setPlaidLinkToken] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "bank">("card");
   const [form, setForm] = useState<ShippingAddress>({
     firstName: "",
     lastName: "",
@@ -178,26 +181,14 @@ export default function CheckoutPage() {
     }));
   }, [profile]);
 
-  // Fetch Plaid link token
-  const fetchLinkToken = useCallback(async () => {
-    try {
-      const res = await fetch("/api/plaid/create-link-token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user?.id || undefined }),
-      });
-      const data = await res.json();
-      if (data.link_token) {
-        setLinkToken(data.link_token);
-      } else {
-        setError("Failed to initialize payment. Please try again.");
-      }
-    } catch {
-      setError("Failed to initialize payment. Please try again.");
-    }
-  }, [user?.id]);
+  // Fetch Plaid link token on mount (graceful: if Plaid not configured, bank tab won't show)
+  useEffect(() => {
+    fetch("/api/plaid/create-link-token", { method: "POST" })
+      .then((r) => r.json())
+      .then((d) => { if (d.link_token) setPlaidLinkToken(d.link_token); })
+      .catch(() => {}); // Plaid not configured — hide bank option
+  }, []);
 
-  // Validate form before opening Plaid Link
   const isFormValid = !!(
     form.firstName &&
     form.lastName &&
@@ -210,25 +201,42 @@ export default function CheckoutPage() {
     agreedToTerms
   );
 
-  const handlePayClick = async () => {
-    if (!isFormValid) {
-      setError("Please fill in all shipping fields and agree to the return policy.");
-      return;
-    }
+  // Calculate total for the pay button
+  const orderTotal = useMemo(() => {
+    const state = form.state.trim().toUpperCase();
+    if (state.length !== 2) return subtotal + protectionTotal;
+    const fees = calculateOrderFees(state, totalItems, subtotal);
+    return fees.total + protectionTotal;
+  }, [form.state, totalItems, subtotal, protectionTotal]);
+
+  const handleSquarePayment = async (sourceId: string) => {
+    setLoading(true);
     setError("");
-    if (!linkToken) {
-      await fetchLinkToken();
+
+    try {
+      const res = await fetch("/api/square/process-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceId,
+          shipping: form,
+          items,
+          tireProtection,
+          auth_user_id: user?.id || "",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Payment failed");
+
+      window.location.href = `/checkout/success?order_id=${data.orderId}`;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setLoading(false);
     }
   };
 
-  // Fetch link token when form becomes valid
-  useEffect(() => {
-    if (isFormValid && !linkToken) {
-      fetchLinkToken();
-    }
-  }, [isFormValid, linkToken, fetchLinkToken]);
-
-  const handlePlaidSuccess = async (publicToken: string, accountId: string) => {
+  const handlePlaidPayment = useCallback(async (publicToken: string, accountId: string) => {
     setLoading(true);
     setError("");
 
@@ -254,7 +262,11 @@ export default function CheckoutPage() {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setLoading(false);
     }
-  };
+  }, [form, items, tireProtection, user?.id]);
+
+  const handleAddressSelect = useCallback((address: { address1: string; city: string; state: string; zip: string }) => {
+    setForm((prev) => ({ ...prev, ...address }));
+  }, []);
 
   if (items.length === 0) {
     return (
@@ -357,14 +369,11 @@ export default function CheckoutPage() {
                 </div>
                 <div className="sm:col-span-2">
                   <label htmlFor="address1" className="block text-sm font-medium text-gray-700">Address</label>
-                  <input
-                    type="text"
+                  <AddressAutocomplete
                     id="address1"
-                    name="address1"
-                    required
-                    autoComplete="address-line1"
                     value={form.address1}
-                    onChange={handleChange}
+                    onChange={handleAddressSelect}
+                    onInput={(value) => setForm((prev) => ({ ...prev, address1: value }))}
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-orange focus:ring-1 focus:ring-orange outline-none"
                   />
                 </div>
@@ -517,14 +526,52 @@ export default function CheckoutPage() {
                 </span>
               </label>
 
-              <div className="mt-5" onClick={!isFormValid ? handlePayClick : undefined}>
-                <PlaidPayButton
-                  linkToken={linkToken}
-                  onSuccess={handlePlaidSuccess}
-                  onExit={() => setLoading(false)}
-                  disabled={!isFormValid}
-                  loading={loading}
-                />
+              {/* Payment method tabs */}
+              {plaidLinkToken && (
+                <div className="mt-5 flex rounded-lg border border-gray-200 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("card")}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                      paymentMethod === "card"
+                        ? "bg-safety-orange text-white"
+                        : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    Pay with Card
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("bank")}
+                    className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                      paymentMethod === "bank"
+                        ? "bg-safety-orange text-white"
+                        : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    Pay with Bank Account
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-5">
+                {paymentMethod === "card" ? (
+                  <SquarePayForm
+                    appId={process.env.NEXT_PUBLIC_SQUARE_APP_ID!}
+                    locationId={process.env.NEXT_PUBLIC_SQUARE_LOCATION_ID!}
+                    onPayment={handleSquarePayment}
+                    disabled={!isFormValid}
+                    loading={loading}
+                    total={orderTotal}
+                  />
+                ) : (
+                  <PlaidPayButton
+                    linkToken={plaidLinkToken}
+                    onSuccess={handlePlaidPayment}
+                    disabled={!isFormValid}
+                    loading={loading}
+                  />
+                )}
               </div>
               {!agreedToTerms && (
                 <p className="mt-2 text-center text-xs text-red-500">
@@ -532,7 +579,7 @@ export default function CheckoutPage() {
                 </p>
               )}
               <p className="mt-3 text-center text-xs text-gray-400">
-                Secure ACH bank payment &mdash; powered by Plaid
+                {paymentMethod === "card" ? "Secure card payment" : "Secure bank payment"} &mdash; powered by {paymentMethod === "card" ? "Square" : "Plaid"}
               </p>
 
               <TrustBadges />

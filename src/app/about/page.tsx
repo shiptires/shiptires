@@ -16,7 +16,6 @@ const FEATURED_BRANDS = [
   { name: "Goodyear", logo: "goodyear.png" },
   { name: "Pirelli", logo: "pirelli.png" },
   { name: "Cooper", logo: "cooper.png" },
-  { name: "Hankook", logo: "hankook.png" },
   { name: "Yokohama", logo: "yokohama.png" },
   { name: "Falken", logo: "falken.png" },
   { name: "Toyo", logo: "toyo.png" },
@@ -183,6 +182,25 @@ export default function AboutPage() {
               View all brands &rarr;
             </Link>
           </p>
+        </section>
+
+        {/* Location */}
+        <section className="rounded-xl bg-white border border-gray-200 p-8 shadow-sm">
+          <h2 className="text-2xl font-black text-gray-900">Our Location</h2>
+          <p className="mt-4 text-gray-600 leading-relaxed">
+            Ship.Tires ships from our warehouse in Fresno, California — centrally located for fast
+            delivery to the entire West Coast and nationwide.
+          </p>
+          <div className="mt-4 flex items-start gap-3">
+            <svg className="h-5 w-5 text-orange flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+            </svg>
+            <div>
+              <p className="font-bold text-gray-900">363 N Blackstone Ave</p>
+              <p className="text-gray-600">Fresno, CA 93701</p>
+            </div>
+          </div>
         </section>
 
         {/* CTA */}

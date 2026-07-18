@@ -57,9 +57,9 @@ export default async function CityLocationsPage({
   // Priority brands in exact display order (most recognizable first)
   const priorityOrder = [
     "MICHELIN", "GOODYEAR", "BRIDGESTONE", "CONTINENTAL", "PIRELLI",
-    "COOPER", "HANKOOK", "YOKOHAMA", "TOYO", "FIRESTONE",
-    "BFGOODRICH", "FALKEN", "GENERAL", "KUMHO", "NEXEN",
-    "NITTO", "DUNLOP", "NOKIAN", "UNIROYAL", "KELLY",
+    "COOPER", "YOKOHAMA", "TOYO", "FIRESTONE", "BFGOODRICH",
+    "FALKEN", "GENERAL", "KUMHO", "NEXEN", "NITTO",
+    "DUNLOP", "NOKIAN", "UNIROYAL", "KELLY",
   ];
   const priorityRank = new Map(priorityOrder.map((n, i) => [n, i + 1]));
 

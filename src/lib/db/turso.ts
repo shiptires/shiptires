@@ -528,14 +528,47 @@ export async function getTiresBySize(
   aspectRatio: string,
   rimSize: string
 ): Promise<TireRow[]> {
-  const db = getDb();
+  // 1. Try Turso first
   const result = await safeExecute({
     sql: `SELECT * FROM tires
     WHERE width = ? AND aspect_ratio = ? AND rim_size = ?
     ORDER BY make_name, model_name`,
     args: [width, aspectRatio, rimSize],
   });
-  return result.rows as unknown as TireRow[];
+  const tursoRows = result.rows as unknown as TireRow[];
+  if (tursoRows.length > 0) return tursoRows;
+
+  // 2. JSON data fallback — search key brands (batched to avoid overwhelming self-fetches)
+  const KEY_BRAND_SLUGS = [
+    "michelin", "bridgestone", "continental", "goodyear", "pirelli",
+    "cooper", "hankook", "yokohama", "falken", "toyo",
+    "firestone", "kumho", "nexen", "nitto", "dunlop",
+    "bfgoodrich", "uniroyal", "general-tire", "nokian",
+    "radar", "advanta", "kenda", "arroyo",
+  ];
+
+  const tires: TireRow[] = [];
+  // Batch fetches: 5 at a time to avoid overwhelming the deployment
+  for (let i = 0; i < KEY_BRAND_SLUGS.length; i += 5) {
+    const batch = KEY_BRAND_SLUGS.slice(i, i + 5);
+    const results = await Promise.all(batch.map((slug) => loadBrandTireData(slug)));
+    for (const data of results) {
+      if (!data) continue;
+      for (const modelSlug of Object.keys(data)) {
+        const model = data[modelSlug];
+        for (const ct of model.t) {
+          if (
+            String(ct[1]) === width &&
+            String(ct[2]) === aspectRatio &&
+            String(ct[3]) === rimSize
+          ) {
+            tires.push(compactToTireRow(ct, model));
+          }
+        }
+      }
+    }
+  }
+  return tires;
 }
 
 export async function getTiresByBrandAndSize(

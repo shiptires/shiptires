@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     template: "%s | Ship.Tires",
   },
   description:
-    "Shop tires online from 34 brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Cooper, Hankook, Yokohama & more. Ship free to your door or installer in Los Angeles, New York, Houston, Chicago, Phoenix & nationwide. Find tires for Honda, Toyota, Ford, Chevrolet, BMW & all vehicles. Call (279) 238-8473.",
+    "Shop tires online from 34 brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Cooper, Yokohama & more. Ship free to your door or installer in Los Angeles, New York, Houston, Chicago, Phoenix & nationwide. Find tires for Honda, Toyota, Ford, Chevrolet, BMW & all vehicles. Call (279) 238-8473.",
   openGraph: {
     title: "Shop Tires Online — Ship Free Nationwide",
     description:
@@ -93,11 +93,13 @@ const jsonLd = {
   email: "info@ship.tires",
   logo: "https://ship.tires/logo.png",
   description:
-    "Shop tires online from top brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Hankook, Yokohama, Cooper, Toyo, Falken, Firestone, Kumho, Nexen, Nitto, Dunlop, Nokian, General Tire, Maxxis, and more. Ship free to your door or installer anywhere in the US. Find tires for Honda, Toyota, Ford, Chevrolet, BMW, Mercedes-Benz, Nissan, Hyundai, Kia, Jeep, Ram, GMC, Subaru, Volkswagen, Audi, Lexus, Mazda, Tesla & all vehicles.",
+    "Shop tires online from top brands including Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Yokohama, Cooper, Toyo, Falken, Firestone, Kumho, Nexen, Nitto, Dunlop, Nokian, General Tire, Maxxis, and more. Ship free to your door or installer anywhere in the US. Find tires for Honda, Toyota, Ford, Chevrolet, BMW, Mercedes-Benz, Nissan, Hyundai, Kia, Jeep, Ram, GMC, Subaru, Volkswagen, Audi, Lexus, Mazda, Tesla & all vehicles.",
   address: {
     "@type": "PostalAddress",
-    addressLocality: "Sacramento",
+    streetAddress: "363 N Blackstone Ave",
+    addressLocality: "Fresno",
     addressRegion: "CA",
+    postalCode: "93701",
     addressCountry: "US",
   },
   areaServed: {
@@ -107,7 +109,7 @@ const jsonLd = {
   priceRange: "$$",
   brand: [
     "Advanta", "BFGoodrich", "Bridgestone", "Continental", "Cooper", "Dunlop",
-    "Falken", "Firestone", "General Tire", "Goodyear", "Hankook", "Hoosier",
+    "Falken", "Firestone", "General Tire", "Goodyear", "Hoosier",
     "Kenda", "Kumho", "Laufenn", "Maxxis", "Michelin", "Mickey Thompson",
     "Nankang", "Nexen", "Nitto", "Nokian", "Pirelli", "Power King", "Radar",
     "Range Finder", "Riken", "Sumitomo", "Toyo", "Uniroyal", "Vitour", "Vogue",
@@ -177,7 +179,7 @@ const serviceSchema = {
     url: "https://ship.tires",
   },
   description:
-    "Shop tires online from 34 brands and ship free to your door or local installer. Find tires by vehicle (Honda, Toyota, Ford, Chevrolet, BMW, Nissan, Jeep, Tesla & more) or by tire size. Browse Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Cooper, Hankook, Yokohama and more. Free shipping to Los Angeles, New York, Chicago, Houston, Phoenix, Philadelphia, San Antonio, Dallas, San Diego, San Jose & everywhere in the continental US.",
+    "Shop tires online from 34 brands and ship free to your door or local installer. Find tires by vehicle (Honda, Toyota, Ford, Chevrolet, BMW, Nissan, Jeep, Tesla & more) or by tire size. Browse Michelin, Goodyear, Bridgestone, Continental, Pirelli, BFGoodrich, Cooper, Yokohama and more. Free shipping to Los Angeles, New York, Chicago, Houston, Phoenix, Philadelphia, San Antonio, Dallas, San Diego, San Jose & everywhere in the continental US.",
   serviceType: [
     "Online Tire Sales",
     "Free Tire Shipping",
