@@ -541,7 +541,7 @@ export async function getTiresBySize(
   // 2. JSON data fallback — search key brands (batched to avoid overwhelming self-fetches)
   const KEY_BRAND_SLUGS = [
     "michelin", "bridgestone", "continental", "goodyear", "pirelli",
-    "cooper", "hankook", "yokohama", "falken", "toyo",
+    "cooper", "yokohama", "falken", "toyo",
     "firestone", "kumho", "nexen", "nitto", "dunlop",
     "bfgoodrich", "uniroyal", "general-tire", "nokian",
     "radar", "advanta", "kenda", "arroyo",

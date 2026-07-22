@@ -105,7 +105,7 @@ export const tireCategories: TireCategory[] = [
     slug: "highway",
     type: "highway",
     description:
-      "Highway tires from Michelin, Cooper, Firestone, Hankook, and General are optimized for trucks, SUVs, and vans on paved roads. Shop the Michelin Defender LTX, Cooper Discoverer HTP, and Firestone Destination — smooth ride, long tread life, and free shipping on every order.",
+      "Highway tires from Michelin, Cooper, Firestone, and General are optimized for trucks, SUVs, and vans on paved roads. Shop the Michelin Defender LTX, Cooper Discoverer HTP, and Firestone Destination — smooth ride, long tread life, and free shipping on every order.",
     image:
       "https://new.tirelibrary.com/tireModelImage/b6d98e23-5c4f-4a19-8e67-2a4fb7c80d91",
     features: [
@@ -120,7 +120,7 @@ export const tireCategories: TireCategory[] = [
     slug: "touring",
     type: "touring",
     description:
-      "Touring tires from Michelin, Continental, Bridgestone, Pirelli, and Hankook deliver premium comfort for sedans, crossovers, and luxury vehicles. Shop the Michelin Primacy, Continental PureContact, and Bridgestone Ecopia — up to 80,000-mile warranties and free shipping.",
+      "Touring tires from Michelin, Continental, Bridgestone, Pirelli, and Yokohama deliver premium comfort for sedans, crossovers, and luxury vehicles. Shop the Michelin Primacy, Continental PureContact, and Bridgestone Ecopia — up to 80,000-mile warranties and free shipping.",
     image:
       "https://new.tirelibrary.com/tireModelImage/c3a47f09-6d82-4e53-9b74-1f5ec8d62a30",
     features: [

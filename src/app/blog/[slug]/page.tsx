@@ -46,7 +46,7 @@ const KEYWORD_LINKS: [RegExp, string][] = [
   [/\bContinental\b(?!\s+GT\b)/g, '<a href="/tires/continental" class="text-safety-orange hover:underline">Continental</a>'],
   [/\bPirelli\b/g, '<a href="/tires/pirelli" class="text-safety-orange hover:underline">Pirelli</a>'],
   [/\bCooper Tires\b/g, '<a href="/tires/cooper" class="text-safety-orange hover:underline">Cooper Tires</a>'],
-  [/\bHankook\b/g, '<a href="/tires/hankook" class="text-safety-orange hover:underline">Hankook</a>'],
+
   [/\bYokohama\b/g, '<a href="/tires/yokohama" class="text-safety-orange hover:underline">Yokohama</a>'],
   [/\bToyo Tires\b/g, '<a href="/tires/toyo" class="text-safety-orange hover:underline">Toyo Tires</a>'],
   [/\bFalken\b/g, '<a href="/tires/falken" class="text-safety-orange hover:underline">Falken</a>'],

@@ -9,7 +9,7 @@ const YEARS = [
 ];
 const TOP_BRAND_SLUGS = [
   "michelin", "bridgestone", "goodyear", "continental", "pirelli",
-  "cooper", "hankook", "yokohama", "toyo", "falken",
+  "cooper", "yokohama", "toyo", "falken",
 ];
 
 export async function generateStaticParams() {

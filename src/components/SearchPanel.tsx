@@ -9,7 +9,7 @@ import { brands as curatedBrands } from "@/data/brands";
 
 const topBrandSlugs = [
   "michelin", "goodyear", "bridgestone", "continental", "pirelli",
-  "cooper", "hankook", "yokohama", "toyo", "firestone",
+  "cooper", "yokohama", "toyo", "firestone",
   "bfgoodrich", "falken", "radar", "nitto", "kumho", "nexen",
 ];
 

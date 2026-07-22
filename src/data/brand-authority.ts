@@ -203,43 +203,6 @@ export const brandAuthority: BrandAuthority[] = [
     market: "performance",
   },
   {
-    slug: "hankook",
-    name: "Hankook",
-    country: "South Korea",
-    headquarters: "Seoul, South Korea",
-    founded: 1941,
-    overview:
-      "Hankook Tire, founded in 1941 in Seoul, South Korea, has evolved from a regional manufacturer into a global tire powerhouse with a presence in over 180 countries. The company is the seventh-largest tire maker in the world by revenue and has earned OEM partnerships with major automakers including BMW, Audi, Mercedes-Benz, Porsche, and Volkswagen — a testament to their engineering quality and consistency.\n\nHankook offers a comprehensive tire lineup spanning ultra-high-performance, touring, all-season, winter, and SUV categories. Their tires are engineered at the Hankook Technodome, one of the most advanced R&D centers in the tire industry, and manufactured in state-of-the-art facilities in South Korea, Hungary, Indonesia, and the United States. Drivers who shop for Hankook tires appreciate the combination of premium performance and competitive pricing, and the brand's efficient logistics network can ship orders across North America quickly.\n\nIn recent years, Hankook has expanded aggressively into the premium segment, including tires for electric vehicles and high-performance applications. Their iON line of EV-specific tires demonstrates a forward-looking approach that positions Hankook as a serious competitor to established European premium brands.",
-    technologies: [
-      "Kontrol Technology",
-      "Aqua Pine Wet Traction Design",
-      "Sound Absorber Noise Reduction",
-      "Multi-Directional Sipe Technology",
-      "iON EV-Optimized Construction",
-    ],
-    topModels: [
-      {
-        name: "Ventus S1 evo3",
-        description:
-          "Hankook's flagship ultra-high-performance summer tire chosen as OE by BMW and Porsche, delivering elite grip and cornering stability.",
-        type: "performance",
-      },
-      {
-        name: "Kinergy GT",
-        description:
-          "A grand touring all-season tire providing a comfortable, quiet ride with dependable all-weather traction and long tread life for sedans and CUVs.",
-        type: "all-season",
-      },
-      {
-        name: "Dynapro AT2",
-        description:
-          "A capable all-terrain tire for trucks and SUVs with a rugged tread design, 3PMSF winter certification, and excellent on-road comfort.",
-        type: "all-terrain",
-      },
-    ],
-    market: "mainstream",
-  },
-  {
     slug: "cooper",
     name: "Cooper",
     country: "USA",
@@ -1023,9 +986,9 @@ export const brandAuthority: BrandAuthority[] = [
     headquarters: "Seoul, South Korea",
     founded: 2014,
     overview:
-      "Laufenn is a value-tier tire brand launched in 2014 by Hankook Tire, one of the world's largest tire manufacturers. The name derives from the German word \"laufen,\" meaning \"to run,\" and the brand is designed to make Hankook's advanced tire technology accessible at more affordable price points. Laufenn tires are engineered by Hankook's R&D teams and produced in Hankook's global manufacturing facilities, ensuring quality control standards that match the parent brand.\n\nLaufenn offers a streamlined range of all-season, performance, and SUV tires under the S FIT, G FIT, and X FIT product families. The simplified lineup makes it easy for drivers to find the right tire without navigating an overwhelming catalog. When cost-conscious drivers shop for Laufenn tires, they get Hankook engineering at a lower price, and retailers ship these well-made tires to budget-minded customers nationwide who want more than generic budget-tire quality.\n\nAs one of the newest brands in the tire market, Laufenn represents the growing trend of premium manufacturers creating sub-brands that bring advanced technology to the value segment, giving consumers more options than ever before.",
+      "Laufenn is a value-tier tire brand launched in 2014 with a focus on making advanced tire technology accessible at affordable price points. The name derives from the German word \"laufen,\" meaning \"to run,\" and the brand is built around delivering quality engineering without the premium markup. Laufenn tires are produced in modern global manufacturing facilities with rigorous quality control standards.\n\nLaufenn offers a streamlined range of all-season, performance, and SUV tires under the S FIT, G FIT, and X FIT product families. The simplified lineup makes it easy for drivers to find the right tire without navigating an overwhelming catalog. When cost-conscious drivers shop for Laufenn tires, they get solid engineering at a lower price, and retailers ship these well-made tires to budget-minded customers nationwide who want more than generic budget-tire quality.\n\nAs one of the newest brands in the tire market, Laufenn represents the growing trend of bringing advanced technology to the value segment, giving consumers more options than ever before.",
     technologies: [
-      "Hankook-Derived Compound Technology",
+      "Advanced Compound Technology",
       "Full-Depth Siping",
       "Jointless Belt Construction",
       "Aqua Skid Resistance Design",

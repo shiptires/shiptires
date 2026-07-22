@@ -127,10 +127,10 @@ export const vehicleMakes: VehicleMakeContent[] = [
     intro:
       "Nissan offers a diverse lineup from the affordable Sentra and Versa to the popular Rogue crossover, capable Pathfinder, and rugged Frontier and Titan trucks. The right tires enhance your Nissan's comfort, safety, and fuel efficiency.",
     overview:
-      "Nissan Motor Corporation, founded in 1933 in Yokohama, Japan, has grown into one of the world's leading automakers with a diverse vehicle lineup spanning every major segment. Nissan's best-known models include the midsize Altima sedan, the top-selling Rogue crossover, the practical Sentra compact, the three-row Pathfinder, the midsize Frontier pickup, the full-size Titan truck, and the iconic 370Z and its successor, the Nissan Z sports car. The Rogue consistently ranks among America's best-selling SUVs, and the Altima remains a strong competitor in the midsize sedan market.\n\nWhen you shop for Nissan tires, the most common sizes include 215/55R17 for the Altima, 225/65R17 for the Rogue, 205/55R16 and 215/50R17 for the Sentra, 255/60R18 for the Pathfinder, 265/70R17 for the Frontier, and 275/65R18 for the Titan. Top recommended tire brands for Nissan vehicles include Michelin, Bridgestone, Hankook, and Yokohama — all available to shop and ship free at Ship.Tires. Touring all-season tires are the best choice for the Altima and Sentra, while the Frontier and Titan benefit from all-terrain options for drivers who venture off the pavement.\n\nNissan's Intelligent Mobility suite, including ProPILOT Assist and Intelligent All-Wheel Drive, relies on consistent tire traction for proper function. Whether you drive a Rogue through rainy Pacific Northwest commutes or a Frontier across dusty Southwest trails, selecting the right tires and keeping them properly maintained ensures your Nissan delivers the safety and performance it was engineered to provide.",
+      "Nissan Motor Corporation, founded in 1933 in Yokohama, Japan, has grown into one of the world's leading automakers with a diverse vehicle lineup spanning every major segment. Nissan's best-known models include the midsize Altima sedan, the top-selling Rogue crossover, the practical Sentra compact, the three-row Pathfinder, the midsize Frontier pickup, the full-size Titan truck, and the iconic 370Z and its successor, the Nissan Z sports car. The Rogue consistently ranks among America's best-selling SUVs, and the Altima remains a strong competitor in the midsize sedan market.\n\nWhen you shop for Nissan tires, the most common sizes include 215/55R17 for the Altima, 225/65R17 for the Rogue, 205/55R16 and 215/50R17 for the Sentra, 255/60R18 for the Pathfinder, 265/70R17 for the Frontier, and 275/65R18 for the Titan. Top recommended tire brands for Nissan vehicles include Michelin, Bridgestone, and Yokohama — all available to shop and ship free at Ship.Tires. Touring all-season tires are the best choice for the Altima and Sentra, while the Frontier and Titan benefit from all-terrain options for drivers who venture off the pavement.\n\nNissan's Intelligent Mobility suite, including ProPILOT Assist and Intelligent All-Wheel Drive, relies on consistent tire traction for proper function. Whether you drive a Rogue through rainy Pacific Northwest commutes or a Frontier across dusty Southwest trails, selecting the right tires and keeping them properly maintained ensures your Nissan delivers the safety and performance it was engineered to provide.",
     tireGuide:
       "For Nissan sedans like the Altima and Sentra, touring all-season tires provide the best balance of ride comfort and tread life. The Rogue and Murano benefit from crossover-specific all-season tires. For the Frontier and Titan trucks, all-terrain tires deliver on-road comfort with off-road capability.",
-    popularBrands: ["Michelin", "Continental", "Bridgestone", "Falken", "Yokohama", "Hankook"],
+    popularBrands: ["Michelin", "Continental", "Bridgestone", "Falken", "Yokohama"],
     faqs: [
       {
         q: "What tires are best for my Nissan Rogue?",
@@ -168,7 +168,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Mercedes-Benz, founded in 1926 in Stuttgart, Germany, is one of the world's most prestigious automotive brands, building vehicles that define luxury, safety, and engineering excellence. The current Mercedes lineup spans every segment: the compact A-Class and CLA sedans, the benchmark C-Class and executive E-Class, the flagship S-Class, the sporty CLE coupe, and the elegant SL roadster. The SUV range includes the compact GLA and GLB, the popular GLC, the midsize GLE and GLE Coupe, the full-size GLS, and the legendary G-Class (G-Wagen). Mercedes-AMG models — including the AMG GT, AMG C 63, and AMG G 63 — deliver track-ready performance. The brand's electric EQ lineup includes the EQB, EQE, EQS sedan, and EQS SUV.\n\nCommon tire sizes for Mercedes-Benz vehicles include 225/45R18 for the C-Class, 245/45R18 for the E-Class, 255/45R19 for the S-Class, 235/60R18 for the GLC, 255/55R19 for the GLE, 275/50R20 for the GLS, and 275/55R19 for the G-Class. Premium tire brands recommended for Mercedes vehicles include Continental, Michelin, Pirelli, and Bridgestone — shop all of them and ship free at Ship.Tires. Many Mercedes models are available with run-flat tires (MOExtended) that allow continued driving after a puncture.\n\nMercedes-Benz's 4MATIC all-wheel-drive system, AIRMATIC air suspension, and advanced driver assistance systems rely on properly specified tires for optimal performance. Whether you drive a C-Class through city traffic, a GLE on family road trips, or an AMG GT on track days, selecting the right tires ensures your Mercedes delivers the comfort, safety, and performance its engineers intended.",
     tireGuide:
       "Mercedes vehicles are tuned for a balance of comfort and sportiness. For sedans like the C-Class and E-Class, premium touring or performance tires maintain ride quality and handling precision. SUVs like the GLE and GLC benefit from all-season tires that handle varied road conditions while preserving interior quietness. The G-Class needs capable all-terrain or highway tires. AMG models demand ultra-high-performance tires. For the EQS and EQE, EV-optimized low rolling resistance tires maximize range.",
-    popularBrands: ["Continental", "Michelin", "Pirelli", "Bridgestone", "Goodyear", "Hankook"],
+    popularBrands: ["Continental", "Michelin", "Pirelli", "Bridgestone", "Goodyear"],
     faqs: [
       {
         q: "Do Mercedes-Benz vehicles require special tires?",
@@ -190,14 +190,14 @@ export const vehicleMakes: VehicleMakeContent[] = [
     intro:
       "Hyundai has rapidly become one of America's most popular brands, with vehicles like the Tucson, Elantra, Sonata, Santa Fe, and Palisade offering exceptional value and modern features. The right tires maximize your Hyundai's comfort, efficiency, and safety.",
     overview:
-      "Hyundai Motor Company, founded in 1967 in Seoul, South Korea, has risen from a budget automaker to one of the most respected brands in the global automotive market. Hyundai's current lineup includes the compact Tucson and midsize Santa Fe crossovers, the Elantra compact sedan, the Sonata midsize sedan, the three-row Palisade, the subcompact Kona, and the Ioniq family of electric vehicles including the Ioniq 5 and Ioniq 6. Hyundai vehicles are known for their generous warranty coverage, modern design, and strong value proposition.\n\nWhen you shop for Hyundai tires, the most common sizes include 225/60R18 for the Tucson, 215/55R17 for the Elantra, 215/55R17 for the Sonata, 235/65R18 for the Santa Fe, 245/60R18 for the Palisade, and 235/55R19 for the Ioniq 5. Value-oriented and premium tire brands alike work well on Hyundai vehicles — Hankook, Kumho, and Nexen offer excellent quality at competitive prices, while Michelin and Continental deliver premium performance. Shop all of these brands and ship free at Ship.Tires. Touring all-season tires are the most popular choice for Hyundai sedans and crossovers, while EV-specific low rolling resistance tires are recommended for the Ioniq lineup.\n\nHyundai's SmartSense safety suite, which includes Forward Collision-Avoidance Assist and Highway Driving Assist, relies on consistent tire grip for optimal performance. South Korean tire manufacturers like Hankook, Kumho, and Nexen are natural partners for Hyundai vehicles, as they are often fitted as original equipment. Whether you are commuting in an Elantra, road-tripping in a Palisade, or maximizing range in an Ioniq 5, the right tires ensure your Hyundai delivers the comfort, safety, and efficiency its engineers intended.",
+      "Hyundai Motor Company, founded in 1967 in Seoul, South Korea, has risen from a budget automaker to one of the most respected brands in the global automotive market. Hyundai's current lineup includes the compact Tucson and midsize Santa Fe crossovers, the Elantra compact sedan, the Sonata midsize sedan, the three-row Palisade, the subcompact Kona, and the Ioniq family of electric vehicles including the Ioniq 5 and Ioniq 6. Hyundai vehicles are known for their generous warranty coverage, modern design, and strong value proposition.\n\nWhen you shop for Hyundai tires, the most common sizes include 225/60R18 for the Tucson, 215/55R17 for the Elantra, 215/55R17 for the Sonata, 235/65R18 for the Santa Fe, 245/60R18 for the Palisade, and 235/55R19 for the Ioniq 5. Value-oriented and premium tire brands alike work well on Hyundai vehicles — Kumho and Nexen offer excellent quality at competitive prices, while Michelin and Continental deliver premium performance. Shop all of these brands and ship free at Ship.Tires. Touring all-season tires are the most popular choice for Hyundai sedans and crossovers, while EV-specific low rolling resistance tires are recommended for the Ioniq lineup.\n\nHyundai's SmartSense safety suite, which includes Forward Collision-Avoidance Assist and Highway Driving Assist, relies on consistent tire grip for optimal performance. South Korean tire manufacturers like Kumho and Nexen are natural partners for Hyundai vehicles, as they are often fitted as original equipment. Whether you are commuting in an Elantra, road-tripping in a Palisade, or maximizing range in an Ioniq 5, the right tires ensure your Hyundai delivers the comfort, safety, and efficiency its engineers intended.",
     tireGuide:
       "For Hyundai sedans like the Elantra and Sonata, touring all-season tires deliver long tread life and a comfortable ride. The Tucson and Santa Fe perform well with crossover all-season tires. The Palisade benefits from premium touring tires that provide a quiet, luxury-like ride. For the Ioniq 5, low rolling resistance tires maximize electric range.",
-    popularBrands: ["Michelin", "Continental", "Hankook", "Kumho", "Bridgestone", "Yokohama"],
+    popularBrands: ["Michelin", "Continental", "Kumho", "Bridgestone", "Yokohama"],
     faqs: [
       {
         q: "What tires should I get for my Hyundai Tucson?",
-        a: "The Hyundai Tucson works well with all-season crossover tires like the Michelin CrossClimate2 or Hankook Kinergy PT. These provide reliable all-weather traction and a comfortable ride for daily driving.",
+        a: "The Hyundai Tucson works well with all-season crossover tires like the Michelin CrossClimate2 or Continental TrueContact Tour. These provide reliable all-weather traction and a comfortable ride for daily driving.",
       },
     ],
   },
@@ -207,10 +207,10 @@ export const vehicleMakes: VehicleMakeContent[] = [
     intro:
       "Kia has earned a reputation for exceptional value, bold design, and impressive warranties. From the family-friendly Telluride to the practical Sportage, sporty K5, and efficient Forte, Kia vehicles deserve tires that complement their quality and performance.",
     overview:
-      "Kia Corporation, founded in 1944 in Seoul, South Korea, has undergone a remarkable transformation from a manufacturer of bicycles and steel tubing to one of the world's most dynamic automakers. Kia's current lineup features the award-winning three-row Telluride, the midsize Sorento, the compact Sportage, the practical Forte sedan, the funky Soul, and the groundbreaking EV6 electric crossover. Kia's bold design language, industry-leading warranty (10-year/100,000-mile powertrain), and competitive pricing have made it one of the fastest-growing brands in the United States.\n\nCommon tire sizes for Kia vehicles include 235/65R17 for the Sorento, 225/45R17 for the Forte, 225/60R17 for the Sportage, 245/50R20 for the Telluride, and 235/55R19 for the EV6. Recommended tire brands for Kia vehicles include Hankook, Kumho, Michelin, and Continental — shop all of them and ship free at Ship.Tires. Hankook and Kumho are frequently fitted as original equipment on Kia vehicles, offering strong performance at value-oriented price points. For drivers seeking premium options, Michelin and Continental tires deliver top-tier grip, tread life, and ride comfort.\n\nKia's Drive Wise advanced driver-assistance technology, including Lane Following Assist and Highway Driving Assist, depends on reliable tire traction to function as designed. The EV6, with its 800-volt architecture and ultra-fast charging capability, benefits specifically from EV-optimized tires that minimize rolling resistance for maximum range. Whether you are hauling the family in a Telluride, commuting in a Forte, or pushing the limits of the EV6's impressive acceleration, choosing the right tires ensures your Kia delivers the performance and safety that have earned the brand its growing reputation.",
+      "Kia Corporation, founded in 1944 in Seoul, South Korea, has undergone a remarkable transformation from a manufacturer of bicycles and steel tubing to one of the world's most dynamic automakers. Kia's current lineup features the award-winning three-row Telluride, the midsize Sorento, the compact Sportage, the practical Forte sedan, the funky Soul, and the groundbreaking EV6 electric crossover. Kia's bold design language, industry-leading warranty (10-year/100,000-mile powertrain), and competitive pricing have made it one of the fastest-growing brands in the United States.\n\nCommon tire sizes for Kia vehicles include 235/65R17 for the Sorento, 225/45R17 for the Forte, 225/60R17 for the Sportage, 245/50R20 for the Telluride, and 235/55R19 for the EV6. Recommended tire brands for Kia vehicles include Kumho, Michelin, and Continental — shop all of them and ship free at Ship.Tires. Kumho is frequently fitted as original equipment on Kia vehicles, offering strong performance at value-oriented price points. For drivers seeking premium options, Michelin and Continental tires deliver top-tier grip, tread life, and ride comfort.\n\nKia's Drive Wise advanced driver-assistance technology, including Lane Following Assist and Highway Driving Assist, depends on reliable tire traction to function as designed. The EV6, with its 800-volt architecture and ultra-fast charging capability, benefits specifically from EV-optimized tires that minimize rolling resistance for maximum range. Whether you are hauling the family in a Telluride, commuting in a Forte, or pushing the limits of the EV6's impressive acceleration, choosing the right tires ensures your Kia delivers the performance and safety that have earned the brand its growing reputation.",
     tireGuide:
       "Kia vehicles span multiple segments, each with different tire needs. For the Telluride and Sorento, all-season SUV tires provide the traction and comfort families need. The K5 and Forte perform best with touring all-season tires for daily commuting. The EV6 benefits from EV-specific tires designed for instant torque and range efficiency.",
-    popularBrands: ["Hankook", "Kumho", "Michelin", "Continental", "Bridgestone", "Falken"],
+    popularBrands: ["Kumho", "Michelin", "Continental", "Bridgestone", "Falken"],
     faqs: [
       {
         q: "What tires are best for my Kia Telluride?",
@@ -295,7 +295,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Volkswagen combines German engineering with practical everyday performance. Whether you drive a Jetta, Tiguan, Atlas, or GTI, the right tires enhance your VW's precise handling, ride comfort, and fuel efficiency.",
     tireGuide:
       "For VW sedans like the Jetta and Passat, touring all-season tires provide comfort and long tread life. The GTI and Golf R deserve performance tires that match their sporty character. SUVs like the Tiguan and Atlas benefit from all-season crossover tires. For the ID.4, EV-optimized tires maximize range and handle instant torque.",
-    popularBrands: ["Continental", "Michelin", "Pirelli", "Bridgestone", "Hankook", "Yokohama"],
+    popularBrands: ["Continental", "Michelin", "Pirelli", "Bridgestone", "Yokohama"],
     faqs: [
       {
         q: "What tires are best for a VW GTI?",
@@ -324,10 +324,10 @@ export const vehicleMakes: VehicleMakeContent[] = [
     intro:
       "Tesla vehicles require tires engineered for the unique demands of electric performance — instant torque, heavy battery weight, and regenerative braking. The Model 3, Model Y, Model S, Model X, and Cybertruck all benefit from EV-optimized tires that maximize range and grip.",
     overview:
-      "Tesla, Inc., founded in 2003 in Palo Alto, California, has transformed the automotive industry by proving that electric vehicles can be desirable, high-performance, and practical for everyday use. Tesla's current lineup includes the Model 3 compact sedan, the Model Y compact SUV (now the best-selling vehicle globally), the Model S luxury sedan, the Model X full-size SUV, and the Cybertruck all-electric pickup. Each Tesla model delivers instant torque, over-the-air software updates, and access to the Supercharger network.\n\nCommon tire sizes for Tesla vehicles include 235/45R18 for the Model 3, 255/45R19 for the Model Y, 265/35R21 for the Model S, 255/45R20 for the Model X, and 285/65R20 for the Cybertruck. EV-optimized tire brands recommended for Tesla include Michelin, Continental, and Hankook — shop all of them and ship free at Ship.Tires. Low rolling resistance is especially important for Tesla owners because it directly impacts driving range. Tires designed for EVs feature reinforced sidewalls to support the heavier battery weight, specialized rubber compounds for reduced rolling resistance, and acoustic foam inserts for a quieter cabin experience.\n\nTesla's regenerative braking system puts unique demands on tires compared to conventional vehicles, as deceleration forces are applied through the drive wheels rather than traditional brake pads. This means front tires on rear-wheel-drive Model 3s and rear tires on all-wheel-drive variants may wear differently than expected. Regular tire rotation every 5,000 to 7,500 miles is essential for maximizing tread life. When it is time to replace your Tesla tires, choosing EV-specific options from Michelin, Continental, or Hankook ensures you maintain optimal range, grip, and the whisper-quiet ride that defines the Tesla ownership experience.",
+      "Tesla, Inc., founded in 2003 in Palo Alto, California, has transformed the automotive industry by proving that electric vehicles can be desirable, high-performance, and practical for everyday use. Tesla's current lineup includes the Model 3 compact sedan, the Model Y compact SUV (now the best-selling vehicle globally), the Model S luxury sedan, the Model X full-size SUV, and the Cybertruck all-electric pickup. Each Tesla model delivers instant torque, over-the-air software updates, and access to the Supercharger network.\n\nCommon tire sizes for Tesla vehicles include 235/45R18 for the Model 3, 255/45R19 for the Model Y, 265/35R21 for the Model S, 255/45R20 for the Model X, and 285/65R20 for the Cybertruck. EV-optimized tire brands recommended for Tesla include Michelin and Continental — shop all of them and ship free at Ship.Tires. Low rolling resistance is especially important for Tesla owners because it directly impacts driving range. Tires designed for EVs feature reinforced sidewalls to support the heavier battery weight, specialized rubber compounds for reduced rolling resistance, and acoustic foam inserts for a quieter cabin experience.\n\nTesla's regenerative braking system puts unique demands on tires compared to conventional vehicles, as deceleration forces are applied through the drive wheels rather than traditional brake pads. This means front tires on rear-wheel-drive Model 3s and rear tires on all-wheel-drive variants may wear differently than expected. Regular tire rotation every 5,000 to 7,500 miles is essential for maximizing tread life. When it is time to replace your Tesla tires, choosing EV-specific options from Michelin or Continental ensures you maintain optimal range, grip, and the whisper-quiet ride that defines the Tesla ownership experience.",
     tireGuide:
       "Tesla's instant torque and heavy batteries accelerate tire wear compared to gas vehicles. EV-specific tires have reinforced sidewalls for extra load capacity and low rolling resistance for maximum range. For the Model 3 and Model Y, all-season EV tires like the Michelin e.Primacy or Continental EcoContact provide the best balance of range and grip. Performance variants benefit from summer performance tires.",
-    popularBrands: ["Michelin", "Continental", "Pirelli", "Bridgestone", "Hankook", "Goodyear"],
+    popularBrands: ["Michelin", "Continental", "Pirelli", "Bridgestone", "Goodyear"],
     faqs: [
       {
         q: "Do Teslas need special tires?",
@@ -376,7 +376,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Audi's Quattro all-wheel drive system and precision engineering demand tires that deliver confident grip, responsive handling, and refined comfort. From the A4 and A6 sedans to the Q5 and Q7 SUVs, every Audi benefits from matched, quality tires.",
     tireGuide:
       "Like Subaru, Audi's Quattro AWD system performs best with matched tires across all four corners. For the A4 and A6, performance all-season tires maintain the car's handling precision year-round. The Q5 and Q7 benefit from premium all-season SUV tires. S-line and RS models require ultra-high-performance tires rated for their power output.",
-    popularBrands: ["Continental", "Michelin", "Pirelli", "Bridgestone", "Dunlop", "Hankook"],
+    popularBrands: ["Continental", "Michelin", "Pirelli", "Bridgestone", "Dunlop"],
     faqs: [
       {
         q: "Do all four Audi tires need to match?",
@@ -391,7 +391,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Volvo's commitment to safety extends to tire selection. The XC90, XC60, XC40, and S60 all benefit from tires that deliver maximum grip, short stopping distances, and confident all-weather traction to complement Volvo's advanced safety systems.",
     tireGuide:
       "Volvo vehicles are designed for Scandinavian winters, making tire choice critical for safety. For the XC90 and XC60, premium all-season tires provide year-round comfort and traction. In cold climates, dedicated winter tires significantly enhance braking and cornering grip. For the S60, performance all-season tires maintain engaging handling characteristics.",
-    popularBrands: ["Michelin", "Continental", "Nokian", "Pirelli", "Bridgestone", "Hankook"],
+    popularBrands: ["Michelin", "Continental", "Nokian", "Pirelli", "Bridgestone"],
     faqs: [
       {
         q: "Should I get winter tires for my Volvo?",
@@ -461,7 +461,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Infiniti combines Japanese reliability with luxury performance. The QX60, Q50, and QX80 deliver a refined driving experience that's enhanced by quality tires matched to their performance-luxury character.",
     tireGuide:
       "Infiniti vehicles lean toward sporty luxury, so tire selection can meaningfully impact driving enjoyment. The Q50 benefits from performance all-season tires that match its sport sedan character. The QX60 pairs well with touring SUV tires for family comfort. The QX80, as a full-size luxury SUV, needs highway tires with load capacity for its size and weight.",
-    popularBrands: ["Michelin", "Bridgestone", "Continental", "Yokohama", "Falken", "Hankook"],
+    popularBrands: ["Michelin", "Bridgestone", "Continental", "Yokohama", "Falken"],
     faqs: [],
   },
   {
@@ -471,7 +471,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Buick delivers premium comfort and quiet refinement in every vehicle. The Enclave, Encore, and Envision prioritize a smooth, whisper-quiet ride — and the right tires are essential for maintaining that luxury experience.",
     tireGuide:
       "Buick vehicles are tuned for comfort above all, making tire noise and ride quality the top priorities. For the Enclave, touring SUV tires with low noise ratings provide the quietest ride. The Encore and Envision benefit from comfort-oriented all-season tires with long tread warranties.",
-    popularBrands: ["Michelin", "Continental", "Bridgestone", "Goodyear", "Hankook", "Cooper"],
+    popularBrands: ["Michelin", "Continental", "Bridgestone", "Goodyear", "Cooper"],
     faqs: [],
   },
   {
@@ -491,7 +491,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Lincoln delivers serene luxury and effortless comfort. The Navigator, Aviator, and Corsair are designed for whisper-quiet cruising, and the right tires are critical for maintaining Lincoln's signature smooth, isolated ride quality.",
     tireGuide:
       "Lincoln vehicles are tuned for maximum comfort and noise isolation, making tire choice particularly important. The Navigator needs premium highway tires with high load ratings for its full-size platform. The Aviator benefits from touring tires that complement its air suspension. The Corsair pairs well with comfort-focused all-season tires.",
-    popularBrands: ["Michelin", "Continental", "Bridgestone", "Pirelli", "Goodyear", "Hankook"],
+    popularBrands: ["Michelin", "Continental", "Bridgestone", "Pirelli", "Goodyear"],
     faqs: [],
   },
   {
@@ -501,7 +501,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Genesis brings Korean luxury engineering to the premium segment with exceptional value. The G70, G80, GV70, and GV80 combine stunning design with dynamic performance, requiring tires that complement their luxury-sport character.",
     tireGuide:
       "Genesis vehicles offer a sportier driving experience than many luxury competitors, making tire selection impactful. The G70 benefits from performance all-season or summer tires that match its sport sedan dynamics. The GV70 and GV80 pair well with premium all-season crossover tires that maintain ride quality and handling balance.",
-    popularBrands: ["Michelin", "Continental", "Hankook", "Pirelli", "Bridgestone", "Yokohama"],
+    popularBrands: ["Michelin", "Continental", "Pirelli", "Bridgestone", "Yokohama"],
     faqs: [],
   },
   {
@@ -511,7 +511,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Mitsubishi offers practical, value-oriented vehicles with capable all-wheel drive options. The Outlander, Eclipse Cross, and Mirage provide reliable transportation that benefits from well-chosen tires for safety, comfort, and fuel efficiency.",
     tireGuide:
       "For the Outlander and Eclipse Cross, all-season crossover tires provide the best balance of traction and fuel economy. The Mirage benefits from fuel-efficient touring tires that maximize its already impressive gas mileage.",
-    popularBrands: ["Michelin", "Hankook", "Kumho", "Yokohama", "Falken", "Continental"],
+    popularBrands: ["Michelin", "Kumho", "Yokohama", "Falken", "Continental"],
     faqs: [],
   },
   {
@@ -521,7 +521,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "MINI vehicles are all about driving fun and go-kart-like handling. From the Hardtop and Convertible to the Countryman, every MINI benefits from tires that maintain its legendary nimble, responsive character.",
     tireGuide:
       "MINI's signature handling makes tire choice critical. For the Hardtop and Convertible, performance all-season or summer tires maintain the car's playful dynamics. The John Cooper Works variants deserve ultra-high-performance tires. The Countryman, as a small crossover, benefits from all-season tires that don't dull its sporty handling.",
-    popularBrands: ["Continental", "Michelin", "Pirelli", "Bridgestone", "Dunlop", "Hankook"],
+    popularBrands: ["Continental", "Michelin", "Pirelli", "Bridgestone", "Dunlop"],
     faqs: [],
   },
   {
@@ -541,7 +541,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Chrysler focuses on family-friendly comfort with the Pacifica minivan and the returning sedan lineup. The right tires enhance the Pacifica's smooth ride and cargo-hauling capability for families on the go.",
     tireGuide:
       "The Chrysler Pacifica benefits from touring all-season tires that provide a quiet, comfortable ride with long tread life. For the Pacifica Hybrid, low rolling resistance tires help maximize electric range during city driving.",
-    popularBrands: ["Michelin", "Continental", "Bridgestone", "Goodyear", "Cooper", "Hankook"],
+    popularBrands: ["Michelin", "Continental", "Bridgestone", "Goodyear", "Cooper"],
     faqs: [],
   },
   {
@@ -698,7 +698,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Fiat brings Italian charm to compact and city cars, with the iconic 500 and its electric 500e variant offering fun, efficient urban transportation. The right tires maximize your Fiat's nimble handling, fuel efficiency, and ride comfort in city driving.",
     tireGuide:
       "Fiat's compact vehicles use smaller tire sizes that offer a wide range of affordable options. Touring all-season tires are ideal for daily driving, while performance tires suit the sportier 500 Abarth. The 500e benefits from low rolling resistance tires to maximize electric range.",
-    popularBrands: ["Michelin", "Continental", "Pirelli", "Hankook", "Yokohama", "Kumho"],
+    popularBrands: ["Michelin", "Continental", "Pirelli", "Yokohama", "Kumho"],
     faqs: [
       {
         q: "What size tires does a Fiat 500 use?",
@@ -732,7 +732,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Lucid Motors builds some of the most advanced electric vehicles on the market. The Lucid Air luxury sedan offers industry-leading range and performance, while the Gravity SUV brings that technology to a family-friendly format. EV-optimized tires are essential to maximizing range and performance.",
     tireGuide:
       "Lucid vehicles require EV-specific tires designed for low rolling resistance and high load capacity. The Air's aerodynamic efficiency is best preserved with properly specified tires. Low-noise tires with foam inserts are recommended to maintain the cabin's near-silent experience.",
-    popularBrands: ["Pirelli", "Continental", "Michelin", "Bridgestone", "Goodyear", "Hankook"],
+    popularBrands: ["Pirelli", "Continental", "Michelin", "Bridgestone", "Goodyear"],
     faqs: [
       {
         q: "What tires does the Lucid Air use?",
@@ -747,7 +747,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Polestar combines Scandinavian design with electric performance, producing vehicles like the Polestar 2 fastback, Polestar 3 SUV, and Polestar 4 coupe-SUV. The right tires complement Polestar's focus on sustainable, high-performance electric driving.",
     tireGuide:
       "Polestar vehicles benefit from EV-optimized tires with low rolling resistance to maximize range. The Polestar 2 works well with all-season or performance all-season tires. The Polestar 3 and 4 require SUV-rated tires designed for heavier electric vehicles.",
-    popularBrands: ["Continental", "Pirelli", "Michelin", "Hankook", "Bridgestone", "Goodyear"],
+    popularBrands: ["Continental", "Pirelli", "Michelin", "Bridgestone", "Goodyear"],
     faqs: [
       {
         q: "What tires are recommended for Polestar 2?",
@@ -762,7 +762,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Smart specializes in ultra-compact vehicles designed for city living. The Smart Fortwo and its electric EQ variant are among the smallest cars on American roads, and their unique tire sizes require careful selection to maintain handling stability and ride quality.",
     tireGuide:
       "Smart vehicles use small tire sizes that may have fewer available options than standard cars. Touring all-season tires provide the best all-around performance. For the EQ Fortwo, low rolling resistance tires help maximize electric range in urban driving.",
-    popularBrands: ["Continental", "Michelin", "Pirelli", "Hankook", "Kumho", "Yokohama"],
+    popularBrands: ["Continental", "Michelin", "Pirelli", "Kumho", "Yokohama"],
     faqs: [
       {
         q: "What size tires does a Smart Fortwo use?",
@@ -777,7 +777,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Though Scion was discontinued in 2016, hundreds of thousands of Scion vehicles remain on American roads. The FR-S sports car, tC coupe, xB hatchback, and iM compact still need quality replacement tires for safe, reliable performance.",
     tireGuide:
       "Scion vehicles use common tire sizes that are widely available. The FR-S (now Toyota 86) benefits from performance tires, while the tC and xB work well with all-season touring tires. Most Scion tire sizes are affordable and available from many brands.",
-    popularBrands: ["Michelin", "Continental", "Bridgestone", "Hankook", "Yokohama", "Falken"],
+    popularBrands: ["Michelin", "Continental", "Bridgestone", "Yokohama", "Falken"],
     faqs: [
       {
         q: "Can I still find tires for my Scion?",
@@ -792,7 +792,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Pontiac was discontinued in 2010, but many Pontiac vehicles including the G6, GTO, Grand Prix, and Firebird remain in active service. Finding quality replacement tires for these vehicles is straightforward since they share sizes with other GM models.",
     tireGuide:
       "Pontiac vehicles use common tire sizes shared across the GM platform family. The GTO and Firebird benefit from performance tires, while the G6 and Grand Prix work well with all-season touring tires. Most Pontiac tire sizes are affordable and widely stocked.",
-    popularBrands: ["Goodyear", "Michelin", "Bridgestone", "Cooper", "Firestone", "Hankook"],
+    popularBrands: ["Goodyear", "Michelin", "Bridgestone", "Cooper", "Firestone"],
     faqs: [
       {
         q: "Can I still buy tires for my Pontiac?",
@@ -807,7 +807,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Saturn was discontinued in 2010, but many Saturn vehicles remain on the road. The Vue, Outlook, Aura, and Ion use common tire sizes shared with other GM vehicles, making replacement tires easy to find at competitive prices.",
     tireGuide:
       "Saturn vehicles share platforms with other GM brands, so tire options are plentiful. The Vue and Outlook use common crossover sizes. The Aura and Ion use popular sedan sizes. All-season touring tires provide the best value and all-weather performance.",
-    popularBrands: ["Goodyear", "Cooper", "Hankook", "Michelin", "Bridgestone", "Firestone"],
+    popularBrands: ["Goodyear", "Cooper", "Michelin", "Bridgestone", "Firestone"],
     faqs: [
       {
         q: "Where can I find Saturn tires?",
@@ -822,7 +822,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Suzuki exited the US automotive market in 2012, but vehicles like the Grand Vitara, SX4, and Kizashi remain on the road. These vehicles use standard tire sizes that are readily available from major tire manufacturers.",
     tireGuide:
       "Suzuki vehicles use common tire sizes found on many compact cars and SUVs. The Grand Vitara benefits from all-terrain or highway tires. The SX4 and Kizashi work well with all-season touring tires. All sizes remain widely stocked and affordable.",
-    popularBrands: ["Yokohama", "Bridgestone", "Hankook", "Michelin", "Continental", "Falken"],
+    popularBrands: ["Yokohama", "Bridgestone", "Michelin", "Continental", "Falken"],
     faqs: [
       {
         q: "Are Suzuki tires still available?",
@@ -837,7 +837,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Saab production ended in 2012, but the 9-3 and 9-5 remain popular among enthusiasts for their turbocharged performance and unique Swedish design. Standard European tire sizes make finding replacements straightforward.",
     tireGuide:
       "Saab vehicles use common European sedan tire sizes. Performance all-season tires work well for year-round driving, while summer performance tires suit enthusiasts who want maximum grip. Winter tires are recommended for Saab owners in cold climates.",
-    popularBrands: ["Continental", "Michelin", "Pirelli", "Nokian", "Hankook", "Bridgestone"],
+    popularBrands: ["Continental", "Michelin", "Pirelli", "Nokian", "Bridgestone"],
     faqs: [
       {
         q: "What tires fit a Saab 9-3?",
@@ -867,7 +867,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Mercury was discontinued by Ford in 2011, but many Mercury vehicles including the Grand Marquis, Mariner, and Milan remain in daily use. These vehicles share platforms with Ford models, ensuring wide tire availability.",
     tireGuide:
       "Mercury vehicles share platforms with Ford counterparts — the Grand Marquis with the Crown Victoria, the Mariner with the Escape, and the Milan with the Fusion. Tire options are plentiful and affordable. Touring all-season tires are the best choice for everyday driving.",
-    popularBrands: ["Goodyear", "Michelin", "Cooper", "Bridgestone", "Firestone", "Hankook"],
+    popularBrands: ["Goodyear", "Michelin", "Cooper", "Bridgestone", "Firestone"],
     faqs: [
       {
         q: "Can I still get tires for my Mercury?",
@@ -897,7 +897,7 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "Fisker brought modern EV design to the market with the Ocean electric SUV. While the company faced challenges, Ocean SUVs on the road still need quality replacement tires designed for electric vehicle weight and efficiency.",
     tireGuide:
       "The Fisker Ocean uses standard EV-compatible tire sizes. Low rolling resistance tires maximize electric range, while performance all-season tires provide better grip. Choose tires with reinforced sidewalls to handle the extra weight of the battery pack.",
-    popularBrands: ["Continental", "Michelin", "Pirelli", "Bridgestone", "Hankook", "Goodyear"],
+    popularBrands: ["Continental", "Michelin", "Pirelli", "Bridgestone", "Goodyear"],
     faqs: [
       {
         q: "What tires does the Fisker Ocean use?",
@@ -912,11 +912,11 @@ export const vehicleMakes: VehicleMakeContent[] = [
       "VinFast is a Vietnamese automaker bringing affordable electric vehicles to the American market with the VF8 midsize SUV and VF9 full-size SUV. EV-optimized tires help maximize range and complement VinFast's electric performance.",
     tireGuide:
       "VinFast EVs benefit from tires designed for electric vehicles — low rolling resistance to maximize range, reinforced sidewalls for battery weight, and optimized tread patterns for quiet highway driving. All-season tires provide the best year-round versatility.",
-    popularBrands: ["Continental", "Michelin", "Hankook", "Pirelli", "Bridgestone", "Kumho"],
+    popularBrands: ["Continental", "Michelin", "Pirelli", "Bridgestone", "Kumho"],
     faqs: [
       {
         q: "What tires work for the VinFast VF8?",
-        a: "The VF8 uses 245/50R19 or 255/45R20 tires. Continental EcoContact 6, Michelin e.Primacy, and Hankook iON are EV-optimized options that maximize range.",
+        a: "The VF8 uses 245/50R19 or 255/45R20 tires. Continental EcoContact 6 and Michelin e.Primacy are EV-optimized options that maximize range.",
       },
     ],
   },

@@ -76,93 +76,87 @@ Ship.Tires is an online tire retailer where you can shop & ship car, truck & SUV
 - **Scorpion All Terrain Plus** — All-Terrain, 50,000 mi, $179–$269
 - **Winter Sottozero 3** — Winter, No mileage warranty, $169–$289
 
-### 6. Hankook (South Korea, est. 1941)
-**Models:**
-- **Ventus V2 Concept2** — All-Season, 45,000 mi, $89–$149
-- **Kinergy GT** — Touring, 70,000 mi, $99–$159
-- **Dynapro AT2** — All-Terrain, 60,000 mi, $139–$229
-
-### 7. Cooper (USA, est. 1914)
+### 6. Cooper (USA, est. 1914)
 **Models:**
 - **Discoverer AT3 4S** — All-Terrain, 65,000 mi, $149–$249
 - **CS5 Ultra Touring** — Touring, 70,000 mi, $109–$169
 - **Discoverer STT Pro** — Mud-Terrain, No mileage warranty, $199–$329
 
-### 8. Firestone (USA, est. 1900)
+### 7. Firestone (USA, est. 1900)
 **Models:**
 - **WeatherGrip** — All-Season, 65,000 mi, $119–$179
 - **Destination LE3** — Highway, 70,000 mi, $139–$209
 - **All Season** — All-Season, 55,000 mi, $79–$129
 
-### 9. BFGoodrich (USA, est. 1870)
+### 8. BFGoodrich (USA, est. 1870)
 **Models:**
 - **All-Terrain T/A KO2** — All-Terrain, 50,000 mi, $179–$299
 - **Mud-Terrain T/A KM3** — Mud-Terrain, No mileage warranty, $219–$379
 - **Advantage T/A Sport LT** — All-Season, 60,000 mi, $139–$199
 
-### 10. Yokohama (Japan, est. 1917)
+### 9. Yokohama (Japan, est. 1917)
 **Models:**
 - **Geolandar A/T G015** — All-Terrain, 60,000 mi, $149–$239
 - **ADVAN Sport A/S+** — All-Season, 50,000 mi, $139–$219
 - **BluEarth Winter V906** — Winter, No mileage warranty, $119–$189
 
-### 11. Toyo (Japan, est. 1945)
+### 10. Toyo (Japan, est. 1945)
 **Models:**
 - **Open Country A/T III** — All-Terrain, 65,000 mi, $159–$259
 - **Proxes Sport** — Performance, No mileage warranty, $149–$279
 - **Celsius II** — All-Season, 60,000 mi, $119–$179
 
-### 12. Falken (Japan, est. 1983)
+### 11. Falken (Japan, est. 1983)
 **Models:**
 - **Wildpeak A/T3W** — All-Terrain, 55,000 mi, $129–$219
 - **Azenis FK510** — Performance, No mileage warranty, $129–$229
 - **Sincera SN201 A/S** — All-Season, 65,000 mi, $79–$119
 
-### 13. General Tire (USA, est. 1915)
+### 12. General Tire (USA, est. 1915)
 **Models:**
 - **Grabber A/TX** — All-Terrain, 60,000 mi, $139–$219
 - **AltiMAX RT45** — All-Season, 75,000 mi, $79–$129
 - **Grabber HTS 60** — Highway, 65,000 mi, $129–$189
 
-### 14. Kumho (South Korea, est. 1960)
+### 13. Kumho (South Korea, est. 1960)
 **Models:**
 - **Crugen HP71** — All-Season, 65,000 mi, $109–$179
 - **Solus TA51a** — All-Season, 75,000 mi, $69–$109
 
-### 15. Nexen (South Korea, est. 1942)
+### 14. Nexen (South Korea, est. 1942)
 **Models:**
 - **N'Fera AU7** — All-Season, 50,000 mi, $99–$159
 - **Roadian HTX2** — Highway, 70,000 mi, $109–$169
 
-### 16. Nitto (Japan, est. 1949)
+### 15. Nitto (Japan, est. 1949)
 **Models:**
 - **Ridge Grappler** — All-Terrain, No mileage warranty, $189–$319
 - **NT555 G2** — Performance, No mileage warranty, $119–$209
 - **Nomad Grappler** — All-Season, 60,000 mi, $159–$219
 
-### 17. Dunlop (UK, est. 1888)
+### 16. Dunlop (UK, est. 1888)
 **Models:**
 - **Sport Maxx RT2** — Performance, No mileage warranty, $129–$229
 - **Signature HP** — All-Season, 55,000 mi, $99–$159
 
-### 18. Maxxis (Taiwan, est. 1967)
+### 17. Maxxis (Taiwan, est. 1967)
 **Models:**
 - **Razr AT811** — All-Terrain, 55,000 mi, $139–$219
 - **Victra MA-Z4S** — Performance, No mileage warranty, $79–$149
 - **Premitra HP5** — Touring, 60,000 mi, $79–$129
 
-### 19. Ironman (USA, est. 1969)
+### 18. Ironman (USA, est. 1969)
 **Models:**
 - **GR906** — All-Season, 50,000 mi, $59–$89
 - **All Country AT** — All-Terrain, 50,000 mi, $109–$179
 
-### 20. Sumitomo (Japan, est. 1909)
+### 19. Sumitomo (Japan, est. 1909)
 **Models:**
 - **HTR A/S P03** — All-Season, 60,000 mi, $89–$139
 - **Encounter AT** — All-Terrain, 50,000 mi, $119–$189
 - **HTR Enhance WX2** — Performance, 45,000 mi, $89–$149
 
-### 21. Radar (Singapore, est. 2006)
+### 20. Radar (Singapore, est. 2006)
 **Models:**
 - **Dimax AS-8** — All-Season, 60,000 mi, $68–$243
   Sizes: 205/55R16, 215/55R17, 225/65R17, 235/55R18, 245/45R18, 255/60R18, 265/50R19, 275/55R20
@@ -177,7 +171,7 @@ Ship.Tires is an online tire retailer where you can shop & ship car, truck & SUV
 - **Renegade R/T+** — Mud-Terrain, 45,000 mi, $215–$434
   Sizes: 265/50R20, 285/70R17, 33X12.50R17, 35X12.50R17, 35X12.50R20, 37X13.50R20, 37X13.50R22
 
-### 22. Nokian (Finland, est. 1988)
+### 21. Nokian (Finland, est. 1988)
 **Models:**
 - **Hakkapeliitta R5** — Winter, No mileage warranty, $129–$259
 - **Hakkapeliitta 10** — Winter (Studded), No mileage warranty, $149–$279
@@ -185,78 +179,78 @@ Ship.Tires is an online tire retailer where you can shop & ship car, truck & SUV
 - **Outpost APT** — All-Season, 60,000 mi, $149–$239
 - **Seasonproof** — All-Weather, 60,000 mi, $119–$209
 
-### 23. Laufenn (South Korea, est. 2014)
+### 22. Laufenn (South Korea, est. 2014)
 **Models:**
 - **S Fit AS (LH01)** — All-Season, 45,000 mi, $79–$159
 - **G Fit AS (LH41)** — All-Season, 75,000 mi, $69–$119
 - **X Fit AT (LC01)** — All-Terrain, 50,000 mi, $119–$209
 - **X Fit HT (LD01)** — Highway, 70,000 mi, $99–$179
 
-### 24. Kenda (Taiwan, est. 1962)
+### 23. Kenda (Taiwan, est. 1962)
 **Models:**
 - **Klever R/T (KR601)** — All-Terrain, 40,000 mi, $149–$289
 - **Klever A/T2 (KR628)** — All-Terrain, 55,000 mi, $119–$229
 - **Vezda Touring A/S (KR205)** — Touring, 60,000 mi, $89–$159
 
-### 25. Uniroyal (USA, est. 1892)
+### 24. Uniroyal (USA, est. 1892)
 **Models:**
 - **Tiger Paw Touring** — Touring, 65,000 mi, $89–$149
 - **Laredo Cross Country Tour** — All-Season, 70,000 mi, $109–$179
 - **Tiger Paw Destination** — All-Season, 60,000 mi, $99–$159
 
-### 26. Mickey Thompson (USA, est. 1963)
+### 25. Mickey Thompson (USA, est. 1963)
 **Models:**
 - **Baja Boss A/T** — All-Terrain, 50,000 mi, $219–$399
 - **Baja Boss M/T** — Mud-Terrain, No mileage warranty, $249–$459
 - **Deegan 38** — All-Terrain, 50,000 mi, $159–$289
 
-### 27. Vogue (USA, est. 1914)
+### 26. Vogue (USA, est. 1914)
 **Models:**
 - **Custom Built Radial VIII** — Touring, No mileage warranty, $249–$449
 - **Custom Built Radial SCT2** — All-Season, 60,000 mi, $199–$349
 - **Signature V** — Performance, No mileage warranty, $199–$329
 
-### 28. Nankang (Taiwan, est. 1959)
+### 27. Nankang (Taiwan, est. 1959)
 **Models:**
 - **NS-25 All Season** — All-Season, 50,000 mi, $69–$129
 - **SP-9 Cross Sport** — All-Season, 50,000 mi, $79–$149
 - **AR-1 Competition** — Performance, No mileage warranty, $99–$199
 
-### 29. Hoosier (USA, est. 1957)
+### 28. Hoosier (USA, est. 1957)
 **Models:**
 - **A7** — Performance (Competition), No mileage warranty, $199–$349
 - **R7** — Performance (Competition), No mileage warranty, $189–$319
 - **Drag Radial** — Performance (Drag), No mileage warranty, $169–$289
 
-### 30. Advanta (USA)
+### 29. Advanta (USA)
 **Models:**
 - **ER-700** — All-Season, 50,000 mi, $59–$99
 - **SVT-01** — All-Season, 55,000 mi, $69–$109
 - **ATX-750** — All-Terrain, 50,000 mi, $99–$169
 
-### 31. Power King (USA)
+### 30. Power King (USA)
 **Models:**
 - **Towmax STR II** — Trailer, No mileage warranty, $69–$129
 - **Towmax Vanguard** — Trailer, No mileage warranty, $79–$149
 - **Super Highway II** — Highway, No mileage warranty, $89–$159
 
-### 32. Range Finder (USA)
+### 31. Range Finder (USA)
 **Models:**
 - **RST** — Trailer, No mileage warranty, $59–$109
 - **RFX** — All-Terrain, No mileage warranty, $99–$179
 
-### 33. Riken (Serbia, est. 1954)
+### 32. Riken (Serbia, est. 1954)
 **Models:**
 - **Raptor HR** — All-Season, 50,000 mi, $59–$99
 - **Raptor VR** — Performance, 45,000 mi, $69–$119
 
-### 34. Vitour (China, est. 2009)
+### 33. Vitour (China, est. 2009)
 **Models:**
 - **Tempesta Enzo** — Performance, No mileage warranty, $79–$149
 - **Ice Line** — Winter, No mileage warranty, $69–$129
 - **Spiritway** — All-Season, 50,000 mi, $59–$99
 
-### 35. Vredestein (Netherlands, est. 1909)
+### 34. Vredestein (Netherlands, est. 1909)
 **Models:**
 - **Hypertrac All Season** — All-Season, 60,000 mi, $109–$189
 - **Pinza AT** — All-Terrain, 50,000 mi, $129–$219
@@ -430,7 +424,6 @@ Every page on ship.tires has a .md endpoint for AI consumption. Append `.md` to 
 - https://ship.tires/tires/firestone
 - https://ship.tires/tires/general
 - https://ship.tires/tires/goodyear
-- https://ship.tires/tires/hankook
 - https://ship.tires/tires/hoosier
 - https://ship.tires/tires/kenda
 - https://ship.tires/tires/kumho

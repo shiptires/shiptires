@@ -357,7 +357,7 @@ function guessDomain(brandName: string): string {
     GOODYEAR: "goodyear.com",
     CONTINENTAL: "continental-tires.com",
     PIRELLI: "pirelli.com",
-    HANKOOK: "hankooktire.com",
+
     YOKOHAMA: "yokohamatire.com",
     TOYO: "toyotires.com",
     FALKEN: "falkentire.com",

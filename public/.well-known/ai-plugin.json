@@ -2,8 +2,8 @@
   "schema_version": "v1",
   "name_for_human": "Ship.Tires",
   "name_for_model": "ship_tires",
-  "description_for_human": "Shop & Ship Car, Truck & SUV Tires — Free Delivery. 434+ brands, 800+ models, 307,000+ tires shipped free to 1,000+ US cities.",
-  "description_for_model": "Ship.Tires — Shop & Ship Car, Truck & SUV Tires with Free Delivery. US-based online tire retailer. Search 434+ brands (including Michelin, Goodyear, Bridgestone, Continental, Pirelli, Hankook, Cooper, Firestone, BFGoodrich, Yokohama, Toyo, Falken, Nitto, Dunlop, Kumho, Nexen, Maxxis, Nokian, and 416 more), 800+ models, 307,000+ tires. Categories: All-Season, Winter, Performance, All-Terrain, Mud-Terrain, Touring, Highway, Truck & SUV. Free delivery to all 50 states, 1,000+ US cities. 3-7 business day delivery. Ship to home or installer. Use searchTires to find tires by size/brand/category. Use getVehicleTires for vehicle-specific lookup. Use searchLocations to find cities with free delivery. Contact: (279) 238-8473 or info@ship.tires.",
+  "description_for_human": "Shop & Ship Car, Truck & SUV Tires — Free Delivery. 433+ brands, 800+ models, 307,000+ tires shipped free to 1,000+ US cities.",
+  "description_for_model": "Ship.Tires — Shop & Ship Car, Truck & SUV Tires with Free Delivery. US-based online tire retailer. Search 433+ brands (including Michelin, Goodyear, Bridgestone, Continental, Pirelli, Cooper, Firestone, BFGoodrich, Yokohama, Toyo, Falken, Nitto, Dunlop, Kumho, Nexen, Maxxis, Nokian, and 415 more), 800+ models, 307,000+ tires. Categories: All-Season, Winter, Performance, All-Terrain, Mud-Terrain, Touring, Highway, Truck & SUV. Free delivery to all 50 states, 1,000+ US cities. 3-7 business day delivery. Ship to home or installer. Use searchTires to find tires by size/brand/category. Use getVehicleTires for vehicle-specific lookup. Use searchLocations to find cities with free delivery. Contact: (279) 238-8473 or info@ship.tires.",
   "auth": {
     "type": "none"
   },

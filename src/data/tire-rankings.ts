@@ -270,15 +270,6 @@ export const tireRankings: TireRanking[] = [
       },
       {
         rank: 3,
-        brand: "Hankook",
-        model: "iON evo",
-        dbModel: "Ion Evo (IK01)",
-        score: 9.0,
-        racingConnection:
-          "Engineered as the official tire of Porsche Taycan and ABB FIA Formula E Championship, with EV-specific noise dampening and torque handling.",
-      },
-      {
-        rank: 4,
         brand: "Pirelli",
         model: "P Zero E",
         dbModel: "Pzero E",
@@ -287,7 +278,7 @@ export const tireRankings: TireRanking[] = [
           "Carries Pirelli's Elect marking with high-load construction and low rolling resistance developed through their Jaguar I-PACE eTrophy racing series.",
       },
       {
-        rank: 5,
+        rank: 4,
         brand: "Bridgestone",
         model: "Turanza EV",
         score: 8.5,
@@ -370,15 +361,6 @@ export const tireRankings: TireRanking[] = [
       },
       {
         rank: 3,
-        brand: "Hankook",
-        model: "Kinergy PT",
-        dbModel: "Kinergy PT H737",
-        score: 8.5,
-        racingConnection:
-          "Features Hankook's advanced compound technology from their DTM and Formula E racing programs, filtered into their value-tier lineup.",
-      },
-      {
-        rank: 4,
         brand: "General",
         model: "Altimax RT45",
         score: 8.3,
@@ -386,7 +368,7 @@ export const tireRankings: TireRanking[] = [
           "Leverages Continental parent company's motorsport R&D, including Visual Alignment Indicators and Replacement Tire Monitor technology.",
       },
       {
-        rank: 5,
+        rank: 4,
         brand: "Sumitomo",
         model: "HTR A/S P03",
         score: 8.0,
